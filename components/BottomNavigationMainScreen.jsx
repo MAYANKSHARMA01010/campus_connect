@@ -25,7 +25,7 @@ export default function BottomNavigationMainScreen() {
       initialRouteName='Home'
       screenOptions={{
         headerStyle: {
-          backgroundColor: 'transparent',
+          backgroundColor: '#e6e6e6',
           elevation: 0,
           shadowOpacity: 0,
         },
@@ -77,9 +77,10 @@ export default function BottomNavigationMainScreen() {
 
 const styles = StyleSheet.create({
   headerLogo: {
-    width: 40,
-    height: 40,
+    width: 80,
+    height: 80,
     resizeMode: 'contain',
+    marginTop: 12,
     marginLeft: 10,
   },
   headerTitleText: {
