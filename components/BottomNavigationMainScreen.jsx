@@ -1,32 +1,20 @@
-import React from 'react'
-import { 
-  Text, 
-  View 
-} from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import HomeScreen from '../Screens/Home'
-import EventScreen from '../Screens/Events'
-import ProfileScreen from '../Screens/Profile'
-import SearchScreen from '../Screens/Search'
+import HomeScreen from '../Screens/Home';
+import EventScreen from '../Screens/Events';
+import ProfileScreen from '../Screens/Profile';
+import SearchScreen from '../Screens/Search';
 
-const Tabs = createBottomTabNavigator()
+const Tabs = createBottomTabNavigator();
 
 export default function BottomNavigationMainScreen() {
   return (
-    <View>
-      <Text>
-        BottomNavigationMainScreen
-      </Text>
-      <NavigationContainer>
-        <Tabs.Navigator>
-          <Tabs.Screen name="Home" component={HomeScreen} />
-          <Tabs.Screen name="Events" component={EventScreen} />
-          <Tabs.Screen name="Profile" component={ProfileScreen} />
-          <Tabs.Screen name="Search" component={SearchScreen} />
-        </Tabs.Navigator>
-      </NavigationContainer>
-    </View>
-  )
+    <Tabs.Navigator>
+      <Tabs.Screen name="Home" component={HomeScreen} />
+      <Tabs.Screen name="Events" component={EventScreen} />
+      <Tabs.Screen name="Profile" component={ProfileScreen} />
+      <Tabs.Screen name="Search" component={SearchScreen} />
+    </Tabs.Navigator>
+  );
 }
