@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+
 import HomeScreen from '../Screens/Home'
 import EventScreen from '../Screens/Events'
 import ProfileScreen from '../Screens/Profile'

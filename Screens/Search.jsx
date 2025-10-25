@@ -1,15 +1,24 @@
 import React from 'react'
 import {
     View,
-    Text
+    Text,
+    StyleSheet,
 } from 'react-native'
 
 export default function SearchScreen() {
   return (
-    <View>
+    <View style={styles.mainContainer}>
         <Text>
             Search Screen
         </Text>
     </View>
   )
 }
+
+styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center'
+  },
+})
