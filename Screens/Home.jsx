@@ -17,12 +17,18 @@ const techData = [
 ]
 
 const pastEvents = [
-  { id: 1, title: 'Tech Symposium 2023', date: 'March 15, 2023', summary: 'A gathering of tech enthusiasts to discuss emerging technologies.', img: 'symposium2023.png' },
-  { id: 2, title: 'AI Workshop', date: 'April 10, 2023', summary: 'Hands-on workshop on building AI models.', img: 'ai_workshop.png' },
-  { id: 3, title: 'Blockchain Seminar', date: 'May 5, 2023', summary: 'Seminar on blockchain applications and trends.', img: 'blockchain_seminar.png' },
-  { id: 4, title: 'Cybersecurity Conference', date: 'June 20, 2023', summary: 'Conference on the latest in cybersecurity.', img: 'cybersecurity_conference.png' },
-  { id: 5, title: 'Data Science Bootcamp', date: 'July 15, 2023', summary: 'Intensive bootcamp on data science techniques.', img: 'data_science_bootcamp.png' },
-]
+  { id: 1, title: 'Tech Symposium 2023', date: 'March 15, 2023', summary: 'A gathering of tech enthusiasts to discuss emerging technologies.', img: 'https://source.unsplash.com/400x300/?technology,conference' },
+  { id: 2, title: 'AI Workshop', date: 'April 10, 2023', summary: 'Hands-on workshop on building AI models.', img: 'https://source.unsplash.com/400x300/?ai,workshop' },
+  { id: 3, title: 'Blockchain Seminar', date: 'May 5, 2023', summary: 'Seminar on blockchain applications and trends.', img: 'https://source.unsplash.com/400x300/?blockchain,seminar' },
+  { id: 4, title: 'Cybersecurity Conference', date: 'June 20, 2023', summary: 'Conference on the latest in cybersecurity.', img: 'https://source.unsplash.com/400x300/?cybersecurity,conference' },
+  { id: 5, title: 'Data Science Bootcamp', date: 'July 15, 2023', summary: 'Intensive bootcamp on data science techniques.', img: 'https://source.unsplash.com/400x300/?data,bootcamp' },
+  { id: 6, title: 'Mobile Dev Meetup', date: 'August 10, 2023', summary: 'Meetup for mobile app developers to share ideas.', img: 'https://source.unsplash.com/400x300/?mobile,development' },
+  { id: 7, title: 'Cloud Computing Summit', date: 'September 5, 2023', summary: 'Summit discussing cloud infrastructure and trends.', img: 'https://source.unsplash.com/400x300/?cloud,computing' },
+  { id: 8, title: 'Startup Pitch Night', date: 'October 12, 2023', summary: 'Event for startups to pitch their ideas to investors.', img: 'https://source.unsplash.com/400x300/?startup,pitch' },
+  { id: 9, title: 'VR/AR Expo', date: 'November 20, 2023', summary: 'Exposition showcasing VR and AR innovations.', img: 'https://source.unsplash.com/400x300/?vr,ar' },
+  { id: 10, title: 'IoT Hackathon', date: 'December 15, 2023', summary: 'Hackathon focused on IoT device solutions.', img: 'https://source.unsplash.com/400x300/?iot,hackathon' },
+  { id: 11, title: 'Machine Learning Conference', date: 'January 25, 2024', summary: 'Conference exploring advances in machine learning.', img: 'https://source.unsplash.com/400x300/?machine,learning' },
+];
 
 const comingEvents = [
   { id: 1, title: 'IoT Expo 2024', date: 'August 10, 2024', summary: 'Expo showcasing the latest in IoT technology.', img: 'iot_expo2024.png' },
@@ -34,11 +40,10 @@ const comingEvents = [
 
 export default function HomeScreen() {
   return (
-    <View>
+    <View style={styles.container}>
       <View style={styles.textContainer}>
         <View style={styles.row}>
           <Text style={styles.bigC}>C</Text>
-
           <View style={styles.rightTextContainer}>
             <Text style={styles.ampus}>AMPUS</Text>
             <Text style={styles.onnect}>ONNECT</Text>
@@ -46,21 +51,31 @@ export default function HomeScreen() {
         </View>
       </View>
 
-
-
       <View style={styles.pastEventsContainer}>
         <Text style={styles.sectionTitle}>Past Events</Text>
         <FlatList
           data={pastEvents.slice(0, 5)}
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+          keyExtractor={(item, index) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.eventContainer}>
               <Image source={{ uri: item.img }} style={styles.eventImage} />
-              <Text style={styles.eventTitle}>{item.title}</Text>
+              <Text 
+                style={styles.eventTitle} 
+                numberOfLines={1} 
+                ellipsizeMode="tail"
+              >
+                {item.title}
+              </Text>
               <Text style={styles.eventDate}>{item.date}</Text>
-              <Text style={styles.eventSummary}>{item.summary}</Text>
+              <Text 
+                style={styles.eventSummary} 
+                numberOfLines={2} 
+                ellipsizeMode="tail"
+              >
+                {item.summary}
+              </Text>
             </View>
           )}
           ListFooterComponent={() => (
@@ -71,12 +86,15 @@ export default function HomeScreen() {
           contentContainerStyle={styles.scrollContainer}
         />
       </View>
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f2f2f2',
+  },
   textContainer: {
     marginTop: 18,
     marginLeft: 38,
@@ -117,13 +135,14 @@ const styles = StyleSheet.create({
   },
   eventContainer: {
     width: 220,
+    height: 224,
     backgroundColor: '#fff',
     borderRadius: 12,
     marginRight: 12,
     padding: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 6 },
     shadowRadius: 3,
     elevation: 3,
   },
@@ -136,6 +155,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+    height: 28,
   },
   eventDate: {
     fontSize: 13,
@@ -144,10 +164,11 @@ const styles = StyleSheet.create({
   eventSummary: {
     fontSize: 14,
     marginTop: 4,
+    height: 36,
   },
   viewMoreContainer: {
     width: 220,
-    height: 240,
+    height: 224,
     backgroundColor: '#f0f0f0',
     borderRadius: 12,
     justifyContent: 'center',
