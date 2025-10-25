@@ -19,6 +19,14 @@ export default function BottomNavigationMainScreen() {
       <Text>
         BottomNavigationMainScreen
       </Text>
+      <NavigationContainer>
+        <Tabs.Navigator>
+          <Tabs.Screen name="Home" component={HomeScreen} />
+          <Tabs.Screen name="Events" component={EventScreen} />
+          <Tabs.Screen name="Profile" component={ProfileScreen} />
+          <Tabs.Screen name="Search" component={SearchScreen} />
+        </Tabs.Navigator>
+      </NavigationContainer>
     </View>
   )
 }

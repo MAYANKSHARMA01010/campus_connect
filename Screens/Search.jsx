@@ -15,7 +15,7 @@ export default function SearchScreen() {
   )
 }
 
-styles = StyleSheet.create({
+const styles = StyleSheet.create({
   mainContainer: {
     flex: 1, 
     justifyContent: 'center', 
