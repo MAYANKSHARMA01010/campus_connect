@@ -4,7 +4,7 @@ import {
     Text
 } from 'react-native'
 
-function Home() {
+export default function HomeScreen() {
   return (
     <View>
         <Text>
@@ -13,5 +13,3 @@ function Home() {
     </View>
   )
 }
-
-export default Home

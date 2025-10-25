@@ -4,7 +4,7 @@ import {
     Text
 } from 'react-native'
 
-function Profile() {
+export default function ProfileScreen() {
   return (
     <View>
         <Text>
@@ -13,5 +13,3 @@ function Profile() {
     </View>
   )
 }
-
-export default Profile

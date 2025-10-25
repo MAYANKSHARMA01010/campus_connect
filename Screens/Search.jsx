@@ -4,7 +4,7 @@ import {
     Text
 } from 'react-native'
 
-function Search() {
+export default function SearchScreen() {
   return (
     <View>
         <Text>
@@ -13,5 +13,3 @@ function Search() {
     </View>
   )
 }
-
-export default Search

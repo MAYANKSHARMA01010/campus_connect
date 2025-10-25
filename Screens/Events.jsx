@@ -4,7 +4,7 @@ import {
     Text
 } from 'react-native'
 
-function Events() {
+export default function EventScreen() {
   return (
     <View>
         <Text>
@@ -13,5 +13,3 @@ function Events() {
     </View>
   )
 }
-
-export default Events
