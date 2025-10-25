@@ -62,7 +62,7 @@ export default function HomeScreen() {
       </View>
 
       {/* PAST EVENTS */}
-      <View style={styles.pastEventsContainer}>
+      <View style={styles.EventSection}>
         <Text style={styles.sectionTitle}>Past Events</Text>
         <FlatList
           data={pastEvents.slice(0, 5)}
@@ -99,7 +99,7 @@ export default function HomeScreen() {
       </View>
       
       {/* COMING EVENTS */}
-      <View style={styles.pastEventsContainer}>
+      <View style={styles.EventSection}>
         <Text style={styles.sectionTitle}>Coming Events</Text>
         <FlatList
           data={comingEvents.slice(0, 5)}
@@ -136,7 +136,7 @@ export default function HomeScreen() {
       </View>
       
       {/* TECH EVENTS */}
-      <View style={styles.pastEventsContainer}>
+      <View style={styles.EventSection}>
         <Text style={styles.sectionTitle}>Tech Events</Text>
         <FlatList
           data={techEvents.slice(0, 5)}
@@ -173,7 +173,7 @@ export default function HomeScreen() {
       </View>
       
       {/* SPORTS EVENTS */}
-      <View style={styles.pastEventsContainer}>
+      <View style={styles.EventSection}>
         <Text style={styles.sectionTitle}>Sports Events</Text>
         <FlatList
           data={sportsEvents.slice(0, 5)}
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     marginTop: -5,
     fontWeight: 'bold',
   },
-  pastEventsContainer: {
+  EventSection: {
     marginVertical: 16,
   },
   sectionTitle: {
