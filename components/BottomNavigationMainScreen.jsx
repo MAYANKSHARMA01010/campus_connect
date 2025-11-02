@@ -1,16 +1,8 @@
-import React from 'react';
+import * as React from 'react';
+import { Image, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { 
-  Entypo,
-  Ionicons,
-  MaterialIcons,
-  FontAwesome6,
-} from '@expo/vector-icons'; 
-import { 
-  Image, 
-  Text, 
-  StyleSheet 
-} from 'react-native';
+import { Entypo, Ionicons, MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
+import { Appbar, Text } from 'react-native-paper';
 
 import HomeScreen from '../Screens/Home';
 import EventScreen from '../Screens/Events';
@@ -19,17 +11,21 @@ import SearchScreen from '../Screens/Search';
 
 const Tabs = createBottomTabNavigator();
 
+function CustomHeader({ title }) {
+  return (
+    <Appbar.Header style={styles.header}>
+      <Image source={require('../assets/LOGO.png')} style={styles.headerLogo} />
+      <Appbar.Content title={<Text variant="titleLarge">{title}</Text>} titleStyle={styles.headerTitleText} />
+    </Appbar.Header>
+  );
+}
+
 export default function BottomNavigationMainScreen() {
   return (
     <Tabs.Navigator
-      initialRouteName='Home'
+      initialRouteName="Home"
       screenOptions={{
-        headerStyle: {
-          backgroundColor: '#e6e6e6',
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        headerTitleAlign: 'center',
+        header: ({ route }) => <CustomHeader title={route.name} />,
       }}
     >
       <Tabs.Screen
@@ -37,8 +33,6 @@ export default function BottomNavigationMainScreen() {
         component={HomeScreen}
         options={{
           tabBarIcon: () => <Entypo name="home" size={24} color="black" />,
-          headerTitle: () => <Text style={styles.headerTitleText}>Home</Text>,
-          headerLeft: () => <Image source={require("../assets/LOGO.png")} style={styles.headerLogo} />,
         }}
       />
 
@@ -47,28 +41,22 @@ export default function BottomNavigationMainScreen() {
         component={SearchScreen}
         options={{
           tabBarIcon: () => <Ionicons name="search" size={24} color="black" />,
-          headerTitle: () => <Text style={styles.headerTitleText}>Search</Text>,
-          headerLeft: () => <Image source={require("../assets/LOGO.png")} style={styles.headerLogo} />,
         }}
       />
 
-      <Tabs.Screen 
+      <Tabs.Screen
         name="Events"
-        component={EventScreen} 
+        component={EventScreen}
         options={{
           tabBarIcon: () => <MaterialIcons name="event" size={24} color="black" />,
-          headerTitle: () => <Text style={styles.headerTitleText}>Events</Text>,
-          headerLeft: () => <Image source={require("../assets/LOGO.png")} style={styles.headerLogo} />,
         }}
       />
 
       <Tabs.Screen
         name="Profile"
-        component={ProfileScreen} 
+        component={ProfileScreen}
         options={{
           tabBarIcon: () => <FontAwesome6 name="user" size={24} color="black" />,
-          headerTitle: () => <Text style={styles.headerTitleText}>Profile</Text>,
-          headerLeft: () => <Image source={require("../assets/LOGO.png")} style={styles.headerLogo} />,
         }}
       />
     </Tabs.Navigator>
@@ -76,15 +64,17 @@ export default function BottomNavigationMainScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    backgroundColor: '#e6e6e6',
+    elevation: 2,
+  },
   headerLogo: {
-    width: 80,
-    height: 80,
+    width: 70,
+    height: 70,
     resizeMode: 'contain',
-    marginTop: 12,
     marginLeft: 10,
   },
   headerTitleText: {
-    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
   },

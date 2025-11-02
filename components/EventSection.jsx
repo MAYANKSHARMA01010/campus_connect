@@ -1,106 +1,87 @@
-import React from 'react';
-import { 
-    View, 
-    Text, 
-    FlatList, 
-    Image, 
-    StyleSheet 
-} from 'react-native';
+import * as React from 'react';
+import { FlatList, Image, StyleSheet, View } from 'react-native';
+import { Card, Text, Button, Surface } from 'react-native-paper';
 
 export default function EventSection({ title, data }) {
-    const renderCard = ({ item }) => (
-        <View style={styles.card}>
-            <Image source={{ uri: item.img }} style={styles.image} />
-            <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-                {item.title}
-            </Text>
-            <Text style={styles.date}>{item.date}</Text>
-            <Text style={styles.summary} numberOfLines={2} ellipsizeMode="tail">
-                {item.summary}
-            </Text>
-        </View>
-    );
+  const renderCard = ({ item }) => (
+    <Card style={styles.card} mode="elevated">
+      <Card.Cover source={{ uri: item.img }} style={styles.image} />
+      <Card.Content>
+        <Text variant="titleMedium" numberOfLines={1} ellipsizeMode="tail">
+          {item.title}
+        </Text>
+        <Text variant="bodySmall" style={styles.date}>
+          {item.date}
+        </Text>
+        <Text variant="bodyMedium" numberOfLines={2} ellipsizeMode="tail" style={styles.summary}>
+          {item.summary}
+        </Text>
+      </Card.Content>
+    </Card>
+  );
 
-    return (
-        <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{title}</Text>
-            <FlatList
-                data={data.slice(0, 6)}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderCard}
-                ListFooterComponent={() => (
-                    <View style={styles.viewMoreContainer}>
-                        <Text style={styles.viewMoreText}>View More</Text>
-                    </View>
-                )}
-                contentContainerStyle={styles.scrollContainer}
-            />
-        </View>
-    );
+  return (
+    <Surface style={styles.section} elevation={2}>
+      <Text variant="headlineSmall" style={styles.sectionTitle}>
+        {title}
+      </Text>
+
+      <FlatList
+        data={data.slice(0, 6)}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderCard}
+        ListFooterComponent={() => (
+          <Surface style={styles.viewMoreContainer} elevation={1}>
+            <Button mode="contained-tonal" onPress={() => {}}>
+              View More
+            </Button>
+          </Surface>
+        )}
+        contentContainerStyle={styles.scrollContainer}
+      />
+    </Surface>
+  );
 }
 
 const styles = StyleSheet.create({
-    section: {
-        marginVertical: 16,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        marginLeft: 16,
-        marginBottom: 8,
-    },
-    scrollContainer: {
-        paddingHorizontal: 16,
-    },
-    card: {
-        width: 220,
-        height: 224,
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        marginRight: 12,
-        padding: 10,
-        shadowColor: '#000',
-        shadowOpacity: 0.2,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 3,
-        elevation: 3,
-    },
-    image: {
-        width: '100%',
-        height: 120,
-        borderRadius: 8,
-        marginBottom: 6,
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        height: 28,
-    },
-    date: {
-        fontSize: 13,
-        color: 'gray',
-    },
-    summary: {
-        fontSize: 14,
-        marginTop: 4,
-        height: 36,
-    },
-    viewMoreContainer: {
-        width: 220,
-        height: 224,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        borderWidth: 1,
-        borderColor: '#ccc',
-    },
-    viewMoreText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#555',
-    },
+  section: {
+    marginVertical: 16,
+    borderRadius: 12,
+  },
+  sectionTitle: {
+    marginLeft: 16,
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  scrollContainer: {
+    paddingHorizontal: 16,
+  },
+  card: {
+    width: 220,
+    height: 224,
+    borderRadius: 12,
+    marginRight: 12,
+  },
+  image: {
+    height: 120,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  date: {
+    color: 'gray',
+    marginTop: 4,
+  },
+  summary: {
+    marginTop: 4,
+  },
+  viewMoreContainer: {
+    width: 220,
+    height: 224,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
 });

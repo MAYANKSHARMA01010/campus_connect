@@ -1,20 +1,14 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import * as React from 'react';
+import { Provider as PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import BottomNavigationMainScreen from './components/BottomNavigationMainScreen';
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <View style={styles.mainContainer}>
+    <PaperProvider>
+      <NavigationContainer>
         <BottomNavigationMainScreen />
-      </View>
-    </NavigationContainer>
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-  },
-});

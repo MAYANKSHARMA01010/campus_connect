@@ -1,12 +1,7 @@
-import React from 'react';
+import * as React from 'react';
+import { StyleSheet, ScrollView, View } from 'react-native';
+import { Text, Surface } from 'react-native-paper';
 import EventSection from '../components/EventSection';
-
-import { 
-  View, 
-  Text,
-  ScrollView, 
-  StyleSheet 
-} from 'react-native';
 
 import { 
   pastEvents, 
@@ -15,19 +10,18 @@ import {
   sportsEvents 
 } from '../data/eventsData';
 
-
 export default function HomeScreen() {
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
-      <View style={styles.textContainer}>
+      <Surface style={styles.headerSurface}>
         <View style={styles.row}>
-          <Text style={styles.bigC}>C</Text>
+          <Text variant="displayMedium" style={styles.bigC}>C</Text>
           <View style={styles.rightTextContainer}>
-            <Text style={styles.ampus}>AMPUS</Text>
-            <Text style={styles.onnect}>ONNECT</Text>
+            <Text variant="titleLarge" style={styles.ampus}>AMPUS</Text>
+            <Text variant="titleLarge" style={styles.onnect}>ONNECT</Text>
           </View>
         </View>
-      </View>
+      </Surface>
 
       <EventSection title="Past Events" data={pastEvents} />
       <EventSection title="Coming Events" data={comingEvents} />
@@ -40,18 +34,21 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#f6f6f6',
   },
-  textContainer: {
+  headerSurface: {
     marginTop: 18,
     marginLeft: 38,
+    marginRight: 16,
+    padding: 8,
+    borderRadius: 12,
+    elevation: 3,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   bigC: {
-    fontSize: 60,
     fontWeight: 'bold',
   },
   rightTextContainer: {
@@ -60,11 +57,9 @@ const styles = StyleSheet.create({
     marginLeft: 3,
   },
   ampus: {
-    fontSize: 20,
     fontWeight: 'bold',
   },
   onnect: {
-    fontSize: 20,
     marginTop: -5,
     fontWeight: 'bold',
   },
