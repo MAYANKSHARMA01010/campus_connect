@@ -1,11 +1,7 @@
 import * as React from 'react';
-import { FlatList, StyleSheet, View, Dimensions } from 'react-native';
-import { Card, Text, Button, Surface } from 'react-native-paper';
+import { FlatList, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { Card, Text, Surface } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.88;
-const CARD_HEIGHT = CARD_WIDTH * 0.62;
 
 export default function EventSection({ title, data }) {
   const navigation = useNavigation();
@@ -27,6 +23,16 @@ export default function EventSection({ title, data }) {
     </Card>
   );
 
+  const renderViewMoreCard = () => (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => navigation.navigate('Events')}>
+      <View style={styles.viewMoreCard}>
+        <Text style={styles.viewMoreText}>View More</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <Surface style={styles.section} elevation={0}>
       <View style={styles.titleContainer}>
@@ -43,24 +49,13 @@ export default function EventSection({ title, data }) {
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderCard}
-        ListFooterComponent={() => (
-          <View style={styles.viewMoreContainer}>
-            <Button
-              mode="outlined"
-              textColor="#E91E63"
-              style={styles.viewMoreBtn}
-              onPress={() => navigation.navigate('Events')}>
-              View More
-            </Button>
-          </View>
-        )}
+        ListFooterComponent={renderViewMoreCard}
         contentContainerStyle={styles.scrollContainer}
       />
     </Surface>
   );
 }
 
-// your existing styles below ↓
 const styles = StyleSheet.create({
   section: {
     marginTop: 22,
@@ -89,9 +84,11 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: 16,
   },
+
+  // Normal fixed card sizing (no Dimensions)
   card: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT + 120,
+    width: 280,
+    height: 320,
     borderRadius: 18,
     marginRight: 16,
     backgroundColor: '#fff',
@@ -99,7 +96,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: CARD_HEIGHT,
+    height: 180,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
   },
@@ -121,13 +118,23 @@ const styles = StyleSheet.create({
     color: '#444',
     fontSize: 13,
   },
-  viewMoreContainer: {
+
+  // Matching "View More" card
+  viewMoreCard: {
+    width: 280,
+    height: 320,
+    borderRadius: 18,
+    marginRight: 16,
+    borderWidth: 1.5,
+    borderColor: '#E91E63',
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 120,
   },
-  viewMoreBtn: {
-    borderColor: '#E91E63',
-    borderRadius: 10,
+  viewMoreText: {
+    color: '#E91E63',
+    fontWeight: '700',
+    fontSize: 16,
+    letterSpacing: 0.5,
   },
 });
