@@ -7,10 +7,14 @@ import HomeScreen from '../Screens/Home';
 import EventScreen from '../Screens/Events';
 import ProfileScreen from '../Screens/Profile';
 import SearchScreen from '../Screens/Search';
+import LoginScreen from '../Screens/Login';
+import { useAuth } from '../context/authContext';
 
 const Tabs = createBottomTabNavigator();
 
 export default function BottomNavigationMainScreen() {
+  const { isLoggedIn } = useAuth();
+
   return (
     <Tabs.Navigator
       initialRouteName="Home"
@@ -21,7 +25,7 @@ export default function BottomNavigationMainScreen() {
         tabBarActiveTintColor: '#E91E63',
         tabBarInactiveTintColor: '#555',
       }}
-    > 
+    >
       <Tabs.Screen
         name="Home"
         component={HomeScreen}
@@ -44,8 +48,8 @@ export default function BottomNavigationMainScreen() {
         }}
       />
       <Tabs.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name={isLoggedIn ? "Profile" : "Login"}
+        component={isLoggedIn ? ProfileScreen : LoginScreen}
         options={{
           tabBarIcon: ({ color }) => <FontAwesome6 name="user" size={24} color={color} />,
         }}
