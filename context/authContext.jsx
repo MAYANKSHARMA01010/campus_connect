@@ -4,37 +4,35 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const loadLoginState = async () => {
-            try {
-                const storedStatus = await AsyncStorage.getItem('isLoggedIn');
-                if (storedStatus === 'true') setIsLoggedIn(true);
-            } 
-            catch (error) {
-                console.error('Error loading login state:', error);
-            } 
-            finally {
-                setLoading(false);
-            }
-        };
-        loadLoginState();
-    }, []);
+  useEffect(() => {
+    const loadLoginState = async () => {
+      try {
+        const storedStatus = await AsyncStorage.getItem('isLoggedIn');
+        setIsLoggedIn(storedStatus === 'true');
+      } catch (error) {
+        console.error('Error loading login state:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadLoginState();
+  }, []);
 
-    useEffect(() => {
-        AsyncStorage.setItem('isLoggedIn', isLoggedIn ? 'true' : 'false');
-    }, [isLoggedIn]);
+  useEffect(() => {
+    AsyncStorage.setItem('isLoggedIn', isLoggedIn ? 'true' : 'false');
+  }, [isLoggedIn]);
 
-    const login = () => setIsLoggedIn(true);
-    const logout = () => setIsLoggedIn(false);
+  const login = () => setIsLoggedIn(true);
+  const logout = () => setIsLoggedIn(false);
 
-    return (
-        <AuthContext.Provider value={{ isLoggedIn, login, logout, loading }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={{ isLoggedIn, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => useContext(AuthContext);
