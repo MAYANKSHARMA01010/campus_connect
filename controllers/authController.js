@@ -4,18 +4,17 @@ const bcrypt = require("bcrypt");
 
 
 async function createUserController(req, res) {
-    const { name, username, email, password } = req.body;
+    let { name, username, email, password } = req.body;
 
     try {
+        name = name.trim();
+        username = username.trim().toLowerCase();
+        email = email.trim().toLowerCase();
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = await prisma.user.create({
-            data: {
-                name,
-                username,
-                email,
-                password: hashedPassword,
-            },
+            data: { name, username, email, password: hashedPassword },
         });
 
         return res.status(201).json({
@@ -30,17 +29,18 @@ async function createUserController(req, res) {
     } 
     catch (err) {
         console.error("CreateUser error:", err);
-        return res.status(500).json({
-            ERROR: "Internal Server Error while creating user",
-        });
+        return res.status(500).json({ ERROR: "Internal Server Error while creating user" });
     }
 }
 
 
 async function loginUserController(req, res) {
-    const { email, username, password } = req.body;
+    let { email, username, password } = req.body;
 
     try {
+        if (email) email = email.trim().toLowerCase();
+        if (username) username = username.trim().toLowerCase();
+
         const user = await prisma.user.findFirst({
             where: {
                 OR: [
@@ -68,6 +68,8 @@ async function loginUserController(req, res) {
 
         const token = createToken(payload);
 
+        console.log("Generated JWT Token:", token);
+
         return res.status(200).json({
             message: "Login successful ✅",
             token,
@@ -88,15 +90,11 @@ async function loginUserController(req, res) {
 
 async function logoutUserController(req, res) {
     try {
-        return res.status(200).json({
-            message: "Logout successful",
-        });
+        return res.status(200).json({ message: "Logout successful" });
     } 
     catch (error) {
         console.error("Logout error:", error);
-        return res.status(500).json({
-            ERROR: "Logout failed",
-        });
+        return res.status(500).json({ ERROR: "Logout failed" });
     }
 }
 
@@ -104,39 +102,79 @@ async function logoutUserController(req, res) {
 async function getMeController(req, res) {
     try {
         const userId = req.user.id;
-
         const user = await prisma.user.findUnique({
             where: { id: userId },
+            select: { id: true, name: true, username: true, email: true, gender: true },
+        });
+
+        if (!user) return res.status(404).json({ ERROR: "User not found" });
+
+        return res.status(200).json({ message: "User fetched successfully", user });
+    } 
+    catch (error) {
+        console.error("GetMe error:", error);
+        return res.status(500).json({ ERROR: "Internal Server Error" });
+    }
+}
+
+
+async function updateUserController(req, res) {
+    try {
+        const userId = req.user.id;
+        let { name, username, gender } = req.body;
+
+        const updateData = {};
+
+        if (name && name.trim()) updateData.name = name.trim();
+        if (username && username.trim()) updateData.username = username.trim().toLowerCase();
+        if (gender && gender.trim()) updateData.gender = gender.trim();
+
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({ ERROR: "No valid fields provided for update" });
+        }
+
+        if (updateData.username) {
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    username: updateData.username,
+                    NOT: { id: userId },
+                },
+            });
+            if (existingUser) {
+                return res.status(400).json({ ERROR: "Username already taken" });
+            }
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: updateData,
             select: {
                 id: true,
                 name: true,
                 username: true,
                 email: true,
                 gender: true,
+                updatedAt: true,
             },
         });
 
-        if (!user) {
-            return res.status(404).json({ ERROR: "User not found" });
-        }
-
         return res.status(200).json({
-            message: "User fetched successfully",
-            user,
+            message: "✅ Profile updated successfully",
+            user: updatedUser,
         });
     } 
-    catch (error) {
-        console.error("GetMe error:", error);
+    catch (err) {
+        console.error("UpdateUser error:", err);
         return res.status(500).json({
-            ERROR: "Internal Server Error",
+            ERROR: "Internal Server Error while updating user",
         });
     }
 }
 
-
-module.exports = { 
+module.exports = {
     createUserController,
     loginUserController,
     logoutUserController,
     getMeController,
+    updateUserController,
 };
