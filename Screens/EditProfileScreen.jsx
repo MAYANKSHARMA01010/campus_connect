@@ -48,7 +48,6 @@ export default function EditProfileScreen({ navigation }) {
           style={styles.input}
         />
 
-        {/* GENDER DROPDOWN */}
         <Menu
           visible={genderMenuVisible}
           onDismiss={() => setGenderMenuVisible(false)}

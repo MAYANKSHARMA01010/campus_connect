@@ -29,7 +29,6 @@ export default function ProfileScreen({ navigation }) {
 
         <Divider style={{ width: "80%", marginVertical: 20 }} />
 
-        {/* 2 × 2 GRID */}
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>Email</Text>
@@ -52,7 +51,6 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
-        {/* BUTTONS */}
         <Button
           mode="contained"
           onPress={() => navigation.navigate("EditProfile")}
