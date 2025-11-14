@@ -1,52 +1,84 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { Text, TextInput, Button, ActivityIndicator } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, TextInput, Button, ActivityIndicator } from "react-native-paper";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginScreen({ navigation }) {
-  const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login, isLoggedIn } = useAuth();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
+  useEffect(() => {
+    if (isLoggedIn) navigation.navigate("Home");
+  }, [isLoggedIn]);
 
-    try {
-      setLoading(true);
-      await AsyncStorage.setItem('token', 'demo_token');
-      login();
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Something went wrong.');
-    } finally {
-      setLoading(false);
-    }
+  const handleLogin = async () => {
+    if (!identifier || !password)
+      return alert("Please enter email/username and password");
+
+    setLoading(true);
+    const success = await login(
+      identifier.includes("@")
+        ? { email: identifier, password }
+        : { username: identifier, password }
+    );
+    setLoading(false);
+
+    if (success) navigation.navigate("Home");
   };
 
   return (
     <View style={styles.container}>
-      <Text variant="headlineMedium" style={styles.title}>Welcome Back 👋</Text>
-      <TextInput label="Email" mode="outlined" value={email} onChangeText={setEmail} style={styles.input} />
-      <TextInput label="Password" mode="outlined" value={password} onChangeText={setPassword} secureTextEntry style={styles.input} />
-      <Button mode="contained" onPress={handleLogin} style={styles.button} buttonColor="#E91E63" disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : 'Login'}
+      <Text variant="headlineMedium" style={styles.title}>
+        Welcome Back 👋
+      </Text>
+
+      <TextInput
+        label="Email or Username"
+        mode="outlined"
+        value={identifier}
+        onChangeText={setIdentifier}
+        style={styles.input}
+      />
+
+      <TextInput
+        label="Password"
+        mode="outlined"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry={!showPassword}
+        right={
+          <TextInput.Icon
+            icon={showPassword ? "eye-off" : "eye"}
+            onPress={() => setShowPassword(!showPassword)}
+          />
+        }
+        style={styles.input}
+      />
+
+      <Button
+        mode="contained"
+        onPress={handleLogin}
+        style={styles.button}
+        buttonColor="#E91E63"
+        disabled={loading}
+      >
+        {loading ? <ActivityIndicator color="#fff" /> : "Login"}
       </Button>
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.link}>Don't have an account? Register</Text>
+
+      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+        <Text style={styles.link}>Don’t have an account? Register</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, backgroundColor: '#fff' },
-  title: { textAlign: 'center', marginBottom: 30, fontWeight: '700', color: '#E91E63' },
+  container: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "#fff" },
+  title: { textAlign: "center", marginBottom: 30, fontWeight: "700", color: "#E91E63" },
   input: { marginBottom: 16 },
   button: { marginTop: 10, borderRadius: 10, paddingVertical: 6 },
-  link: { textAlign: 'center', color: '#E91E63', marginTop: 20, fontWeight: '600' },
+  link: { textAlign: "center", color: "#E91E63", marginTop: 20, fontWeight: "600" },
 });
