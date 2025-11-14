@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { Text, TextInput, Button, ActivityIndicator } from "react-native-paper";
+import { Text, TextInput, Button, ActivityIndicator, Surface } from "react-native-paper";
 import { useAuth } from "../context/AuthContext";
 
 export default function RegisterScreen({ navigation }) {
   const { register } = useAuth();
+
   const [form, setForm] = useState({
     name: "",
     username: "",
@@ -12,6 +13,7 @@ export default function RegisterScreen({ navigation }) {
     password: "",
     confirm_password: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -20,7 +22,11 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (Object.values(form).some((v) => !v))
-      return alert("Please fill in all fields");
+      return alert("Please fill all fields");
+
+    if (form.password !== form.confirm_password)
+      return alert("Passwords do not match");
+
     setLoading(true);
     await register(form);
     setLoading(false);
@@ -28,86 +34,153 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text variant="headlineMedium" style={styles.title}>
-        Create Account ✨
-      </Text>
+    <View style={styles.screen}>
 
-      <TextInput
-        label="Full Name"
-        mode="outlined"
-        value={form.name}
-        onChangeText={(v) => handleChange("name", v)}
-        style={styles.input}
-      />
+      {/* CAMPUS TOP HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Campus Connect</Text>
+      </View>
 
-      <TextInput
-        label="Username"
-        mode="outlined"
-        value={form.username}
-        onChangeText={(v) => handleChange("username", v)}
-        style={styles.input}
-      />
+      {/* FORM CARD */}
+      <Surface style={styles.card}>
+        <Text style={styles.title}>Create Account ✨</Text>
+        <Text style={styles.subtitle}>Join your campus community</Text>
 
-      <TextInput
-        label="Email"
-        mode="outlined"
-        value={form.email}
-        onChangeText={(v) => handleChange("email", v)}
-        style={styles.input}
-      />
+        <TextInput
+          label="Full Name"
+          mode="outlined"
+          value={form.name}
+          onChangeText={(v) => handleChange("name", v)}
+          style={styles.input}
+        />
 
-      <TextInput
-        label="Password"
-        mode="outlined"
-        value={form.password}
-        onChangeText={(v) => handleChange("password", v)}
-        secureTextEntry={!showPassword}
-        right={
-          <TextInput.Icon
-            icon={showPassword ? "eye-off" : "eye"}
-            onPress={() => setShowPassword(!showPassword)}
-          />
-        }
-        style={styles.input}
-      />
+        <TextInput
+          label="Username"
+          mode="outlined"
+          value={form.username}
+          onChangeText={(v) => handleChange("username", v)}
+          style={styles.input}
+        />
 
-      <TextInput
-        label="Confirm Password"
-        mode="outlined"
-        value={form.confirm_password}
-        onChangeText={(v) => handleChange("confirm_password", v)}
-        secureTextEntry={!showConfirm}
-        right={
-          <TextInput.Icon
-            icon={showConfirm ? "eye-off" : "eye"}
-            onPress={() => setShowConfirm(!showConfirm)}
-          />
-        }
-        style={styles.input}
-      />
+        <TextInput
+          label="Email"
+          mode="outlined"
+          value={form.email}
+          onChangeText={(v) => handleChange("email", v)}
+          style={styles.input}
+        />
 
-      <Button
-        mode="contained"
-        onPress={handleRegister}
-        style={styles.button}
-        buttonColor="#E91E63"
-        disabled={loading}
-      >
-        {loading ? <ActivityIndicator color="#fff" /> : "Register"}
-      </Button>
+        <TextInput
+          label="Password"
+          mode="outlined"
+          value={form.password}
+          onChangeText={(v) => handleChange("password", v)}
+          secureTextEntry={!showPassword}
+          right={
+            <TextInput.Icon
+              icon={showPassword ? "eye-off" : "eye"}
+              onPress={() => setShowPassword(!showPassword)}
+            />
+          }
+          style={styles.input}
+        />
 
-      <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-        <Text style={styles.link}>Already have an account? Login</Text>
-      </TouchableOpacity>
+        <TextInput
+          label="Confirm Password"
+          mode="outlined"
+          value={form.confirm_password}
+          onChangeText={(v) => handleChange("confirm_password", v)}
+          secureTextEntry={!showConfirm}
+          right={
+            <TextInput.Icon
+              icon={showConfirm ? "eye-off" : "eye"}
+              onPress={() => setShowConfirm(!showConfirm)}
+            />
+          }
+          style={styles.input}
+        />
+
+        <Button
+          mode="contained"
+          onPress={handleRegister}
+          style={styles.button}
+          buttonColor="#E91E63"
+          disabled={loading}
+        >
+          {loading ? <ActivityIndicator color="#fff" /> : "Register"}
+        </Button>
+
+        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+          <Text style={styles.link}>Already have an account? Login</Text>
+        </TouchableOpacity>
+      </Surface>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", paddingHorizontal: 24, backgroundColor: "#fff" },
-  title: { textAlign: "center", marginBottom: 30, fontWeight: "700", color: "#E91E63" },
-  input: { marginBottom: 16 },
-  button: { marginTop: 10, borderRadius: 10, paddingVertical: 6 },
-  link: { textAlign: "center", color: "#E91E63", marginTop: 20, fontWeight: "600" },
+  screen: {
+    flex: 1,
+    backgroundColor: "#F6F7FB",
+  },
+
+  header: {
+    height: 160,
+    backgroundColor: "#E91E63",
+    justifyContent: "flex-end",
+    padding: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 6,
+  },
+
+  headerText: {
+    color: "#FFF",
+    fontSize: 28,
+    fontWeight: "800",
+  },
+
+  card: {
+    marginTop: -60,
+    marginHorizontal: 20,
+    backgroundColor: "#fff",
+    padding: 25,
+    borderRadius: 20,
+    elevation: 10,
+  },
+
+  title: {
+    textAlign: "center",
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 5,
+    color: "#E91E63",
+  },
+
+  subtitle: {
+    textAlign: "center",
+    color: "#555",
+    marginBottom: 25,
+    fontSize: 14,
+  },
+
+  input: {
+    marginBottom: 16,
+    backgroundColor: "#FAFAFA",
+    borderRadius: 10,
+  },
+
+  button: {
+    marginTop: 10,
+    borderRadius: 10,
+    paddingVertical: 6,
+  },
+
+  link: {
+    textAlign: "center",
+    color: "#E91E63",
+    marginTop: 18,
+    fontWeight: "600",
+    fontSize: 14,
+  },
 });
