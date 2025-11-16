@@ -16,11 +16,12 @@ import {
   IconButton,
 } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
-
-// ⚠️ IMPORTANT: Replace with your machine's IP (not localhost)
-const BASE_URL = "http://192.168.1.4:5000"; // CHANGE THIS
+import API from "../api/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function HostEventScreen({ navigation }) {
+  const { user } = useAuth();
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -37,14 +38,8 @@ export default function HostEventScreen({ navigation }) {
   const [snack, setSnack] = useState({ visible: false, message: "", type: "info" });
   const [touched, setTouched] = useState({});
 
-  // 🔑 get token (must already be saved at login)
-  const token = global.authToken || "";
-
   const handleChange = (k, v) => setForm({ ...form, [k]: v });
 
-  // ============================
-  // IMAGE PICKING
-  // ============================
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
@@ -55,7 +50,6 @@ export default function HostEventScreen({ navigation }) {
 
     if (!result.canceled) {
       const uris = result.assets.map((img) => img.uri);
-
       setForm((prev) => ({
         ...prev,
         images: [...prev.images, ...uris].slice(0, 10),
@@ -70,9 +64,6 @@ export default function HostEventScreen({ navigation }) {
     }));
   };
 
-  // ============================
-  // VALIDATION
-  // ============================
   const validate = () => {
     const err = {};
     if (!form.title.trim()) err.title = "Required";
@@ -85,9 +76,6 @@ export default function HostEventScreen({ navigation }) {
 
   const errors = validate();
 
-  // ============================
-  // SUBMIT EVENT REQUEST
-  // ============================
   const submit = async () => {
     setTouched({
       title: true,
@@ -105,40 +93,20 @@ export default function HostEventScreen({ navigation }) {
     try {
       setLoading(true);
 
-      const res = await fetch(`${BASE_URL}/api/events/request`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // 🔥 token required
-        },
-        body: JSON.stringify({
-          ...form,
-          images: form.images, // 🔥 MUST match backend Json field
-        }),
+      const res = await API.post("/events/request", {
+        ...form,
+        createdBy: user?.id || null,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setSnack({
-          visible: true,
-          message: data.ERROR || data.message || "Failed",
-          type: "error",
-        });
-        setLoading(false);
-        return;
-      }
-
-      setSnack({
-        visible: true,
-        message: "Event request submitted!",
-        type: "success",
-      });
-
+      setSnack({ visible: true, message: "Event request submitted!", type: "success" });
       setLoading(false);
       setTimeout(() => navigation.goBack(), 1200);
-    } catch (e) {
-      setSnack({ visible: true, message: "Network error", type: "error" });
+    } catch (err) {
+      setSnack({
+        visible: true,
+        message: err.response?.data?.ERROR || "Failed",
+        type: "error",
+      });
       setLoading(false);
     }
   };
@@ -148,7 +116,6 @@ export default function HostEventScreen({ navigation }) {
       <Surface style={styles.card}>
         <Text style={styles.title}>Host an Event</Text>
 
-        {/* TEXT INPUTS */}
         <TextInput
           label="Event Title *"
           mode="outlined"
@@ -230,7 +197,6 @@ export default function HostEventScreen({ navigation }) {
           onChangeText={(v) => handleChange("contact", v)}
         />
 
-        {/* IMAGES */}
         <Text style={styles.subHeading}>Upload Event Images (min 4) *</Text>
 
         <View style={styles.imageGrid}>
@@ -279,28 +245,13 @@ export default function HostEventScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { padding: 16 },
   card: { padding: 18, borderRadius: 14, elevation: 3 },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#E91E63",
-    marginBottom: 10,
-  },
+  title: { fontSize: 20, fontWeight: "700", color: "#E91E63", marginBottom: 10 },
   input: { marginBottom: 12 },
-  subHeading: {
-    fontWeight: "600",
-    marginTop: 12,
-    marginBottom: 6,
-    color: "#444",
-  },
+  subHeading: { fontWeight: "600", marginTop: 12, marginBottom: 6, color: "#444" },
   imageGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   imageWrapper: { position: "relative" },
   image: { width: 90, height: 90, borderRadius: 10 },
-  removeBtn: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "#fff",
-  },
+  removeBtn: { position: "absolute", top: -8, right: -8, backgroundColor: "#fff" },
   addImageBox: {
     width: 90,
     height: 90,

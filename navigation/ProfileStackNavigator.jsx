@@ -10,13 +10,13 @@ export default function ProfileStackNavigator() {
     <Stack.Navigator>
       <Stack.Screen 
         name="ProfileMain" 
-        component={ProfileScreen} 
-        options={{ headerShown: false }} 
+        component={ProfileScreen}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen 
         name="EditProfile" 
-        component={EditProfileScreen} 
+        component={EditProfileScreen}
         options={{
           title: "Edit Profile",
           headerShown: true,
