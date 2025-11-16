@@ -1,33 +1,34 @@
-import * as React from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  ScrollView 
-} from 'react-native';
+import * as React from "react";
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  ImageBackground,
+  TouchableOpacity,
+} from "react-native";
 import {
   Appbar,
   Searchbar,
-  Surface,
   Text,
   Button,
-  Card,
-} from 'react-native-paper';
-import EventSection from '../components/EventSection';
+  Surface,
+} from "react-native-paper";
+import EventSection from "../components/EventSection";
 import {
   pastEvents,
   comingEvents,
   techEvents,
   sportsEvents,
-} from '../data/eventsData';
+} from "../data/eventsData";
 
 export default function HomeScreen({ navigation }) {
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   const sections = [
-    { id: '1', title: "🎓 Coming Up!", data: comingEvents },
-    { id: '2', title: "🎭 The Past Ones", data: pastEvents },
-    { id: '3', title: "💡 Tech Talks", data: techEvents },
-    { id: '4', title: "🏅 Sports & Competitions", data: sportsEvents },
+    { id: "1", title: "🎓 Coming Up!", data: comingEvents },
+    { id: "2", title: "🎭 The Past Ones", data: pastEvents },
+    { id: "3", title: "💡 Tech Talks", data: techEvents },
+    { id: "4", title: "🏅 Sports & Competitions", data: sportsEvents },
   ];
 
   return (
@@ -36,10 +37,10 @@ export default function HomeScreen({ navigation }) {
       contentContainerStyle={styles.container}
     >
       <Appbar.Header style={styles.appbar}>
-        <Text variant="titleLarge" style={styles.appName}>
+        <Text variant="headlineSmall" style={styles.appName}>
           CampusConnect
         </Text>
-        <Appbar.Action icon="bell-outline" onPress={() => {}} />
+        <Appbar.Action icon="bell-outline" />
       </Appbar.Header>
 
       <View style={styles.searchContainer}>
@@ -51,73 +52,71 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
-      <Card style={styles.bannerCard} mode="elevated">
-        <Card.Content>
-          <Text variant="titleLarge" style={styles.bannerTitle}>
-            Discover, Engage, & Participate in Campus Events!
+      <ImageBackground
+        source={{
+          uri: "https://picsum.photos/seed/campus-banner/800/500",
+        }}
+        style={styles.heroBanner}
+        imageStyle={{ borderRadius: 18 }}
+      >
+        <View style={styles.heroOverlay}>
+          <Text style={styles.heroTitle}>Discover Campus Events</Text>
+          <Text style={styles.heroSubtitle}>
+            Explore workshops, fests, sports & more!
           </Text>
-          <Text variant="bodyMedium" style={styles.bannerText}>
-            Find upcoming fests, workshops, and competitions across your campus —
-            all in one place.
-          </Text>
-        </Card.Content>
-      </Card>
+        </View>
+      </ImageBackground>
 
-      {
-        sections.map((section) => (
-          <EventSection key={section.id} title={section.title} data={section.data} />
-        ))
-      }
+      {sections.map((section) => (
+        <View key={section.id} style={{ marginTop: 20 }}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
 
-      <View style={styles.viewAllContainer}>
-        <Button
-          mode="contained"
-          onPress={() => navigation.navigate('Events')}
-          style={styles.viewAllBtn}
-        >
-          View All Events
-        </Button>
-      </View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Events")}
+            >
+              <Text style={styles.viewAllText}>View All →</Text>
+            </TouchableOpacity>
+          </View>
+
+          <EventSection title="" data={section.data} />
+        </View>
+      ))}
 
       <Surface style={styles.hostCard}>
-        <Text variant="headlineSmall" style={styles.hostTitle}>
-          🎤 Want to Host an Event?
-        </Text>
-        <Text variant="bodyMedium" style={styles.hostText}>
+        <Text style={styles.hostTitle}>🎤 Want to Host an Event?</Text>
+        <Text style={styles.hostText}>
           Submit your event details and get featured on CampusConnect!
         </Text>
+
         <Button
           mode="contained"
           style={styles.hostBtn}
-          onPress={() => navigation.navigate('HostEvent')}
+          onPress={() => navigation.navigate("HostEvent")}
         >
           Raise a Request
         </Button>
       </Surface>
 
       <View style={styles.statsRow}>
-        <Surface style={styles.statCard}>
-          <Text variant="headlineMedium" style={styles.statNumber}>50+</Text>
-          <Text variant="bodySmall">Colleges</Text>
-        </Surface>
-        <Surface style={styles.statCard}>
-          <Text variant="headlineMedium" style={styles.statNumber}>200+</Text>
-          <Text variant="bodySmall">Events</Text>
-        </Surface>
-        <Surface style={styles.statCard}>
-          <Text variant="headlineMedium" style={styles.statNumber}>5K+</Text>
-          <Text variant="bodySmall">Participants</Text>
-        </Surface>
+        {[
+          { num: "50+", label: "Colleges" },
+          { num: "200+", label: "Events" },
+          { num: "5K+", label: "Participants" },
+        ].map((item, index) => (
+          <Surface key={index} style={styles.statCard}>
+            <Text style={styles.statNumber}>{item.num}</Text>
+            <Text style={styles.statLabel}>{item.label}</Text>
+          </Surface>
+        ))}
       </View>
 
-      <Surface style={styles.aboutCard} elevation={2}>
-        <Text variant="headlineSmall" style={styles.aboutTitle}>
-          About CampusConnect
-        </Text>
-        <Text variant="bodyMedium" style={styles.aboutText}>
-          CampusConnect is your one-stop platform to explore, register, and
-          participate in college events — from cultural fests to tech summits.
-          Discover opportunities, meet new people, and grow your skills — all in one place!
+      <Surface style={styles.aboutCard}>
+        <Text style={styles.aboutTitle}>About CampusConnect</Text>
+        <Text style={styles.aboutText}>
+          CampusConnect is your one-stop platform to explore, register,
+          and participate in college events — from cultural fests to tech
+          summits. Discover opportunities and grow your skills!
         </Text>
       </Surface>
     </ScrollView>
@@ -126,126 +125,135 @@ export default function HomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fafafa',
-    paddingBottom: 40,
+    backgroundColor: "#FDF7F9",
+    paddingBottom: 50,
   },
 
   appbar: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     elevation: 3,
     paddingHorizontal: 16,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
+
   appName: {
-    color: '#E91E63',
-    fontWeight: '700',
+    color: "#E91E63",
+    fontWeight: "800",
   },
 
   searchContainer: {
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingTop: 14,
   },
   searchbar: {
-    borderRadius: 12,
+    borderRadius: 14,
+    elevation: 2,
   },
 
-  bannerCard: {
+  heroBanner: {
+    height: 200,
     marginHorizontal: 16,
     marginTop: 18,
-    borderRadius: 16,
-    backgroundColor: '#E91E63',
+    borderRadius: 18,
+    overflow: "hidden",
+    justifyContent: "flex-end",
   },
-  bannerTitle: {
+  heroOverlay: {
+    backgroundColor: "rgba(0,0,0,0.35)",
+    padding: 14,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+  },
+  heroTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  heroSubtitle: {
+    color: "#eee",
+    marginTop: 3,
+  },
+
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 18,
+    marginBottom: 4,
+  },
+  sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 6,
+    fontWeight: "700",
+    color: "#C2185B",
   },
-  bannerText: {
-    color: '#fff',
-    opacity: 0.9,
-  },
-
-  categoryScroll: {
-    paddingHorizontal: 12,
-    paddingTop: 16,
-  },
-  categoryChip: {
-    marginRight: 8,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-    borderColor: '#E91E63',
-  },
-
-  viewAllContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  viewAllBtn: {
-    width: '70%',
-    borderRadius: 12,
-    backgroundColor: '#E91E63',
+  viewAllText: {
+    color: "#E91E63",
+    marginTop: 4,
+    fontWeight: "600",
   },
 
   hostCard: {
     marginHorizontal: 16,
-    marginTop: 24,
+    marginTop: 30,
     padding: 20,
     borderRadius: 18,
-    backgroundColor: '#FFE5EC',
-    alignItems: 'center',
+    backgroundColor: "#FFE4EC",
+    alignItems: "center",
   },
   hostTitle: {
-    color: '#C2185B',
-    fontWeight: '700',
+    color: "#C2185B",
+    fontWeight: "700",
+    fontSize: 18,
     marginBottom: 6,
   },
   hostText: {
-    color: '#444',
-    textAlign: 'center',
-    marginBottom: 10,
+    color: "#555",
+    textAlign: "center",
+    marginBottom: 12,
   },
   hostBtn: {
-    borderRadius: 10,
-    backgroundColor: '#E91E63',
+    borderRadius: 8,
+    backgroundColor: "#E91E63",
   },
 
   statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 30,
-    marginHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 28,
   },
   statCard: {
     width: 100,
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#fff',
+    paddingVertical: 12,
+    alignItems: "center",
     borderRadius: 14,
+    backgroundColor: "#fff",
     elevation: 2,
   },
   statNumber: {
-    color: '#E91E63',
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#E91E63",
+  },
+  statLabel: {
+    color: "#444",
+    marginTop: 2,
+    fontWeight: "500",
   },
 
   aboutCard: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 16,
-    marginTop: 30,
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: '#fff',
+    margin: 18,
+    padding: 18,
+    borderRadius: 18,
+    backgroundColor: "#fff",
+    elevation: 2,
   },
   aboutTitle: {
-    color: '#E91E63',
-    fontWeight: '700',
+    color: "#E91E63",
+    fontWeight: "700",
+    fontSize: 18,
     marginBottom: 6,
   },
   aboutText: {
-    color: '#444',
-    height: 100,
+    color: "#444",
+    lineHeight: 20,
   },
 });

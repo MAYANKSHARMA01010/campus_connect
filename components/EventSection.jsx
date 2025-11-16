@@ -37,14 +37,6 @@ export default function EventSection({ title, data }) {
 
   return (
     <Surface style={styles.section} elevation={0}>
-      {/* Title */}
-      <View style={styles.titleContainer}>
-        <View style={styles.line} />
-        <Text variant="titleMedium" style={styles.sectionTitle}>
-          IN THE SPOTLIGHT · {title.toUpperCase()}
-        </Text>
-        <View style={styles.line} />
-      </View>
 
       <FlatList
         data={data.slice(0, 6)}
@@ -64,34 +56,9 @@ const styles = StyleSheet.create({
     marginTop: 22,
     marginBottom: 18,
   },
-
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-    paddingHorizontal: 16,
-  },
-
-  sectionTitle: {
-    fontWeight: '700',
-    color: '#E91E63',
-    fontSize: 15,
-    letterSpacing: 1.5,
-    textAlign: 'center',
-    marginHorizontal: 8,
-  },
-
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E0E0E0',
-  },
-
   scrollContainer: {
     paddingHorizontal: 16,
   },
-
   card: {
     width: 300,
     height: 360,
@@ -101,43 +68,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     elevation: 6,
   },
-
   bgImage: {
     flex: 1,
     justifyContent: 'flex-end',
   },
-
   bgImageStyle: {
     borderRadius: 20,
   },
-
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.35)',
   },
-
   overlayContent: {
     padding: 18,
   },
-
   overlayTitle: {
     color: '#fff',
     fontWeight: '800',
     fontSize: 22,
     marginBottom: 4,
   },
-
   overlayDate: {
     color: '#FFD8E6',
     fontSize: 13,
     marginBottom: 8,
   },
-
   overlaySummary: {
     color: '#ffffffcc',
     fontSize: 14,
   },
-
   viewMoreCard: {
     width: 300,
     height: 360,
@@ -150,7 +109,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 4,
   },
-
   viewMoreText: {
     color: '#E91E63',
     fontWeight: '700',
