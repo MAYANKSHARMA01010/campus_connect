@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
-import { Text, TextInput, Button, ActivityIndicator, Surface, Menu } from "react-native-paper";
+import {
+  Text,
+  TextInput,
+  Button,
+  ActivityIndicator,
+  Surface,
+  Menu,
+} from "react-native-paper";
 import { useAuth } from "../context/AuthContext";
 
 export default function EditProfileScreen({ navigation }) {
@@ -13,16 +20,23 @@ export default function EditProfileScreen({ navigation }) {
   });
 
   const [loading, setLoading] = useState(false);
-
   const [genderMenuVisible, setGenderMenuVisible] = useState(false);
 
-  const handleChange = (key, val) => setForm({ ...form, [key]: val });
+  const handleChange = (key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   const handleSave = async () => {
-    setLoading(true);
-    await updateProfile(form);
-    setLoading(false);
-    navigation.goBack();
+    try {
+      setLoading(true);
+      await updateProfile(form);
+      navigation.goBack();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,17 +49,17 @@ export default function EditProfileScreen({ navigation }) {
         <TextInput
           label="Full Name"
           mode="outlined"
+          style={styles.input}
           value={form.name}
           onChangeText={(v) => handleChange("name", v)}
-          style={styles.input}
         />
 
         <TextInput
           label="Username"
           mode="outlined"
+          style={styles.input}
           value={form.username}
           onChangeText={(v) => handleChange("username", v)}
-          style={styles.input}
         />
 
         <Menu
@@ -58,7 +72,12 @@ export default function EditProfileScreen({ navigation }) {
               value={form.gender}
               editable={false}
               style={styles.input}
-              right={<TextInput.Icon icon="chevron-down" onPress={() => setGenderMenuVisible(true)} />}
+              right={
+                <TextInput.Icon
+                  icon="chevron-down"
+                  onPress={() => setGenderMenuVisible(true)}
+                />
+              }
             />
           }
         >
@@ -102,9 +121,9 @@ export default function EditProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: "#F8F9FA",
     padding: 20,
     justifyContent: "center",
-    backgroundColor: "#F8F9FA",
   },
   card: {
     width: "100%",
@@ -124,7 +143,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
   },
   button: {
-    marginTop: 10,
+    marginTop: 12,
     borderRadius: 10,
     paddingVertical: 6,
   },
