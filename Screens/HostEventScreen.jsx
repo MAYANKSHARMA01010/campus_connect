@@ -107,7 +107,7 @@ export default function HostEventScreen({ navigation }) {
       });
 
       setLoading(false);
-      setTimeout(() => navigation.navigate("Home"), 1200);
+      setTimeout(() => navigation.goBack(), 1200);
     } catch (err) {
       setSnack({
         visible: true,
@@ -121,14 +121,14 @@ export default function HostEventScreen({ navigation }) {
   return (
     <>
       <StatusBar barStyle="light-content" />
-      {/* Premium Header */}
+
       <Appbar.Header
         style={{
           backgroundColor: "#E91E63",
           elevation: 10,
         }}
       >
-        <Appbar.BackAction onPress={() => navigation.navigate("Home")} />
+        <Appbar.BackAction onPress={() => navigation.goBack()} />
         <Appbar.Content
           title="Host an Event"
           titleStyle={{ fontSize: 20, fontWeight: "700", color: "white" }}
@@ -142,7 +142,6 @@ export default function HostEventScreen({ navigation }) {
             Fill the details below to host a campus event 🎉
           </Text>
 
-          {/* FORM FIELDS */}
           <TextInput
             label="Event Title *"
             mode="outlined"
@@ -224,7 +223,6 @@ export default function HostEventScreen({ navigation }) {
             onChangeText={(v) => handleChange("contact", v)}
           />
 
-          {/* IMAGE UPLOAD */}
           <Text style={styles.sectionTitle}>Upload Event Images *</Text>
           <Text style={styles.sectionSubtitle}>Minimum 4 images required</Text>
 
@@ -284,7 +282,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     backgroundColor: "white",
   },
-
   pageTitle: {
     fontSize: 24,
     fontWeight: "800",
@@ -296,9 +293,9 @@ const styles = StyleSheet.create({
     color: "#777",
     marginBottom: 20,
   },
-
-  input: { marginBottom: 12 },
-
+  input: {
+    marginBottom: 12,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
@@ -309,7 +306,6 @@ const styles = StyleSheet.create({
     color: "#777",
     marginBottom: 8,
   },
-
   imageGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
