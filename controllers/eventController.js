@@ -10,10 +10,14 @@ const createEventRequestController = async (req, res) => {
             date,
             time,
             location,
-            imageUrl,
+            images,
             hostName,
             contact
         } = req.body;
+
+        if (!images || !Array.isArray(images) || images.length < 1) {
+            return res.status(400).json({ ERROR: "At least one image is required" });
+        }
 
         const eventRequest = await prisma.eventRequest.create({
             data: {
@@ -23,16 +27,20 @@ const createEventRequestController = async (req, res) => {
                 date: new Date(date),
                 time,
                 location,
-                imageUrl,
+                images,
                 hostName,
                 contact,
                 createdBy: req.user.id,
             },
         });
 
-        res.status(201).json({ message: "Event request submitted", eventRequest });
-    } 
+        res.status(201).json({
+            message: "Event request submitted",
+            eventRequest
+        });
+    }
     catch (error) {
+        console.error("CREATE REQUEST ERROR:", error);
         res.status(500).json({ ERROR: "Internal server error" });
     }
 };
@@ -46,8 +54,9 @@ const getEventRequestsController = async (req, res) => {
         });
 
         res.json(requests);
-    } 
+    }
     catch (error) {
+        console.error("GET REQUESTS ERROR:", error);
         res.status(500).json({ ERROR: "Error fetching event requests" });
     }
 };
@@ -57,8 +66,12 @@ const approveEventController = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const request = await prisma.eventRequest.findUnique({ where: { id: Number(id) } });
-        if (!request) return res.status(404).json({ ERROR: "Request not found" });
+        const request = await prisma.eventRequest.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!request)
+            return res.status(404).json({ ERROR: "Request not found" });
 
         const event = await prisma.event.create({
             data: {
@@ -68,17 +81,20 @@ const approveEventController = async (req, res) => {
                 date: request.date,
                 time: request.time,
                 location: request.location,
-                imageUrl: request.imageUrl,
+                images: request.images,
                 hostName: request.hostName,
                 contact: request.contact,
             },
         });
 
-        await prisma.eventRequest.delete({ where: { id: Number(id) } });
+        await prisma.eventRequest.delete({
+            where: { id: Number(id) }
+        });
 
         res.json({ message: "Event approved", event });
-    } 
+    }
     catch (error) {
+        console.error("APPROVE ERROR:", error);
         res.status(500).json({ ERROR: "Error approving event" });
     }
 };
@@ -91,11 +107,13 @@ const getAllEventsController = async (req, res) => {
         });
 
         res.json(events);
-    } 
+    }
     catch (error) {
+        console.error("GET EVENTS ERROR:", error);
         res.status(500).json({ ERROR: "Error fetching events" });
     }
 };
+
 
 module.exports = {
   createEventRequestController,
