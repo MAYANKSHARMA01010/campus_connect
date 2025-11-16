@@ -1,6 +1,7 @@
 const express = require("express");
 const corsMiddleware = require("./config/cors.js");
 const authRouter = require("./routes/authRoute.js");
+const eventRouter = require("./routes/eventRouter");
 require("dotenv").config();
 
 const app = express();
@@ -10,6 +11,7 @@ app.use(corsMiddleware);
 app.use(express.json());
 
 app.use("/api/auth", authRouter)
+app.use("/api/events", eventRouter);
 
 app.get("/", (req, res) => {
   res.status(200).send("<h1>Backend Running Successfully 🚀</h1>");
