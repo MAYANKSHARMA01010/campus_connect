@@ -1,40 +1,43 @@
 import * as React from 'react';
-import { FlatList, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { Card, Text, Surface } from 'react-native-paper';
+import { FlatList, StyleSheet, View, TouchableOpacity, ImageBackground } from 'react-native';
+import { Text, Surface } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 
 export default function EventSection({ title, data }) {
   const navigation = useNavigation();
 
   const renderCard = ({ item }) => (
-    <Card style={styles.card} mode="elevated">
-      <Card.Cover source={{ uri: item.img }} style={styles.image} />
-      <Card.Content style={styles.cardContent}>
-        <Text variant="titleMedium" style={styles.cardTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text variant="bodySmall" style={styles.date}>
-          {item.date}
-        </Text>
-        <Text variant="bodyMedium" numberOfLines={2} style={styles.summary}>
-          {item.summary}
-        </Text>
-      </Card.Content>
-    </Card>
+    <TouchableOpacity activeOpacity={0.9} style={styles.card}>
+      <ImageBackground source={{ uri: item.img }} style={styles.bgImage} imageStyle={styles.bgImageStyle}>
+
+        <View style={styles.gradientOverlay} />
+
+        <View style={styles.overlayContent}>
+          <Text variant="titleLarge" style={styles.overlayTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.overlayDate}>{item.date}</Text>
+          <Text style={styles.overlaySummary} numberOfLines={2}>
+            {item.summary}
+          </Text>
+        </View>
+      </ImageBackground>
+    </TouchableOpacity>
   );
 
   const renderViewMoreCard = () => (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={() => navigation.navigate('Events')}>
-      <View style={styles.viewMoreCard}>
-        <Text style={styles.viewMoreText}>View More</Text>
-      </View>
+      onPress={() => navigation.navigate('Events')}
+      style={styles.viewMoreCard}
+    >
+      <Text style={styles.viewMoreText}>View More</Text>
     </TouchableOpacity>
   );
 
   return (
     <Surface style={styles.section} elevation={0}>
+      {/* Title */}
       <View style={styles.titleContainer}>
         <View style={styles.line} />
         <Text variant="titleMedium" style={styles.sectionTitle}>
@@ -61,6 +64,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
     marginBottom: 18,
   },
+
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -68,6 +72,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     paddingHorizontal: 16,
   },
+
   sectionTitle: {
     fontWeight: '700',
     color: '#E91E63',
@@ -76,65 +81,80 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: 8,
   },
+
   line: {
     flex: 1,
     height: 1,
     backgroundColor: '#E0E0E0',
   },
+
   scrollContainer: {
     paddingHorizontal: 16,
   },
 
-  // Normal fixed card sizing (no Dimensions)
   card: {
-    width: 280,
-    height: 320,
-    borderRadius: 18,
-    marginRight: 16,
-    backgroundColor: '#fff',
+    width: 300,
+    height: 360,
+    borderRadius: 20,
     overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: 180,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-  },
-  cardContent: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  cardTitle: {
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  date: {
-    color: '#777',
-    marginTop: 4,
-    fontSize: 12,
-  },
-  summary: {
-    marginTop: 6,
-    color: '#444',
-    fontSize: 13,
+    marginRight: 18,
+    backgroundColor: '#fff',
+    elevation: 6,
   },
 
-  // Matching "View More" card
+  bgImage: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+
+  bgImageStyle: {
+    borderRadius: 20,
+  },
+
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+
+  overlayContent: {
+    padding: 18,
+  },
+
+  overlayTitle: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 22,
+    marginBottom: 4,
+  },
+
+  overlayDate: {
+    color: '#FFD8E6',
+    fontSize: 13,
+    marginBottom: 8,
+  },
+
+  overlaySummary: {
+    color: '#ffffffcc',
+    fontSize: 14,
+  },
+
   viewMoreCard: {
-    width: 280,
-    height: 320,
-    borderRadius: 18,
-    marginRight: 16,
-    borderWidth: 1.5,
+    width: 300,
+    height: 360,
+    borderRadius: 20,
+    marginRight: 18,
+    borderWidth: 1.6,
     borderColor: '#E91E63',
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 4,
   },
+
   viewMoreText: {
     color: '#E91E63',
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 18,
     letterSpacing: 0.5,
   },
 });
