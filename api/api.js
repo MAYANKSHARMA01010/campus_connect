@@ -1,8 +1,10 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+export const BASE_URL="https://campus-connect-backend-e7uf.onrender.com"; 
+
 const API = axios.create({
-  baseURL: "https://campus-connect-backend-e7uf.onrender.com/api/auth",
+  baseURL: `${BASE_URL}/api`,
 });
 
 API.interceptors.request.use(async (config) => {

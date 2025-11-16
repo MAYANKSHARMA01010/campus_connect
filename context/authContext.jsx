@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import API from "../api/api";
 import { Alert } from "react-native";
+import API from "../api/api";
 
 const AuthContext = createContext();
 
@@ -19,25 +19,24 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (data) => {
     try {
-      const res = await API.post("/register", data);
+      const res = await API.post("/auth/register", data);
       Alert.alert("Success", "Account created successfully!");
       return res.data;
-    } 
-    catch (err) {
+    } catch (err) {
       Alert.alert("Error", err.response?.data?.ERROR || "Registration failed");
+      return null;
     }
   };
 
   const login = async (credentials) => {
     try {
-      const res = await API.post("/login", credentials);
+      const res = await API.post("/auth/login", credentials);
       const token = res.data.token;
       await AsyncStorage.setItem("token", token);
       setUser(res.data.user);
       Alert.alert("Success", "Login successful!");
       return true;
-    } 
-    catch (err) {
+    } catch (err) {
       Alert.alert("Error", err.response?.data?.ERROR || "Invalid credentials");
       return false;
     }
@@ -45,41 +44,44 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const res = await API.get("/me");
+      const res = await API.get("/auth/me");
       setUser(res.data.user);
-    } 
-    catch (err) {
-      console.error("Fetch user failed", err.response?.data);
+    } catch (err) {
+      await AsyncStorage.removeItem("token");
+      setUser(null);
     }
   };
 
   const updateProfile = async (updates) => {
     try {
-      const res = await API.put("/update", updates);
+      const res = await API.put("/auth/update", updates);
       setUser(res.data.user);
       Alert.alert("Success", "Profile updated successfully!");
-    } 
-    catch (err) {
+    } catch (err) {
       Alert.alert("Error", err.response?.data?.ERROR || "Update failed");
     }
   };
 
   const logout = async () => {
     try {
-      await API.post("/logout");
-    } 
-    catch (err) {
-      console.error("Logout failed", err.response?.data);
-    }
+      await API.post("/auth/logout");
+    } catch {}
     await AsyncStorage.removeItem("token");
     setUser(null);
   };
 
-  const isLoggedIn = !!user;
-
   return (
     <AuthContext.Provider
-      value={{ user, loading, isLoggedIn, register, login, logout, updateProfile }}
+      value={{
+        user,
+        loading,
+        isLoggedIn: !!user,
+        register,
+        login,
+        logout,
+        updateProfile,
+        fetchUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

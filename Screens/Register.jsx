@@ -36,12 +36,10 @@ export default function RegisterScreen({ navigation }) {
   return (
     <View style={styles.screen}>
 
-      {/* CAMPUS TOP HEADER */}
       <View style={styles.header}>
         <Text style={styles.headerText}>Campus Connect</Text>
       </View>
 
-      {/* FORM CARD */}
       <Surface style={styles.card}>
         <Text style={styles.title}>Create Account ✨</Text>
         <Text style={styles.subtitle}>Join your campus community</Text>
