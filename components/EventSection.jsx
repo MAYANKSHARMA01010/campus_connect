@@ -1,19 +1,36 @@
-import * as React from 'react';
-import { FlatList, StyleSheet, View, TouchableOpacity, ImageBackground } from 'react-native';
-import { Text, Surface } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import * as React from "react";
+import {
+  FlatList,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  ImageBackground,
+} from "react-native";
+import { Text, Surface } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
 
 export default function EventSection({ title, data }) {
   const navigation = useNavigation();
 
   const renderCard = ({ item }) => (
-    <TouchableOpacity activeOpacity={0.9} style={styles.card}>
-      <ImageBackground source={{ uri: item.img }} style={styles.bgImage} imageStyle={styles.bgImageStyle}>
-
+    <TouchableOpacity
+      activeOpacity={0.9}
+      style={styles.card}
+      onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
+    >
+      <ImageBackground
+        source={{ uri: item.img }}
+        style={styles.bgImage}
+        imageStyle={styles.bgImageStyle}
+      >
         <View style={styles.gradientOverlay} />
 
         <View style={styles.overlayContent}>
-          <Text variant="titleLarge" style={styles.overlayTitle} numberOfLines={1}>
+          <Text
+            variant="titleLarge"
+            style={styles.overlayTitle}
+            numberOfLines={1}
+          >
             {item.title}
           </Text>
           <Text style={styles.overlayDate}>{item.date}</Text>
@@ -28,7 +45,7 @@ export default function EventSection({ title, data }) {
   const renderViewMoreCard = () => (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={() => navigation.navigate('Events')}
+      onPress={() => navigation.navigate("Events")}
       style={styles.viewMoreCard}
     >
       <Text style={styles.viewMoreText}>View More</Text>
@@ -37,7 +54,6 @@ export default function EventSection({ title, data }) {
 
   return (
     <Surface style={styles.section} elevation={0}>
-
       <FlatList
         data={data.slice(0, 6)}
         horizontal
@@ -63,38 +79,38 @@ const styles = StyleSheet.create({
     width: 300,
     height: 360,
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginRight: 18,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     elevation: 6,
   },
   bgImage: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   bgImageStyle: {
     borderRadius: 20,
   },
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: "rgba(0,0,0,0.35)",
   },
   overlayContent: {
     padding: 18,
   },
   overlayTitle: {
-    color: '#fff',
-    fontWeight: '800',
+    color: "#fff",
+    fontWeight: "800",
     fontSize: 22,
     marginBottom: 4,
   },
   overlayDate: {
-    color: '#FFD8E6',
+    color: "#FFD8E6",
     fontSize: 13,
     marginBottom: 8,
   },
   overlaySummary: {
-    color: '#ffffffcc',
+    color: "#ffffffcc",
     fontSize: 14,
   },
   viewMoreCard: {
@@ -103,15 +119,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 18,
     borderWidth: 1.6,
-    borderColor: '#E91E63',
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#E91E63",
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 4,
   },
   viewMoreText: {
-    color: '#E91E63',
-    fontWeight: '700',
+    color: "#E91E63",
+    fontWeight: "700",
     fontSize: 18,
     letterSpacing: 0.5,
   },
