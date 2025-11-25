@@ -6,7 +6,7 @@ const {
     loginUserMiddleware,
     logoutUserMiddleware,
     updateUserMiddleware,
-} = require("../middlewares/authMiddleware")
+} = require("../middlewares/userMiddleware")
 
 const {
     createUserController,
@@ -14,7 +14,7 @@ const {
     logoutUserController,
     getMeController,
     updateUserController,
-} = require("../controllers/authController")
+} = require("../controllers/userController")
 
 const { 
     authenticate 

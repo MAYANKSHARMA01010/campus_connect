@@ -12,12 +12,6 @@ enum Role {
   ADMIN
 }
 
-enum EventStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model User {
   id            Int       @id @default(autoincrement())
   name          String
@@ -28,40 +22,4 @@ model User {
   role          Role      @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  eventRequests EventRequest[]
-}
-
-model EventRequest {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String
-  category    String
-  date        DateTime
-  time        String
-  location    String
-
-  images      Json      @db.Json
-
-  hostName    String
-  contact     String
-  status      EventStatus  @default(PENDING)
-  createdBy   Int
-  user        User      @relation(fields: [createdBy], references: [id])
-  createdAt   DateTime  @default(now())
-}
-
-model Event {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String
-  category    String
-  date        DateTime
-  time        String
-  location    String
-
-  images      Json      @db.Json
-
-  hostName    String
-  contact     String
-  createdAt   DateTime  @default(now())
 }
