@@ -12,14 +12,46 @@ enum Role {
   ADMIN
 }
 
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
-  id            Int       @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   name          String
-  username      String    @unique
-  email         String    @unique
+  username      String         @unique
+  email         String         @unique
   password      String
-  gender        String    @default("Prefer not to say")
-  role          Role      @default(USER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  gender        String         @default("Prefer not to say")
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  eventRequests EventRequest[]
+}
+
+model EventRequest {
+  id           Int           @id @default(autoincrement())
+  title        String
+  description  String
+  category     String
+  date         DateTime?
+  time         String?
+  location     String?
+  hostName     String?
+  contact      String?
+  status       RequestStatus @default(PENDING)
+  createdById  Int?
+  createdBy    User?         @relation(fields: [createdById], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  images       EventImage[]
+}
+
+model EventImage {
+  id            Int          @id @default(autoincrement())
+  url           String
+  eventRequestId Int
+  eventRequest  EventRequest @relation(fields: [eventRequestId], references: [id])
 }
