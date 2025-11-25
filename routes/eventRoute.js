@@ -1,14 +1,14 @@
 const express = require("express");
 const eventRouter = express.Router();
 
-const { 
-    authenticate 
+const {
+    authenticate
 } = require("../utils/auth");
 
 const {
-  createEventController,
-  getAllEventsController,
-  getEventByIdController,
+    createEventController,
+    getAllEventsController,
+    getEventByIdController,
 } = require("../controllers/eventController");
 
 
