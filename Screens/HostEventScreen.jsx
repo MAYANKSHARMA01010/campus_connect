@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   StatusBar,
+  Text as RNText,
 } from "react-native";
 import {
   Text,
@@ -16,46 +17,67 @@ import {
   Snackbar,
   IconButton,
   Appbar,
+  ActivityIndicator,
 } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import API from "../api/api";
 import { useAuth } from "../context/AuthContext";
+
+const CLOUD_NAME = process.env.CLOUD_NAME;
+const UPLOAD_PRESET = process.env.UPLOAD_PRESET;
+
+const initialForm = {
+  title: "",
+  description: "",
+  category: "",
+  date: "",
+  time: "",
+  location: "",
+  hostName: "",
+  contact: "",
+  images: [
+    "/mnt/data/Screenshot 2025-11-25 at 10.50.03 PM.png",
+  ],
+};
 
 export default function HostEventScreen({ navigation }) {
   const { user } = useAuth();
 
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    category: "",
-    date: "",
-    time: "",
-    location: "",
-    hostName: "",
-    contact: "",
-    images: [],
-  });
-
+  const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [snack, setSnack] = useState({ visible: false, message: "", type: "info" });
   const [touched, setTouched] = useState({});
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [totalToUpload, setTotalToUpload] = useState(0);
 
   const handleChange = (k, v) => setForm({ ...form, [k]: v });
 
   const pickImages = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsMultipleSelection: true,
-      selectionLimit: 10,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        setSnack({ visible: true, message: "Gallery permission required", type: "error" });
+        return;
+      }
 
-    if (!result.canceled) {
-      const uris = result.assets.map((img) => img.uri);
-      setForm((prev) => ({
-        ...prev,
-        images: [...prev.images, ...uris].slice(0, 10),
-      }));
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsMultipleSelection: true,
+        selectionLimit: 10,
+        mediaTypes: [ImagePicker.MediaType.image],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        const uris = result.assets.map((img) => img.uri);
+        setForm((prev) => ({
+          ...prev,
+          images: [...prev.images, ...uris].slice(0, 10),
+        }));
+      }
+    } catch (err) {
+      console.error("pickImages error", err);
+      setSnack({ visible: true, message: "Failed to pick images", type: "error" });
     }
   };
 
@@ -78,6 +100,24 @@ export default function HostEventScreen({ navigation }) {
 
   const errors = validate();
 
+  async function uploadLocalImageToCloudinary(uri) {
+    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+    const data = new FormData();
+    data.append("file", `data:image/jpg;base64,${base64}`);
+    data.append("upload_preset", UPLOAD_PRESET);
+
+    const endpoint = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+    const res = await fetch(endpoint, {
+      method: "POST",
+      body: data,
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || "Cloudinary upload failed");
+    }
+    return json.secure_url;
+  }
+
   const submit = async () => {
     setTouched({
       title: true,
@@ -95,39 +135,87 @@ export default function HostEventScreen({ navigation }) {
     try {
       setLoading(true);
 
-      await API.post("/events/request", {
-        ...form,
-        createdBy: user?.id || null,
-      });
+      const localUris = form.images.filter((u) => !/^https?:\/\//i.test(u));
+      const alreadyUrls = form.images.filter((u) => /^https?:\/\//i.test(u));
 
-      setSnack({
-        visible: true,
-        message: "Event request submitted!",
-        type: "success",
-      });
+      if (localUris.length === 0) {
+        await sendEventToServer([...alreadyUrls]);
+        setLoading(false);
+        return;
+      }
 
+      setTotalToUpload(localUris.length);
+      setUploadingCount(0);
+
+      const uploadedUrls = [];
+      for (let i = 0; i < localUris.length; i++) {
+        const uri = localUris[i];
+        try {
+          const url = await uploadLocalImageToCloudinary(uri);
+          uploadedUrls.push(url);
+        } catch (err) {
+          console.error("Upload failed for", uri, err);
+          setSnack({ visible: true, message: "Image upload failed", type: "error" });
+          setLoading(false);
+          setUploadingCount(0);
+          setTotalToUpload(0);
+          return;
+        } finally {
+          setUploadingCount((c) => c + 1);
+        }
+      }
+
+      const finalUrls = [];
+      let uploadIndex = 0;
+      for (const img of form.images) {
+        if (/^https?:\/\//i.test(img)) {
+          finalUrls.push(img);
+        } else {
+          finalUrls.push(uploadedUrls[uploadIndex]);
+          uploadIndex++;
+        }
+      }
+
+      await sendEventToServer(finalUrls);
+
+      setSnack({ visible: true, message: "Event request submitted!", type: "success" });
       setLoading(false);
-      setTimeout(() => navigation.goBack(), 1200);
+      setTimeout(() => navigation.goBack(), 900);
     } catch (err) {
+      console.error(err);
       setSnack({
         visible: true,
-        message: err.response?.data?.ERROR || "Failed",
+        message: err.response?.data?.ERROR || err.message || "Failed",
         type: "error",
       });
       setLoading(false);
+      setUploadingCount(0);
+      setTotalToUpload(0);
     }
   };
+
+  async function sendEventToServer(imageUrls) {
+    const payload = {
+      title: form.title,
+      description: form.description,
+      category: form.category,
+      date: form.date ? new Date(form.date).toISOString() : null,
+      time: form.time,
+      location: form.location,
+      hostName: form.hostName,
+      contact: form.contact,
+      imageUrls,
+      createdBy: user?.id || null,
+    };
+
+    await API.post("/events/request", payload);
+  }
 
   return (
     <>
       <StatusBar barStyle="light-content" />
 
-      <Appbar.Header
-        style={{
-          backgroundColor: "#E91E63",
-          elevation: 10,
-        }}
-      >
+      <Appbar.Header style={{ backgroundColor: "#E91E63", elevation: 10 }}>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
         <Appbar.Content
           title="Host an Event"
@@ -138,9 +226,7 @@ export default function HostEventScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.container}>
         <Surface style={styles.card}>
           <Text style={styles.pageTitle}>Create Your Event</Text>
-          <Text style={styles.pageSubtitle}>
-            Fill the details below to host a campus event 🎉
-          </Text>
+          <Text style={styles.pageSubtitle}>Fill the details below to host a campus event 🎉</Text>
 
           <TextInput
             label="Event Title *"
@@ -229,7 +315,10 @@ export default function HostEventScreen({ navigation }) {
           <View style={styles.imageGrid}>
             {form.images.map((uri, index) => (
               <View key={index} style={styles.imageWrapper}>
-                <Image source={{ uri }} style={styles.image} />
+                <Image
+                  source={{ uri: /^https?:\/\//i.test(uri) ? uri : uri }}
+                  style={styles.image}
+                />
                 <IconButton
                   icon="close"
                   size={18}
@@ -249,21 +338,28 @@ export default function HostEventScreen({ navigation }) {
             {errors.images}
           </HelperText>
 
+          {uploadingCount > 0 && (
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+              <ActivityIndicator animating={true} size={20} />
+              <RNText style={{ marginLeft: 8 }}>
+                Uploading {uploadingCount} / {totalToUpload}
+              </RNText>
+            </View>
+          )}
+
           <Button
             mode="contained"
             loading={loading}
             onPress={submit}
             style={styles.submitBtn}
             buttonColor="#E91E63"
+            disabled={loading}
           >
             Submit Event Request
           </Button>
         </Surface>
 
-        <Snackbar
-          visible={snack.visible}
-          onDismiss={() => setSnack({ ...snack, visible: false })}
-        >
+        <Snackbar visible={snack.visible} onDismiss={() => setSnack({ ...snack, visible: false })}>
           {snack.message}
         </Snackbar>
       </ScrollView>
