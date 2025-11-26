@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Surface, Text, Button, Avatar, Divider } from "react-native-paper";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/UserContext";
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();

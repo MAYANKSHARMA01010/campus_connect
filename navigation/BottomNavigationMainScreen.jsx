@@ -8,7 +8,7 @@ import EventScreen from '../Screens/Events';
 import SearchScreen from '../Screens/Search';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import AuthStackNavigator from './AuthStackNavigator';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/UserContext';
 
 const Tabs = createBottomTabNavigator();
 

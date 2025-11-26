@@ -8,7 +8,7 @@ import {
   Surface,
   Menu,
 } from "react-native-paper";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/UserContext";
 
 export default function EditProfileScreen({ navigation }) {
   const { user, updateProfile } = useAuth();

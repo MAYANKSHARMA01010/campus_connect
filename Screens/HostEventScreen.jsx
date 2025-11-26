@@ -22,7 +22,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import API from "../api/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/UserContext";
 
 const CLOUD_NAME = process.env.CLOUD_NAME;
 const UPLOAD_PRESET = process.env.UPLOAD_PRESET;

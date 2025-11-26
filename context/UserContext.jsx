@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async (t = token) => {
     try {
-      const res = await API.get("/auth/me", {
+      const res = await API.get("/user/me", {
         headers: { Authorization: `Bearer ${t}` },
       });
       setUser(res.data.user);
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   // FIXED: return true/false
   const register = async (data) => {
     try {
-      await API.post("/auth/register", data);
+      await API.post("/user/register", data);
       Alert.alert("Success", "Account created successfully!");
       return true;
     } catch (err) {
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const res = await API.post("/auth/login", credentials);
+      const res = await API.post("/user/login", credentials);
       const t = res.data.token;
       const u = res.data.user;
 
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await API.post("/auth/logout");
+      await API.post("/user/logout");
     } catch {}
 
     await AsyncStorage.removeItem("token");
