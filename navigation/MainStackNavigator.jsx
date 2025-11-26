@@ -11,7 +11,11 @@ export default function MainStackNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={BottomNavigationMainScreen} />
       <Stack.Screen name="HostEvent" component={HostEventScreen} />
-      <Stack.Screen name="EventDetail" component={EventDetail} options={{ headerShown: true, title: "Event" }} />
+      <Stack.Screen
+        name="EventDetail"
+        component={EventDetail}
+        options={{ headerShown: true, title: "Event" }}
+      />
     </Stack.Navigator>
   );
 }

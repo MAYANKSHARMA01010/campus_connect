@@ -2,6 +2,7 @@ import * as React from 'react';
 import { StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Entypo, Ionicons, MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
+
 import HomeScreen from '../Screens/Home';
 import EventScreen from '../Screens/Events';
 import SearchScreen from '../Screens/Search';
@@ -28,7 +29,7 @@ export default function BottomNavigationMainScreen() {
       <Tabs.Screen
         name="Home"
         component={HomeScreen}
-        options={{ 
+        options={{
           tabBarIcon: ({ color }) => (
             <Entypo name="home" size={24} color={color} />
           )
@@ -38,7 +39,7 @@ export default function BottomNavigationMainScreen() {
       <Tabs.Screen
         name="Search"
         component={SearchScreen}
-        options={{ 
+        options={{
           tabBarIcon: ({ color }) => (
             <Ionicons name="search" size={24} color={color} />
           )
@@ -48,20 +49,22 @@ export default function BottomNavigationMainScreen() {
       <Tabs.Screen
         name="Events"
         component={EventScreen}
-        options={{ 
+        options={{
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="event" size={24} color={color} />
           )
         }}
       />
 
+      {/* FIXED TAB NAME */}
       <Tabs.Screen
-        name={isLoggedIn ? 'Profile' : 'Login'}
+        name="ProfileTab"
         component={isLoggedIn ? ProfileStackNavigator : AuthStackNavigator}
-        options={{ 
+        options={{
           tabBarIcon: ({ color }) => (
             <FontAwesome6 name="user" size={24} color={color} />
-          )
+          ),
+          tabBarLabel: isLoggedIn ? "Profile" : "Login",
         }}
       />
     </Tabs.Navigator>
