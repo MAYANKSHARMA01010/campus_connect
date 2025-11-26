@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from "react-native";
 import {
   Text,
@@ -18,12 +19,9 @@ import {
   Appbar,
   ActivityIndicator,
   Menu,
-  Divider,
 } from "react-native-paper";
 
 import * as ImagePicker from "expo-image-picker";
-import { File } from "expo-file-system";
-import * as FileSystem from "expo-file-system/legacy";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import API from "../api/api";
@@ -54,7 +52,7 @@ const initialForm = {
 };
 
 export default function HostEventScreen({ navigation }) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
@@ -69,6 +67,7 @@ export default function HostEventScreen({ navigation }) {
 
   const handleChange = (k, v) => setForm({ ...form, [k]: v });
 
+  // ------------ PICK IMAGES ------------
   const pickImages = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -78,7 +77,7 @@ export default function HostEventScreen({ navigation }) {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
         selectionLimit: 10,
         quality: 0.8,
@@ -92,14 +91,9 @@ export default function HostEventScreen({ navigation }) {
         ...prev,
         images: [...prev.images, ...uris].slice(0, 10),
       }));
-    }
-    catch (err) {
+    } catch (err) {
       console.log("pickImages error", err);
-      setSnack({
-        visible: true,
-        message: "Failed to pick images",
-        type: "error",
-      });
+      setSnack({ visible: true, message: "Failed to pick images", type: "error" });
     }
   };
 
@@ -110,6 +104,7 @@ export default function HostEventScreen({ navigation }) {
     }));
   };
 
+  // ------------ VALIDATION ------------
   const validate = () => {
     const err = {};
     if (!form.title.trim()) err.title = "Required";
@@ -127,19 +122,17 @@ export default function HostEventScreen({ navigation }) {
 
   const errors = validate();
 
+  // ------------ CLOUDINARY UPLOAD ------------
   async function uploadLocalImageToCloudinary(uri) {
-    if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      throw new Error("Cloudinary config missing");
-    }
+    if (!CLOUD_NAME || !UPLOAD_PRESET) throw new Error("Cloudinary config missing");
 
     const fileName = uri.split("/").pop();
-    const match = /\.(\w+)$/.exec(fileName);
-    const ext = match ? match[1] : "jpg";
+    const ext = fileName.split(".").pop();
 
     const file = {
       uri,
       type: `image/${ext}`,
-      name: fileName
+      name: fileName,
     };
 
     const data = new FormData();
@@ -148,7 +141,7 @@ export default function HostEventScreen({ navigation }) {
 
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
       method: "POST",
-      body: data
+      body: data,
     });
 
     const json = await res.json();
@@ -161,8 +154,10 @@ export default function HostEventScreen({ navigation }) {
     return json.secure_url;
   }
 
-
+  // ------------ SUBMIT EVENT ------------
   const submit = async () => {
+    console.log("submit pressed", { user, token, form });
+
     setTouched({
       title: true,
       description: true,
@@ -172,72 +167,68 @@ export default function HostEventScreen({ navigation }) {
       images: true,
     });
 
+    if (!user) {
+      Alert.alert("Login Required", "You must be logged in to host an event.");
+      return;
+    }
+
     if (Object.keys(errors).length > 0) {
-      setSnack({ visible: true, message: "Fix errors first!", type: "error" });
+      setSnack({ visible: true, message: "Fix the errors first!", type: "error" });
       return;
     }
 
     try {
       setLoading(true);
 
-      const localUris = form.images.filter((u) => !/^https?:\/\//i.test(u));
-      const alreadyUrls = form.images.filter((u) => /^https?:\/\//i.test(u));
+      const localImgs = form.images.filter((u) => !/^https?:\/\//.test(u));
+      const cloudImgs = form.images.filter((u) => /^https?:\/\//.test(u));
 
-      if (localUris.length === 0) {
-        await sendEventToServer([...alreadyUrls]);
-        setLoading(false);
-        return;
-      }
+      let uploadedUrls = [];
 
-      setTotalToUpload(localUris.length);
-      setUploadingCount(0);
+      if (localImgs.length > 0) {
+        setTotalToUpload(localImgs.length);
+        setUploadingCount(0);
 
-      const uploadedUrls = [];
-
-      for (let i = 0; i < localUris.length; i++) {
-        const uri = localUris[i];
-
-        try {
-          const url = await uploadLocalImageToCloudinary(uri);
-          uploadedUrls.push(url);
-        } catch (err) {
-          console.log("Upload failed", err);
-          setSnack({ visible: true, message: "Image upload failed", type: "error" });
-          setLoading(false);
-          return;
-        } finally {
-          setUploadingCount((c) => c + 1);
+        for (let i = 0; i < localImgs.length; i++) {
+          try {
+            const url = await uploadLocalImageToCloudinary(localImgs[i]);
+            uploadedUrls.push(url);
+          } catch (err) {
+            console.log("Cloudinary upload failed", err);
+            Alert.alert("Upload Failed", "Image upload failed, try again.");
+            setLoading(false);
+            return;
+          } finally {
+            setUploadingCount((c) => c + 1);
+          }
         }
       }
 
-      const finalUrls = [];
+      // Maintain order of images
+      const finalImages = [];
+      let idx = 0;
 
-      let uploadIndex = 0;
       for (const img of form.images) {
-        if (/^https?:\/\//i.test(img)) finalUrls.push(img);
+        if (/^https?:\/\//.test(img)) finalImages.push(img);
         else {
-          finalUrls.push(uploadedUrls[uploadIndex]);
-          uploadIndex++;
+          finalImages.push(uploadedUrls[idx]);
+          idx++;
         }
       }
 
-      await sendEventToServer(finalUrls);
+      await sendEventToServer(finalImages);
 
       setSnack({ visible: true, message: "Event submitted!", type: "success" });
       setLoading(false);
-      setTimeout(() => navigation.goBack(), 900);
-    } 
-    catch (err) {
-      console.log(err);
-      setSnack({
-        visible: true,
-        message: err.response?.data?.ERROR || "Failed",
-        type: "error",
-      });
+      setTimeout(() => navigation.goBack(), 800);
+    } catch (err) {
+      console.log("submit error:", err);
+      Alert.alert("Error", err.message || "Failed to submit event");
       setLoading(false);
     }
   };
 
+  // ------------ SEND TO BACKEND ------------
   async function sendEventToServer(imageUrls) {
     const payload = {
       title: form.title,
@@ -252,24 +243,33 @@ export default function HostEventScreen({ navigation }) {
       createdBy: user?.id || null,
     };
 
-    await API.post("/events/request", payload);
+    console.log("sending event payload:", payload);
+
+    try {
+      const res = await API.post("/events/request", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("event request response:", res?.status, res?.data);
+      return res.data;
+    } catch (err) {
+      console.log("sendEventToServer error:", err.response?.data || err);
+      throw new Error(err.response?.data?.ERROR || "Server error");
+    }
   }
 
+  // ---------------- UI ----------------
   return (
     <>
       <StatusBar barStyle="light-content" />
 
       <Appbar.Header style={{ backgroundColor: "#E91E63" }}>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content
-          title="Host Event"
-          titleStyle={{ color: "white", fontWeight: "700", fontSize: 20 }}
-        />
+        <Appbar.Content title="Host Event" color="white" />
       </Appbar.Header>
 
       <ScrollView contentContainerStyle={styles.container}>
         <Surface style={styles.card}>
-
           <Text style={styles.title}>Create your Event</Text>
           <Text style={styles.subtitle}>Fill details to host a campus event 🎉</Text>
 
@@ -298,6 +298,7 @@ export default function HostEventScreen({ navigation }) {
             {errors.description}
           </HelperText>
 
+          {/* CATEGORY */}
           <Menu
             visible={categoryMenuVisible}
             onDismiss={() => setCategoryMenuVisible(false)}
@@ -324,23 +325,17 @@ export default function HostEventScreen({ navigation }) {
               />
             ))}
           </Menu>
-
           <HelperText type="error" visible={touched.category && errors.category}>
             {errors.category}
           </HelperText>
 
-          <TouchableOpacity
-            onPress={() => setDatePickerVisible(true)}
-            style={styles.dropdown}
-          >
+          {/* DATE */}
+          <TouchableOpacity onPress={() => setDatePickerVisible(true)} style={styles.dropdown}>
             <Text style={{ color: form.date ? "#000" : "#777" }}>
               {form.date || "Select Date *"}
             </Text>
             <IconButton icon="calendar" size={22} />
           </TouchableOpacity>
-          <HelperText type="error" visible={touched.date && errors.date}>
-            {errors.date}
-          </HelperText>
 
           {datePickerVisible && (
             <DateTimePicker
@@ -349,28 +344,22 @@ export default function HostEventScreen({ navigation }) {
               display="spinner"
               onChange={(e, selected) => {
                 setDatePickerVisible(false);
-                if (selected) {
-                  handleChange(
-                    "date",
-                    selected.toISOString().split("T")[0]
-                  );
-                }
+                if (selected)
+                  handleChange("date", selected.toISOString().split("T")[0]);
               }}
             />
           )}
+          <HelperText type="error" visible={touched.date && errors.date}>
+            {errors.date}
+          </HelperText>
 
-          <TouchableOpacity
-            onPress={() => setTimePickerVisible(true)}
-            style={styles.dropdown}
-          >
+          {/* TIME */}
+          <TouchableOpacity onPress={() => setTimePickerVisible(true)} style={styles.dropdown}>
             <Text style={{ color: form.time ? "#000" : "#777" }}>
               {form.time || "Select Time *"}
             </Text>
             <IconButton icon="clock" size={22} />
           </TouchableOpacity>
-          <HelperText type="error" visible={touched.time && errors.time}>
-            {errors.time}
-          </HelperText>
 
           {timePickerVisible && (
             <DateTimePicker
@@ -381,15 +370,18 @@ export default function HostEventScreen({ navigation }) {
               onChange={(e, selected) => {
                 setTimePickerVisible(false);
                 if (selected) {
-                  const timeString = selected.toLocaleTimeString([], {
+                  const time = selected.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                   });
-                  handleChange("time", timeString);
+                  handleChange("time", time);
                 }
               }}
             />
           )}
+          <HelperText type="error" visible={touched.time && errors.time}>
+            {errors.time}
+          </HelperText>
 
           <TextInput
             label="Location"
@@ -409,8 +401,8 @@ export default function HostEventScreen({ navigation }) {
 
           <TextInput
             label="Contact Number"
-            mode="outlined"
             keyboardType="number-pad"
+            mode="outlined"
             style={styles.input}
             value={form.contact}
             onChangeText={(v) => handleChange("contact", v)}
@@ -419,12 +411,13 @@ export default function HostEventScreen({ navigation }) {
             {errors.contact}
           </HelperText>
 
+          {/* IMAGES */}
           <Text style={styles.sectionTitle}>Upload Images *</Text>
-          <Text style={styles.sectionSubtitle}>Min 4 images required</Text>
+          <Text style={styles.sectionSubtitle}>Minimum 4 required</Text>
 
           <View style={styles.imageGrid}>
-            {form.images.map((uri, index) => (
-              <View key={index} style={styles.imageWrapper}>
+            {form.images.map((uri, i) => (
+              <View key={i} style={styles.imageWrapper}>
                 <Image source={{ uri }} style={styles.image} />
                 <IconButton
                   icon="close"
@@ -447,7 +440,7 @@ export default function HostEventScreen({ navigation }) {
 
           {uploadingCount > 0 && (
             <View style={{ flexDirection: "row", marginTop: 5 }}>
-              <ActivityIndicator animating size={20} />
+              <ActivityIndicator size={20} />
               <Text style={{ marginLeft: 10 }}>
                 Uploading {uploadingCount} / {totalToUpload}
               </Text>
@@ -462,7 +455,7 @@ export default function HostEventScreen({ navigation }) {
             buttonColor="#E91E63"
             disabled={loading}
           >
-            Submit Event Request
+            Submit Event
           </Button>
         </Surface>
 
@@ -483,7 +476,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "800",
     color: "#E91E63",
     marginBottom: 2,
@@ -528,5 +521,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFE4EC",
   },
-  submitBtn: { marginTop: 20, borderRadius: 12, paddingVertical: 8 },
+  submitBtn: { marginTop: 20, borderRadius: 12 },
 });
