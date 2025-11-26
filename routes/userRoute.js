@@ -1,5 +1,5 @@
 const express = require("express")
-const authRouter = express.Router()
+const userRouter = express.Router()
 
 const {
     createUserMiddleware,
@@ -21,11 +21,11 @@ const {
 } = require("../utils/auth")
 
 
-authRouter.post("/register",createUserMiddleware,createUserController)
-authRouter.post("/login",loginUserMiddleware,loginUserController)
-authRouter.post('/logout',logoutUserMiddleware,logoutUserController)
-authRouter.get("/me",authenticate,getMeController)
-authRouter.put("/update", authenticate, updateUserMiddleware, updateUserController);
+userRouter.post("/register",createUserMiddleware,createUserController)
+userRouter.post("/login",loginUserMiddleware,loginUserController)
+userRouter.post('/logout',logoutUserMiddleware,logoutUserController)
+userRouter.get("/me",authenticate,getMeController)
+userRouter.put("/update", authenticate, updateUserMiddleware, updateUserController);
 
 // Future addition ROUTES :-
 // /refresh
@@ -34,5 +34,5 @@ authRouter.put("/update", authenticate, updateUserMiddleware, updateUserControll
 // /reset-password/:token
 // /delete
 
-module.exports = authRouter;
+module.exports = userRouter;
   

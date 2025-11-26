@@ -1,6 +1,6 @@
 const express = require("express");
 const corsMiddleware = require("./config/cors.js");
-const authRouter = require("./routes/userRoute");
+const userRouter = require("./routes/userRoute");
 const eventRouter = require("./routes/eventRoute.js");
 require("dotenv").config();
 
@@ -10,7 +10,7 @@ const PORT = process.env.SERVER_PORT;
 app.use(corsMiddleware);
 app.use(express.json());
 
-app.use("/api/auth", authRouter)
+app.use("/api/user", userRouter)
 app.use("/api/events", eventRouter);
 
 app.get("/", (req, res) => {
