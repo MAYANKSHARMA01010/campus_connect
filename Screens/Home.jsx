@@ -14,22 +14,44 @@ import {
   Surface,
 } from "react-native-paper";
 import EventSection from "../components/EventSection";
-import {
-  pastEvents,
-  comingEvents,
-  techEvents,
-  sportsEvents,
-} from "../data/eventsData";
+import { getAllEvents } from "../api/events";
 
 export default function HomeScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  const sections = [
-    { id: "1", title: "🎓 Coming Up!", data: comingEvents },
-    { id: "2", title: "🎭 The Past Ones", data: pastEvents },
-    { id: "3", title: "💡 Tech Talks", data: techEvents },
-    { id: "4", title: "🏅 Sports & Competitions", data: sportsEvents },
-  ];
+  const [upcoming, setUpcoming] = React.useState([]);
+  const [past, setPast] = React.useState([]);
+  const [sportsCulture, setSportsCulture] = React.useState([]);
+  const [eduTech, setEduTech] = React.useState([]);
+
+  React.useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    const data = await getAllEvents();
+
+    const today = new Date();
+
+    setUpcoming(data.filter((e) => new Date(e.date) > today));
+    setPast(data.filter((e) => new Date(e.date) < today));
+
+    setSportsCulture(
+      data.filter(
+        (e) =>
+          e.category?.toLowerCase() === "sports" ||
+          e.category?.toLowerCase() === "culture"
+      )
+    );
+
+    setEduTech(
+      data.filter(
+        (e) =>
+          e.category?.toLowerCase() === "tech" ||
+          e.category?.toLowerCase() === "education"
+      )
+    );
+  };
 
   return (
     <ScrollView
@@ -53,9 +75,7 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       <ImageBackground
-        source={{
-          uri: "https://picsum.photos/seed/campus-banner/800/500",
-        }}
+        source={{ uri: "https://picsum.photos/seed/campus-banner/800/500" }}
         style={styles.heroBanner}
         imageStyle={{ borderRadius: 18 }}
       >
@@ -67,21 +87,45 @@ export default function HomeScreen({ navigation }) {
         </View>
       </ImageBackground>
 
-      {sections.map((section) => (
-        <View key={section.id} style={{ marginTop: 20 }}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Events")}
-            >
-              <Text style={styles.viewAllText}>View All →</Text>
-            </TouchableOpacity>
-          </View>
-
-          <EventSection title="" data={section.data} />
+      <View style={{ marginTop: 20 }}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>🎉 Coming Up!</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
+            <Text style={styles.viewAllText}>View All →</Text>
+          </TouchableOpacity>
         </View>
-      ))}
+        <EventSection data={upcoming} />
+      </View>
+
+      <View style={{ marginTop: 20 }}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>🕒 The Past Ones</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
+            <Text style={styles.viewAllText}>View All →</Text>
+          </TouchableOpacity>
+        </View>
+        <EventSection data={past} />
+      </View>
+
+      <View style={{ marginTop: 20 }}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>🏅 Sports & Culture</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
+            <Text style={styles.viewAllText}>View All →</Text>
+          </TouchableOpacity>
+        </View>
+        <EventSection data={sportsCulture} />
+      </View>
+
+      <View style={{ marginTop: 20 }}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>💡 Education & Tech</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
+            <Text style={styles.viewAllText}>View All →</Text>
+          </TouchableOpacity>
+        </View>
+        <EventSection data={eduTech} />
+      </View>
 
       <Surface style={styles.hostCard}>
         <Text style={styles.hostTitle}>🎤 Want to Host an Event?</Text>
@@ -128,19 +172,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#FDF7F9",
     paddingBottom: 50,
   },
-
   appbar: {
     backgroundColor: "#fff",
     elevation: 3,
     paddingHorizontal: 16,
     justifyContent: "space-between",
   },
-
   appName: {
     color: "#E91E63",
     fontWeight: "800",
   },
-
   searchContainer: {
     paddingHorizontal: 16,
     paddingTop: 14,
@@ -149,7 +190,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     elevation: 2,
   },
-
   heroBanner: {
     height: 200,
     marginHorizontal: 16,
@@ -161,8 +201,6 @@ const styles = StyleSheet.create({
   heroOverlay: {
     backgroundColor: "rgba(0,0,0,0.35)",
     padding: 14,
-    borderBottomLeftRadius: 18,
-    borderBottomRightRadius: 18,
   },
   heroTitle: {
     color: "#fff",
@@ -173,7 +211,6 @@ const styles = StyleSheet.create({
     color: "#eee",
     marginTop: 3,
   },
-
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -190,7 +227,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontWeight: "600",
   },
-
   hostCard: {
     marginHorizontal: 16,
     marginTop: 30,
@@ -214,7 +250,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#E91E63",
   },
-
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -238,10 +273,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: "500",
   },
-
   aboutCard: {
-    margin: 18,
-    padding: 18,
+    margin: 30,
+    padding: 20,
     borderRadius: 18,
     backgroundColor: "#fff",
     elevation: 2,

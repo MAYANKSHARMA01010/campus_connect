@@ -19,28 +19,25 @@ export default function EventSection({ title, data }) {
       onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
     >
       <ImageBackground
-        source={{ uri: item.img }}
+        source={{ uri: item.image }}
         style={styles.bgImage}
         imageStyle={styles.bgImageStyle}
       >
         <View style={styles.gradientOverlay} />
 
         <View style={styles.overlayContent}>
-          <Text
-            variant="titleLarge"
-            style={styles.overlayTitle}
-            numberOfLines={1}
-          >
+          <Text variant="titleLarge" style={styles.overlayTitle} numberOfLines={1}>
             {item.title}
           </Text>
           <Text style={styles.overlayDate}>{item.date}</Text>
           <Text style={styles.overlaySummary} numberOfLines={2}>
-            {item.summary}
+            {item.description}
           </Text>
         </View>
       </ImageBackground>
     </TouchableOpacity>
   );
+
 
   const renderViewMoreCard = () => (
     <TouchableOpacity
