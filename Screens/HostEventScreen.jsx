@@ -1,4 +1,3 @@
-// ⭐⭐⭐⭐⭐ COMPLETE FIXED + UPDATED HOST EVENT PAGE
 import React, { useState } from "react";
 import {
   View,
@@ -62,22 +61,14 @@ export default function HostEventScreen({ navigation }) {
   const [snack, setSnack] = useState({ visible: false, message: "", type: "info" });
   const [touched, setTouched] = useState({});
 
-  // Category dropdown state
   const [categoryMenuVisible, setCategoryMenuVisible] = useState(false);
-
-  // Date Picker
   const [datePickerVisible, setDatePickerVisible] = useState(false);
-
-  // Time Picker
   const [timePickerVisible, setTimePickerVisible] = useState(false);
-
-  // Image Upload state
   const [uploadingCount, setUploadingCount] = useState(0);
   const [totalToUpload, setTotalToUpload] = useState(0);
 
   const handleChange = (k, v) => setForm({ ...form, [k]: v });
 
-  // ⭐⭐ FIXED Image Picker NEW SYNTAX ⭐⭐
   const pickImages = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -87,7 +78,7 @@ export default function HostEventScreen({ navigation }) {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"], // NEW SYNTAX
+        mediaTypes: ["images"],
         allowsMultipleSelection: true,
         selectionLimit: 10,
         quality: 0.8,
@@ -128,7 +119,6 @@ export default function HostEventScreen({ navigation }) {
     if (!form.time.trim()) err.time = "Required";
     if (form.images.length < 4) err.images = "Add at least 4 images";
 
-    // Basic phone number validation
     if (form.contact && !/^[0-9]{10}$/.test(form.contact))
       err.contact = "Enter valid 10-digit mobile number";
 
@@ -236,7 +226,8 @@ export default function HostEventScreen({ navigation }) {
       setSnack({ visible: true, message: "Event submitted!", type: "success" });
       setLoading(false);
       setTimeout(() => navigation.goBack(), 900);
-    } catch (err) {
+    } 
+    catch (err) {
       console.log(err);
       setSnack({
         visible: true,
@@ -268,7 +259,6 @@ export default function HostEventScreen({ navigation }) {
     <>
       <StatusBar barStyle="light-content" />
 
-      {/* HEADER */}
       <Appbar.Header style={{ backgroundColor: "#E91E63" }}>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
         <Appbar.Content
@@ -277,14 +267,12 @@ export default function HostEventScreen({ navigation }) {
         />
       </Appbar.Header>
 
-      {/* MAIN CONTENT */}
       <ScrollView contentContainerStyle={styles.container}>
         <Surface style={styles.card}>
 
           <Text style={styles.title}>Create your Event</Text>
           <Text style={styles.subtitle}>Fill details to host a campus event 🎉</Text>
 
-          {/* TITLE */}
           <TextInput
             label="Event Title *"
             mode="outlined"
@@ -297,7 +285,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.title}
           </HelperText>
 
-          {/* DESCRIPTION */}
           <TextInput
             label="Description *"
             mode="outlined"
@@ -311,7 +298,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.description}
           </HelperText>
 
-          {/* CATEGORY DROPDOWN */}
           <Menu
             visible={categoryMenuVisible}
             onDismiss={() => setCategoryMenuVisible(false)}
@@ -343,7 +329,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.category}
           </HelperText>
 
-          {/* DATE PICKER */}
           <TouchableOpacity
             onPress={() => setDatePickerVisible(true)}
             style={styles.dropdown}
@@ -367,14 +352,13 @@ export default function HostEventScreen({ navigation }) {
                 if (selected) {
                   handleChange(
                     "date",
-                    selected.toISOString().split("T")[0] // YYYY-MM-DD
+                    selected.toISOString().split("T")[0]
                   );
                 }
               }}
             />
           )}
 
-          {/* TIME PICKER */}
           <TouchableOpacity
             onPress={() => setTimePickerVisible(true)}
             style={styles.dropdown}
@@ -407,7 +391,6 @@ export default function HostEventScreen({ navigation }) {
             />
           )}
 
-          {/* Location */}
           <TextInput
             label="Location"
             mode="outlined"
@@ -416,7 +399,6 @@ export default function HostEventScreen({ navigation }) {
             onChangeText={(v) => handleChange("location", v)}
           />
 
-          {/* Host Name */}
           <TextInput
             label="Host Name"
             mode="outlined"
@@ -425,7 +407,6 @@ export default function HostEventScreen({ navigation }) {
             onChangeText={(v) => handleChange("hostName", v)}
           />
 
-          {/* Contact */}
           <TextInput
             label="Contact Number"
             mode="outlined"
@@ -438,7 +419,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.contact}
           </HelperText>
 
-          {/* IMAGE UPLOAD */}
           <Text style={styles.sectionTitle}>Upload Images *</Text>
           <Text style={styles.sectionSubtitle}>Min 4 images required</Text>
 
@@ -455,7 +435,6 @@ export default function HostEventScreen({ navigation }) {
               </View>
             ))}
 
-            {/* ADD MORE */}
             <TouchableOpacity onPress={pickImages} style={styles.addImageBox}>
               <IconButton icon="plus" size={30} iconColor="#E91E63" />
               <Text style={{ color: "#E91E63" }}>Add</Text>
