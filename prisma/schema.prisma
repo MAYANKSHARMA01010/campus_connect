@@ -14,7 +14,7 @@ enum Role {
 
 enum RequestStatus {
   PENDING
-  APPROVED 
+  APPROVED
   REJECTED
 }
 
@@ -50,8 +50,8 @@ model EventRequest {
 }
 
 model EventImage {
-  id            Int          @id @default(autoincrement())
-  url           String
+  id             Int          @id @default(autoincrement())
+  url            String
   eventRequestId Int
-  eventRequest  EventRequest @relation(fields: [eventRequestId], references: [id])
+  eventRequest   EventRequest @relation(fields: [eventRequestId], references: [id])
 }
