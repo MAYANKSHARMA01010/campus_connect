@@ -136,9 +136,11 @@ async function updateUserController(req, res) {
         if (updateData.username) {
             const existingUser = await prisma.user.findFirst({
                 where: {
-                    username: updateData.username,
-                    NOT: { id: userId },
-                },
+                    OR: [
+                        email ? { email } : null,
+                        username ? { username } : null
+                    ].filter(Boolean)
+                }
             });
             if (existingUser) {
                 return res.status(400).json({ ERROR: "Username already taken" });
