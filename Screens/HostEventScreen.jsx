@@ -56,30 +56,41 @@ export default function HostEventScreen({ navigation }) {
   const pickImages = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
+      if (!(permission?.granted || permission?.status === "granted")) {
         setSnack({ visible: true, message: "Gallery permission required", type: "error" });
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
         selectionLimit: 10,
-        mediaTypes: [ImagePicker.MediaType.image],
         quality: 0.8,
       });
 
-      if (!result.canceled) {
+      if (!result) return;
+
+      if (result.canceled === false && Array.isArray(result.assets)) {
         const uris = result.assets.map((img) => img.uri);
         setForm((prev) => ({
           ...prev,
           images: [...prev.images, ...uris].slice(0, 10),
         }));
       }
-    } catch (err) {
+
+      else if (result.cancelled === false && result.uri) {
+        setForm((prev) => ({
+          ...prev,
+          images: [...prev.images, result.uri].slice(0, 10),
+        }));
+      }
+    } 
+    catch (err) {
       console.error("pickImages error", err);
       setSnack({ visible: true, message: "Failed to pick images", type: "error" });
     }
   };
+
 
   const removeImage = (uri) => {
     setForm((prev) => ({
@@ -101,6 +112,9 @@ export default function HostEventScreen({ navigation }) {
   const errors = validate();
 
   async function uploadLocalImageToCloudinary(uri) {
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+      throw new Error("Cloudinary config missing (CLOUD_NAME or UPLOAD_PRESET)");
+    }
     const base64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
     const data = new FormData();
     data.append("file", `data:image/jpg;base64,${base64}`);
@@ -153,14 +167,16 @@ export default function HostEventScreen({ navigation }) {
         try {
           const url = await uploadLocalImageToCloudinary(uri);
           uploadedUrls.push(url);
-        } catch (err) {
+        }
+        catch (err) {
           console.error("Upload failed for", uri, err);
           setSnack({ visible: true, message: "Image upload failed", type: "error" });
           setLoading(false);
           setUploadingCount(0);
           setTotalToUpload(0);
           return;
-        } finally {
+        }
+        finally {
           setUploadingCount((c) => c + 1);
         }
       }
