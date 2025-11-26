@@ -23,14 +23,13 @@ import {
 } from "react-native-paper";
 
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system";
+import { File } from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import API from "../api/api";
 import { useAuth } from "../context/UserContext";
-
-const CLOUD_NAME = process.env.CLOUD_NAME;
-const UPLOAD_PRESET = process.env.UPLOAD_PRESET;
+import { CLOUD_NAME, UPLOAD_PRESET } from "@env";
 
 const CATEGORY_OPTIONS = [
   "Music",
@@ -102,7 +101,8 @@ export default function HostEventScreen({ navigation }) {
         ...prev,
         images: [...prev.images, ...uris].slice(0, 10),
       }));
-    } catch (err) {
+    }
+    catch (err) {
       console.log("pickImages error", err);
       setSnack({
         visible: true,
@@ -142,27 +142,35 @@ export default function HostEventScreen({ navigation }) {
       throw new Error("Cloudinary config missing");
     }
 
-    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+    const fileName = uri.split("/").pop();
+    const match = /\.(\w+)$/.exec(fileName);
+    const ext = match ? match[1] : "jpg";
+
+    const file = {
+      uri,
+      type: `image/${ext}`,
+      name: fileName
+    };
 
     const data = new FormData();
-    data.append("file", `data:image/jpg;base64,${base64}`);
+    data.append("file", file);
     data.append("upload_preset", UPLOAD_PRESET);
 
-    const endpoint = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-
-    const res = await fetch(endpoint, {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
       method: "POST",
-      body: data,
+      body: data
     });
 
     const json = await res.json();
 
     if (!res.ok) {
-      throw new Error(json.error?.message || "Cloudinary upload failed");
+      console.log("Cloudinary error:", json);
+      throw new Error(json.error?.message || "Upload failed");
     }
 
     return json.secure_url;
   }
+
 
   const submit = async () => {
     setTouched({
