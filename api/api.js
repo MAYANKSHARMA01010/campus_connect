@@ -1,6 +1,12 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-export const BASE_URL = "https://campus-connect-backend-e7uf.onrender.com";
+import { Platform } from "react-native";
+
+const LOCAL_URL = "http://10.7.29.152:5001";
+const SERVER_URL = "https://campus-connect-backend-e7uf.onrender.com";
+
+
+export const BASE_URL = __DEV__ ? LOCAL_URL : SERVER_URL;
 
 const API = axios.create({
   baseURL: `${BASE_URL}/api`,
@@ -36,7 +42,9 @@ export const rsvpEvent = async (id, status = "going") => {
 
 export const createEventWithImages = async (payload, images) => {
   const form = new FormData();
+
   Object.entries(payload).forEach(([k, v]) => form.append(k, v));
+
   images.forEach((uri, idx) => {
     const ext = uri.split(".").pop();
     const name = `image_${Date.now()}_${idx}.${ext}`;
@@ -50,5 +58,6 @@ export const createEventWithImages = async (payload, images) => {
   const res = await API.post("/events", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+
   return res.data;
 };
