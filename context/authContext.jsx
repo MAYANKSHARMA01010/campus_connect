@@ -27,22 +27,20 @@ export const AuthProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${t}` },
       });
       setUser(res.data.user);
-    } 
-    catch (err) {
-      console.log("SESSION EXPIRED — LOGGING OUT");
+    } catch {
       await logout();
     }
   };
 
+  // FIXED: return true/false
   const register = async (data) => {
     try {
-      const res = await API.post("/auth/register", data);
+      await API.post("/auth/register", data);
       Alert.alert("Success", "Account created successfully!");
-      return res.data;
-    } 
-    catch (err) {
+      return true;
+    } catch (err) {
       Alert.alert("Error", err.response?.data?.ERROR || "Registration failed");
-      return null;
+      return false;
     }
   };
 
@@ -54,40 +52,22 @@ export const AuthProvider = ({ children }) => {
 
       setToken(t);
       await AsyncStorage.setItem("token", t);
-
       setUser(u);
 
       Alert.alert("Success", "Login successful!");
       return true;
-    } 
-    catch (err) {
+    } catch (err) {
       Alert.alert("Error", err.response?.data?.ERROR || "Invalid credentials");
       return false;
     }
   };
 
-  const updateProfile = async (updates) => {
-    try {
-      const res = await API.put("/auth/update", updates);
-      setUser(res.data.user);
-      Alert.alert("Success", "Profile updated successfully!");
-    } 
-    catch (err) {
-      Alert.alert("Error", err.response?.data?.ERROR || "Update failed");
-    }
-  };
-
-
   const logout = async () => {
     try {
       await API.post("/auth/logout");
-    } 
-    catch {
-
-    }
+    } catch {}
 
     await AsyncStorage.removeItem("token");
-
     setToken(null);
     setUser(null);
   };
@@ -102,7 +82,6 @@ export const AuthProvider = ({ children }) => {
         register,
         login,
         logout,
-        updateProfile,
         fetchUser,
       }}
     >

@@ -18,7 +18,8 @@ export default function RegisterScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleChange = (key, value) => setForm({ ...form, [key]: value });
+  const handleChange = (key, value) =>
+    setForm({ ...form, [key]: value });
 
   const handleRegister = async () => {
     if (Object.values(form).some((v) => !v))
@@ -28,9 +29,10 @@ export default function RegisterScreen({ navigation }) {
       return alert("Passwords do not match");
 
     setLoading(true);
-    await register(form);
+    const success = await register(form);
     setLoading(false);
-    navigation.navigate("Login");
+
+    if (success) navigation.navigate("Login");
   };
 
   return (
@@ -117,11 +119,7 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#F6F7FB",
-  },
-
+  screen: { flex: 1, backgroundColor: "#F6F7FB" },
   header: {
     height: 160,
     backgroundColor: "#E91E63",
@@ -129,56 +127,18 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    elevation: 6,
   },
-
-  headerText: {
-    color: "#FFF",
-    fontSize: 28,
-    fontWeight: "800",
-  },
-
+  headerText: { color: "#FFF", fontSize: 28, fontWeight: "800" },
   card: {
     marginTop: -60,
     marginHorizontal: 20,
     backgroundColor: "#fff",
     padding: 25,
     borderRadius: 20,
-    elevation: 10,
   },
-
-  title: {
-    textAlign: "center",
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 5,
-    color: "#E91E63",
-  },
-
-  subtitle: {
-    textAlign: "center",
-    color: "#555",
-    marginBottom: 25,
-    fontSize: 14,
-  },
-
-  input: {
-    marginBottom: 16,
-    backgroundColor: "#FAFAFA",
-    borderRadius: 10,
-  },
-
-  button: {
-    marginTop: 10,
-    borderRadius: 10,
-    paddingVertical: 6,
-  },
-
-  link: {
-    textAlign: "center",
-    color: "#E91E63",
-    marginTop: 18,
-    fontWeight: "600",
-    fontSize: 14,
-  },
+  title: { textAlign: "center", fontSize: 24, fontWeight: "700", color: "#E91E63" },
+  subtitle: { textAlign: "center", color: "#555", marginBottom: 25 },
+  input: { marginBottom: 16, backgroundColor: "#FAFAFA" },
+  button: { marginTop: 10, borderRadius: 10, paddingVertical: 6 },
+  link: { textAlign: "center", color: "#E91E63", marginTop: 18, fontWeight: "600" },
 });
