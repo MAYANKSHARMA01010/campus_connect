@@ -21,7 +21,7 @@ export default function MainStackNavigator() {
       <Stack.Screen
         name="EventDetail"
         component={EventDetail}
-        options={{ headerShown: true, title: "Event" }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
