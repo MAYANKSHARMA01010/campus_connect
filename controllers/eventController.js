@@ -1,6 +1,5 @@
 const { prisma } = require("../config/database");
 
-
 async function createEventController(req, res) {
     try {
         const {
@@ -54,7 +53,6 @@ async function createEventController(req, res) {
     }
 }
 
-
 async function getAllEventsController(req, res) {
     try {
         const events = await prisma.eventRequest.findMany({
@@ -100,7 +98,7 @@ async function getAllEventsForHomeSecreenController(req, res) {
         return res.status(200).json({ events });
     }
     catch (err) {
-        console.error("getAllEventsController ERROR:", err);
+        console.error("getAllEventsForHomeSecreenController ERROR:", err);
         return res.status(500).json({ ERROR: "Failed to fetch events" });
     }
 }
@@ -112,10 +110,9 @@ async function getEventByIdController(req, res) {
         const event = await prisma.eventRequest.findUnique({
             where: { id },
             include: {
-                images: true,
-            },
-            orderBy: {
-                id: 'asc'
+                images: {
+                    orderBy: { id: "asc" }
+                }
             }
         });
 
@@ -128,6 +125,7 @@ async function getEventByIdController(req, res) {
         return res.status(500).json({ ERROR: "Internal Server Error" });
     }
 }
+
 
 module.exports = {
     createEventController,

@@ -1,108 +1,168 @@
+const CATEGORY_OPTIONS = [
+  "Music",
+  "Tech",
+  "Sports",
+  "Workshop",
+  "Seminar",
+  "Cultural",
+  "Gaming",
+  "Other",
+];
+
+function deterministicCount(id) {
+  return (Math.abs(id * 37) % 7) + 4;
+}
+
+function slugify(title) {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+function makeImages(title, count) {
+  const slug = slugify(title);
+  const images = [];
+  for (let i = 1; i <= count; i++) {
+    images.push(`https://picsum.photos/seed/${slug}-${i}/1200/800`);
+  }
+  return images;
+}
+
+function chooseCategoryFromTitle(title, defaultCategory = "Tech") {
+  const t = title.toLowerCase();
+  if (t.includes("workshop") || t.includes("bootcamp") || t.includes("boot camp")) {
+    return "Workshop";
+  }
+  if (t.includes("summit") || t.includes("expo") || t.includes("conference") || t.includes("seminar")) {
+    return "Seminar";
+  }
+  if (t.includes("hack") || t.includes("hackathon") || t.includes("pitch") || t.includes("startup")) {
+    return "Other";
+  }
+  if (t.includes("mobile") || t.includes("cloud") || t.includes("dev") || t.includes("data") || t.includes("ai") || t.includes("blockchain") || t.includes("iot") || t.includes("full-stack") || t.includes("tech")) {
+    return "Tech";
+  }
+  if (t.includes("football") || t.includes("marathon") || t.includes("basketball") || t.includes("swim") || t.includes("tennis") || t.includes("cricket") || t.includes("badminton") || t.includes("volleyball")) {
+    return "Sports";
+  }
+  return defaultCategory;
+}
+
 const techEvents = [
   {
     id: 1,
     title: "Tech Symposium 2025",
     date: "Dec 10, 2025",
-    summary: "A gathering of tech enthusiasts exploring innovation and research.",
-    img: "https://picsum.photos/seed/tech-symposium-2025-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/tech-symposium-2025-1/800/600",
-      "https://picsum.photos/seed/tech-symposium-2025-2/800/600",
-      "https://picsum.photos/seed/tech-symposium-2025-3/800/600",
-      "https://picsum.photos/seed/tech-symposium-2025-4/800/600"
-    ]
+    description: "A gathering of tech enthusiasts exploring innovation and research.",
+    time: "10:00 AM",
+    location: "Auditorium Hall A",
+    hostName: "Tech Club",
+    contact: "+91 9876543210",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Tech Symposium 2025"),
+    img: `https://picsum.photos/seed/tech-symposium-2025-thumb/400/300`,
+    images: makeImages("Tech Symposium 2025", deterministicCount(1)),
   },
   {
     id: 2,
     title: "AI Deep Dive Workshop",
     date: "Jan 18, 2026",
-    summary: "A hands-on workshop on real-world AI projects and model deployment.",
-    img: "https://picsum.photos/seed/ai-deep-workshop-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/ai-deep-workshop-2026-1/800/600",
-      "https://picsum.photos/seed/ai-deep-workshop-2026-2/800/600",
-      "https://picsum.photos/seed/ai-deep-workshop-2026-3/800/600",
-      "https://picsum.photos/seed/ai-deep-workshop-2026-4/800/600"
-    ]
+    description: "A hands-on workshop on real-world AI projects and model deployment.",
+    time: "11:30 AM",
+    location: "Innovation Lab 2",
+    hostName: "AI Research Wing",
+    contact: "+91 9123456780",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("AI Deep Dive Workshop"),
+    img: `https://picsum.photos/seed/ai-deep-workshop-2026-thumb/400/300`,
+    images: makeImages("AI Deep Dive Workshop", deterministicCount(2)),
   },
   {
     id: 3,
     title: "Blockchain Developer Summit",
     date: "Feb 14, 2026",
-    summary: "A deep dive into decentralized apps, smart contracts, and Web3.",
-    img: "https://picsum.photos/seed/blockchain-dev-summit-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/blockchain-dev-summit-1/800/600",
-      "https://picsum.photos/seed/blockchain-dev-summit-2/800/600",
-      "https://picsum.photos/seed/blockchain-dev-summit-3/800/600",
-      "https://picsum.photos/seed/blockchain-dev-summit-4/800/600"
-    ]
+    description: "A deep dive into decentralized apps, smart contracts, and Web3.",
+    time: "02:00 PM",
+    location: "Seminar Room B",
+    hostName: "Blockchain Society",
+    contact: "+91 9988776655",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Blockchain Developer Summit"),
+    img: `https://picsum.photos/seed/blockchain-dev-summit-thumb/400/300`,
+    images: makeImages("Blockchain Developer Summit", deterministicCount(3)),
   },
   {
     id: 4,
     title: "Cybersecurity Conference",
     date: "Mar 22, 2026",
-    summary: "Industry experts discuss cyber threats, hacking, and defense strategies.",
-    img: "https://picsum.photos/seed/cybersec-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/cybersec-2026-1/800/600",
-      "https://picsum.photos/seed/cybersec-2026-2/800/600",
-      "https://picsum.photos/seed/cybersec-2026-3/800/600",
-      "https://picsum.photos/seed/cybersec-2026-4/800/600"
-    ]
+    description: "Industry experts discuss cyber threats, hacking, and defense strategies.",
+    time: "09:30 AM",
+    location: "Cyber Dome",
+    hostName: "Cybersecurity Department",
+    contact: "+91 9001122334",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Cybersecurity Conference"),
+    img: `https://picsum.photos/seed/cybersec-2026-thumb/400/300`,
+    images: makeImages("Cybersecurity Conference", deterministicCount(4)),
   },
   {
     id: 5,
     title: "Data Science Bootcamp",
     date: "Apr 12, 2026",
-    summary: "A multi-day bootcamp covering Python, ML, and data pipelines.",
-    img: "https://picsum.photos/seed/data-science-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/data-science-2026-1/800/600",
-      "https://picsum.photos/seed/data-science-2026-2/800/600",
-      "https://picsum.photos/seed/data-science-2026-3/800/600",
-      "https://picsum.photos/seed/data-science-2026-4/800/600"
-    ]
+    description: "A multi-day bootcamp covering Python, ML, and data pipelines.",
+    time: "01:00 PM",
+    location: "Tech Park Lab 1",
+    hostName: "DSA Council",
+    contact: "+91 8899001122",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Data Science Bootcamp"),
+    img: `https://picsum.photos/seed/data-science-2026-thumb/400/300`,
+    images: makeImages("Data Science Bootcamp", deterministicCount(5)),
   },
   {
     id: 6,
     title: "Mobile Dev Meetup",
     date: "May 20, 2026",
-    summary: "Developers discuss modern mobile stacks, Expo, React Native & Kotlin.",
-    img: "https://picsum.photos/seed/mobile-dev-meetup-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/mobile-dev-meetup-2026-1/800/600",
-      "https://picsum.photos/seed/mobile-dev-meetup-2026-2/800/600",
-      "https://picsum.photos/seed/mobile-dev-meetup-2026-3/800/600",
-      "https://picsum.photos/seed/mobile-dev-meetup-2026-4/800/600"
-    ]
+    description: "Developers discuss modern mobile stacks, Expo, React Native & Kotlin.",
+    time: "03:00 PM",
+    location: "Mobile Lab Center",
+    hostName: "App Dev Club",
+    contact: "+91 7766554433",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Mobile Dev Meetup"),
+    img: `https://picsum.photos/seed/mobile-dev-meetup-2026-thumb/400/300`,
+    images: makeImages("Mobile Dev Meetup", deterministicCount(6)),
   },
   {
     id: 7,
     title: "Cloud Expo 2026",
     date: "Jun 10, 2026",
-    summary: "Explore cloud platforms, devops pipelines and serverless apps.",
-    img: "https://picsum.photos/seed/cloud-expo-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/cloud-expo-2026-1/800/600",
-      "https://picsum.photos/seed/cloud-expo-2026-2/800/600",
-      "https://picsum.photos/seed/cloud-expo-2026-3/800/600",
-      "https://picsum.photos/seed/cloud-expo-2026-4/800/600"
-    ]
+    description: "Explore cloud platforms, devops pipelines and serverless apps.",
+    time: "10:30 AM",
+    location: "Cloud Arena",
+    hostName: "Cloud Computing Club",
+    contact: "+91 8877665544",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Cloud Expo 2026"),
+    img: `https://picsum.photos/seed/cloud-expo-2026-thumb/400/300`,
+    images: makeImages("Cloud Expo 2026", deterministicCount(7)),
   },
   {
     id: 8,
     title: "DevOps Automation Summit",
     date: "Jul 5, 2026",
-    summary: "A summit on CI/CD, infra-as-code, automation and reliability.",
-    img: "https://picsum.photos/seed/devops-summit-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/devops-summit-2026-1/800/600",
-      "https://picsum.photos/seed/devops-summit-2026-2/800/600",
-      "https://picsum.photos/seed/devops-summit-2026-3/800/600",
-      "https://picsum.photos/seed/devops-summit-2026-4/800/600"
-    ]
-  }
+    description: "A summit on CI/CD, infra-as-code, automation and reliability.",
+    time: "11:00 AM",
+    location: "DevOps Hall 3",
+    hostName: "DevOps Guild",
+    contact: "+91 9090909090",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("DevOps Automation Summit"),
+    img: `https://picsum.photos/seed/devops-summit-2026-thumb/400/300`,
+    images: makeImages("DevOps Automation Summit", deterministicCount(8)),
+  },
 ];
 
 const pastEvents = [
@@ -110,106 +170,116 @@ const pastEvents = [
     id: 1,
     title: "Tech Symposium 2023",
     date: "Mar 15, 2023",
-    summary: "A gathering of tech enthusiasts to discuss new technologies.",
-    img: "https://picsum.photos/seed/tech-symposium-2023-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/tech-symposium-2023-1/800/600",
-      "https://picsum.photos/seed/tech-symposium-2023-2/800/600",
-      "https://picsum.photos/seed/tech-symposium-2023-3/800/600",
-      "https://picsum.photos/seed/tech-symposium-2023-4/800/600"
-    ]
+    description: "A gathering of tech enthusiasts to discuss new technologies.",
+    time: "09:00 AM",
+    location: "Auditorium Hall A",
+    hostName: "Tech Club",
+    contact: "+91 9800011122",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Tech Symposium 2023"),
+    img: `https://picsum.photos/seed/tech-symposium-2023-thumb/400/300`,
+    images: makeImages("Tech Symposium 2023", deterministicCount(9)),
   },
   {
     id: 2,
     title: "AI Workshop 2023",
     date: "Apr 10, 2023",
-    summary: "Hands-on training for beginner and intermediate AI developers.",
-    img: "https://picsum.photos/seed/ai-workshop-2023-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/ai-workshop-2023-1/800/600",
-      "https://picsum.photos/seed/ai-workshop-2023-2/800/600",
-      "https://picsum.photos/seed/ai-workshop-2023-3/800/600",
-      "https://picsum.photos/seed/ai-workshop-2023-4/800/600"
-    ]
+    description: "Hands-on training for beginner and intermediate AI developers.",
+    time: "12:00 PM",
+    location: "AI Lab 1",
+    hostName: "AI Faculty Team",
+    contact: "+91 9500023344",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("AI Workshop 2023"),
+    img: `https://picsum.photos/seed/ai-workshop-2023-thumb/400/300`,
+    images: makeImages("AI Workshop 2023", deterministicCount(10)),
   },
   {
     id: 3,
     title: "Blockchain Seminar 2023",
     date: "May 5, 2023",
-    summary: "Talks on blockchain patterns and industry adoption.",
-    img: "https://picsum.photos/seed/blockchain-seminar-2023-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/blockchain-seminar-2023-1/800/600",
-      "https://picsum.photos/seed/blockchain-seminar-2023-2/800/600",
-      "https://picsum.photos/seed/blockchain-seminar-2023-3/800/600",
-      "https://picsum.photos/seed/blockchain-seminar-2023-4/800/600"
-    ]
+    description: "Talks on blockchain patterns and industry adoption.",
+    time: "10:00 AM",
+    location: "Seminar Room B",
+    hostName: "Blockchain Society",
+    contact: "+91 9600034455",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Blockchain Seminar 2023"),
+    img: `https://picsum.photos/seed/blockchain-seminar-2023-thumb/400/300`,
+    images: makeImages("Blockchain Seminar 2023", deterministicCount(11)),
   },
   {
     id: 4,
     title: "Cybersecurity Conference 2023",
     date: "Jun 20, 2023",
-    summary: "Industry experts shared insights into modern cyber threats.",
-    img: "https://picsum.photos/seed/cybersecurity-conf-2023-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/cybersecurity-conf-2023-1/800/600",
-      "https://picsum.photos/seed/cybersecurity-conf-2023-2/800/600",
-      "https://picsum.photos/seed/cybersecurity-conf-2023-3/800/600",
-      "https://picsum.photos/seed/cybersecurity-conf-2023-4/800/600"
-    ]
+    description: "Industry experts shared insights into modern cyber threats.",
+    time: "03:00 PM",
+    location: "Cyber Dome",
+    hostName: "Cybersecurity Department",
+    contact: "+91 9700045566",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Cybersecurity Conference 2023"),
+    img: `https://picsum.photos/seed/cybersecurity-conf-2023-thumb/400/300`,
+    images: makeImages("Cybersecurity Conference 2023", deterministicCount(12)),
   },
   {
     id: 5,
     title: "Mobile Dev Meetup 2023",
     date: "Jul 11, 2023",
-    summary: "React Native, Kotlin, Flutter and cross-platform discussions.",
-    img: "https://picsum.photos/seed/mobile-dev-meetup-2023-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/mobile-dev-meetup-2023-1/800/600",
-      "https://picsum.photos/seed/mobile-dev-meetup-2023-2/800/600",
-      "https://picsum.photos/seed/mobile-dev-meetup-2023-3/800/600",
-      "https://picsum.photos/seed/mobile-dev-meetup-2023-4/800/600"
-    ]
+    description: "React Native, Kotlin, Flutter and cross-platform discussions.",
+    time: "11:00 AM",
+    location: "Mobile Lab Center",
+    hostName: "App Dev Club",
+    contact: "+91 9809988776",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Mobile Dev Meetup 2023"),
+    img: `https://picsum.photos/seed/mobile-dev-meetup-2023-thumb/400/300`,
+    images: makeImages("Mobile Dev Meetup 2023", deterministicCount(13)),
   },
   {
     id: 6,
     title: "Cloud Meetup 2023",
     date: "Aug 2, 2023",
-    summary: "Talks covering AWS, Azure, GCP and modern architectures.",
-    img: "https://picsum.photos/seed/cloud-meetup-2023-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/cloud-meetup-2023-1/800/600",
-      "https://picsum.photos/seed/cloud-meetup-2023-2/800/600",
-      "https://picsum.photos/seed/cloud-meetup-2023-3/800/600",
-      "https://picsum.photos/seed/cloud-meetup-2023-4/800/600"
-    ]
+    description: "Talks covering AWS, Azure, GCP and modern architectures.",
+    time: "02:00 PM",
+    location: "Cloud Arena",
+    hostName: "Cloud Computing Club",
+    contact: "+91 9777665544",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Cloud Meetup 2023"),
+    img: `https://picsum.photos/seed/cloud-meetup-2023-thumb/400/300`,
+    images: makeImages("Cloud Meetup 2023", deterministicCount(14)),
   },
   {
     id: 7,
     title: "Open Hack 2023",
     date: "Sep 14, 2023",
-    summary: "A hackathon with multiple developer tracks and challenges.",
-    img: "https://picsum.photos/seed/open-hack-2023-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/open-hack-2023-1/800/600",
-      "https://picsum.photos/seed/open-hack-2023-2/800/600",
-      "https://picsum.photos/seed/open-hack-2023-3/800/600",
-      "https://picsum.photos/seed/open-hack-2023-4/800/600"
-    ]
+    description: "A hackathon with multiple developer tracks and challenges.",
+    time: "09:00 AM",
+    location: "Main Indoor Stadium",
+    hostName: "Hack Club",
+    contact: "+91 9666655544",
+    status: "APPROVED",
+    category: "Other",
+    subCategory: "hackathon",
+    img: `https://picsum.photos/seed/open-hack-2023-thumb/400/300`,
+    images: makeImages("Open Hack 2023", deterministicCount(15)),
   },
   {
     id: 8,
     title: "Startup Pitch Night 2023",
     date: "Oct 18, 2023",
-    summary: "Startups pitch ideas to mentors, founders, and investors.",
-    img: "https://picsum.photos/seed/pitch-night-2023-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/pitch-night-2023-1/800/600",
-      "https://picsum.photos/seed/pitch-night-2023-2/800/600",
-      "https://picsum.photos/seed/pitch-night-2023-3/800/600",
-      "https://picsum.photos/seed/pitch-night-2023-4/800/600"
-    ]
-  }
+    description: "Startups pitch ideas to mentors, founders, and investors.",
+    time: "05:00 PM",
+    location: "Startup Hub",
+    hostName: "Entrepreneurship Cell",
+    contact: "+91 9554433321",
+    status: "APPROVED",
+    category: "Other",
+    subCategory: "startup-pitch",
+    img: `https://picsum.photos/seed/pitch-night-2023-thumb/400/300`,
+    images: makeImages("Startup Pitch Night 2023", deterministicCount(16)),
+  },
 ];
 
 const comingEvents = [
@@ -217,106 +287,114 @@ const comingEvents = [
     id: 1,
     title: "Spring Tech Fest",
     date: "Feb 07, 2026",
-    summary: "A festival celebrating tech innovations and demos.",
-    img: "https://picsum.photos/seed/spring-tech-fest-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/spring-tech-fest-2026-1/800/600",
-      "https://picsum.photos/seed/spring-tech-fest-2026-2/800/600",
-      "https://picsum.photos/seed/spring-tech-fest-2026-3/800/600",
-      "https://picsum.photos/seed/spring-tech-fest-2026-4/800/600"
-    ]
+    description: "A festival celebrating tech innovations and demos.",
+    time: "11:00 AM",
+    location: "Central Grounds",
+    hostName: "Tech Committee",
+    contact: "+91 8800065432",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Spring Tech Fest"),
+    img: `https://picsum.photos/seed/spring-tech-fest-2026-thumb/400/300`,
+    images: makeImages("Spring Tech Fest", deterministicCount(17)),
   },
   {
     id: 2,
     title: "Robotics Workshop",
     date: "Mar 14, 2026",
-    summary: "Interactive workshop building autonomous robot projects.",
-    img: "https://picsum.photos/seed/robotics-workshop-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/robotics-workshop-2026-1/800/600",
-      "https://picsum.photos/seed/robotics-workshop-2026-2/800/600",
-      "https://picsum.photos/seed/robotics-workshop-2026-3/800/600",
-      "https://picsum.photos/seed/robotics-workshop-2026-4/800/600"
-    ]
+    description: "Interactive workshop building autonomous robot projects.",
+    time: "10:00 AM",
+    location: "Robotics Lab",
+    hostName: "Robotics Club",
+    contact: "+91 9812345678",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Robotics Workshop"),
+    img: `https://picsum.photos/seed/robotics-workshop-2026-thumb/400/300`,
+    images: makeImages("Robotics Workshop", deterministicCount(18)),
   },
   {
     id: 3,
     title: "Digital Marketing Seminar",
     date: "Apr 18, 2026",
-    summary: "Industry insights on modern marketing strategies.",
-    img: "https://picsum.photos/seed/digital-marketing-seminar-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/digital-marketing-seminar-2026-1/800/600",
-      "https://picsum.photos/seed/digital-marketing-seminar-2026-2/800/600",
-      "https://picsum.photos/seed/digital-marketing-seminar-2026-3/800/600",
-      "https://picsum.photos/seed/digital-marketing-seminar-2026-4/800/600"
-    ]
+    description: "Industry insights on modern marketing strategies.",
+    time: "12:30 PM",
+    location: "Marketing Block 1",
+    hostName: "Marketing Community",
+    contact: "+91 9022334455",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Digital Marketing Seminar"),
+    img: `https://picsum.photos/seed/digital-marketing-seminar-2026-thumb/400/300`,
+    images: makeImages("Digital Marketing Seminar", deterministicCount(19)),
   },
   {
     id: 4,
     title: "E-commerce Conference",
     date: "May 25, 2026",
-    summary: "Talks on scaling e-commerce apps and marketing funnels.",
-    img: "https://picsum.photos/seed/ecommerce-conf-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/ecommerce-conf-2026-1/800/600",
-      "https://picsum.photos/seed/ecommerce-conf-2026-2/800/600",
-      "https://picsum.photos/seed/ecommerce-conf-2026-3/800/600",
-      "https://picsum.photos/seed/ecommerce-conf-2026-4/800/600"
-    ]
+    description: "Talks on scaling e-commerce apps and marketing funnels.",
+    time: "02:00 PM",
+    location: "Conference Hall D",
+    hostName: "E-commerce Club",
+    contact: "+91 9876501234",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("E-commerce Conference"),
+    img: `https://picsum.photos/seed/ecommerce-conf-2026-thumb/400/300`,
+    images: makeImages("E-commerce Conference", deterministicCount(20)),
   },
   {
     id: 5,
     title: "App Development Bootcamp",
     date: "Jun 10, 2026",
-    summary: "Two-week intensive mobile & web app dev bootcamp.",
-    img: "https://picsum.photos/seed/app-dev-bootcamp-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/app-dev-bootcamp-2026-1/800/600",
-      "https://picsum.photos/seed/app-dev-bootcamp-2026-2/800/600",
-      "https://picsum.photos/seed/app-dev-bootcamp-2026-3/800/600",
-      "https://picsum.photos/seed/app-dev-bootcamp-2026-4/800/600"
-    ]
+    description: "Two-week intensive mobile & web app dev bootcamp.",
+    time: "09:00 AM",
+    location: "Tech Learning Center",
+    hostName: "App Dev Society",
+    contact: "+91 9600011223",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("App Development Bootcamp"),
+    img: `https://picsum.photos/seed/app-dev-bootcamp-2026-thumb/400/300`,
+    images: makeImages("App Development Bootcamp", deterministicCount(21)),
   },
   {
     id: 6,
     title: "Product Management Summit",
     date: "Jul 18, 2026",
-    summary: "Expert PMs discuss roadmaps, OKRs and customer research.",
-    img: "https://picsum.photos/seed/pm-summit-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/pm-summit-2026-1/800/600",
-      "https://picsum.photos/seed/pm-summit-2026-2/800/600",
-      "https://picsum.photos/seed/pm-summit-2026-3/800/600",
-      "https://picsum.photos/seed/pm-summit-2026-4/800/600"
-    ]
+    description: "Expert PMs discuss roadmaps, OKRs and customer research.",
+    time: "10:00 AM",
+    location: "Business Auditorium",
+    hostName: "Product Club",
+    contact: "+91 9500001122",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Product Management Summit"),
+    img: `https://picsum.photos/seed/pm-summit-2026-thumb/400/300`,
+    images: makeImages("Product Management Summit", deterministicCount(22)),
   },
   {
     id: 7,
     title: "IoT Innovation Day",
     date: "Aug 5, 2026",
-    summary: "Students and startups showcase real IoT projects.",
-    img: "https://picsum.photos/seed/iot-day-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/iot-day-2026-1/800/600",
-      "https://picsum.photos/seed/iot-day-2026-2/800/600",
-      "https://picsum.photos/seed/iot-day-2026-3/800/600",
-      "https://picsum.photos/seed/iot-day-2026-4/800/600"
-    ]
+    description: "Students and startups showcase real IoT projects.",
+    time: "11:30 AM",
+    location: "IoT Arena",
+    hostName: "IoT Club",
+    contact: "+91 9900022334",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("IoT Innovation Day"),
+    img: `https://picsum.photos/seed/iot-day-2026-thumb/400/300`,
+    images: makeImages("IoT Innovation Day", deterministicCount(23)),
   },
   {
     id: 8,
     title: "Full-Stack Weekend",
     date: "Sep 14, 2026",
-    summary: "A coding weekend building full-stack MERN & RN apps.",
-    img: "https://picsum.photos/seed/fullstack-weekend-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/fullstack-weekend-2026-1/800/600",
-      "https://picsum.photos/seed/fullstack-weekend-2026-2/800/600",
-      "https://picsum.photos/seed/fullstack-weekend-2026-3/800/600",
-      "https://picsum.photos/seed/fullstack-weekend-2026-4/800/600"
-    ]
-  }
+    description: "A coding weekend building full-stack MERN & RN apps.",
+    time: "10:00 AM",
+    location: "Coding Hub",
+    hostName: "Developers Circle",
+    contact: "+91 9887766554",
+    status: "APPROVED",
+    category: chooseCategoryFromTitle("Full-Stack Weekend"),
+    img: `https://picsum.photos/seed/fullstack-weekend-2026-thumb/400/300`,
+    images: makeImages("Full-Stack Weekend", deterministicCount(24)),
+  },
 ];
 
 const sportsEvents = [
@@ -324,111 +402,120 @@ const sportsEvents = [
     id: 1,
     title: "Intercollegiate Football Championship",
     date: "Dec 05, 2025",
-    summary: "Annual football championship between top colleges.",
-    img: "https://picsum.photos/seed/football-2025-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/football-2025-1/800/600",
-      "https://picsum.photos/seed/football-2025-2/800/600",
-      "https://picsum.photos/seed/football-2025-3/800/600",
-      "https://picsum.photos/seed/football-2025-4/800/600"
-    ]
+    description: "Annual football championship between top colleges.",
+    time: "03:00 PM",
+    location: "Football Turf",
+    hostName: "Sports Committee",
+    contact: "+91 9123409876",
+    status: "APPROVED",
+    category: "Sports",
+    img: `https://picsum.photos/seed/football-2025-thumb/400/300`,
+    images: makeImages("Intercollegiate Football Championship", deterministicCount(25)),
   },
   {
     id: 2,
     title: "City Marathon 2026",
     date: "Jan 20, 2026",
-    summary: "A huge fitness event bringing athletes across the city.",
-    img: "https://picsum.photos/seed/marathon-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/marathon-2026-1/800/600",
-      "https://picsum.photos/seed/marathon-2026-2/800/600",
-      "https://picsum.photos/seed/marathon-2026-3/800/600",
-      "https://picsum.photos/seed/marathon-2026-4/800/600"
-    ]
+    description: "A huge fitness event bringing athletes across the city.",
+    time: "06:00 AM",
+    location: "City Sports Ground",
+    hostName: "Athletics Club",
+    contact: "+91 9002215467",
+    status: "APPROVED",
+    category: "Sports",
+    img: `https://picsum.photos/seed/marathon-2026-thumb/400/300`,
+    images: makeImages("City Marathon 2026", deterministicCount(26)),
   },
   {
     id: 3,
     title: "Basketball Tournament",
     date: "Feb 28, 2026",
-    summary: "Intense interdepartmental basketball competition.",
-    img: "https://picsum.photos/seed/basketball-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/basketball-2026-1/800/600",
-      "https://picsum.photos/seed/basketball-2026-2/800/600",
-      "https://picsum.photos/seed/basketball-2026-3/800/600",
-      "https://picsum.photos/seed/basketball-2026-4/800/600"
-    ]
+    description: "Intense interdepartmental basketball competition.",
+    time: "01:00 PM",
+    location: "Indoor Court 2",
+    hostName: "Basketball Club",
+    contact: "+91 9456677882",
+    status: "APPROVED",
+    category: "Sports",
+    img: `https://picsum.photos/seed/basketball-2026-thumb/400/300`,
+    images: makeImages("Basketball Tournament", deterministicCount(27)),
   },
   {
     id: 4,
     title: "Swimming Gala 2026",
     date: "Mar 12, 2026",
-    summary: "Competitive swimming events for all categories.",
-    img: "https://picsum.photos/seed/swim-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/swim-2026-1/800/600",
-      "https://picsum.photos/seed/swim-2026-2/800/600",
-      "https://picsum.photos/seed/swim-2026-3/800/600",
-      "https://picsum.photos/seed/swim-2026-4/800/600"
-    ]
+    description: "Competitive swimming events for all categories.",
+    time: "09:30 AM",
+    location: "Aquatic Center",
+    hostName: "Swimming Association",
+    contact: "+91 9560011223",
+    status: "APPROVED",
+    category: "Sports",
+    img: `https://picsum.photos/seed/swim-2026-thumb/400/300`,
+    images: makeImages("Swimming Gala 2026", deterministicCount(28)),
   },
   {
     id: 5,
     title: "Tennis Open Championship",
     date: "Apr 10, 2026",
-    summary: "Singles and doubles tennis tournament.",
-    img: "https://picsum.photos/seed/tennis-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/tennis-2026-1/800/600",
-      "https://picsum.photos/seed/tennis-2026-2/800/600",
-      "https://picsum.photos/seed/tennis-2026-3/800/600",
-      "https://picsum.photos/seed/tennis-2026-4/800/600"
-    ]
+    description: "Singles and doubles tennis tournament.",
+    time: "02:00 PM",
+    location: "Tennis Court A",
+    hostName: "Tennis Club",
+    contact: "+91 9445566778",
+    status: "APPROVED",
+    category: "Sports",
+    img: `https://picsum.photos/seed/tennis-2026-thumb/400/300`,
+    images: makeImages("Tennis Open Championship", deterministicCount(29)),
   },
   {
     id: 6,
     title: "Cricket Cup 2026",
     date: "May 22, 2026",
-    summary: "Department-level cricket knockout rounds.",
-    img: "https://picsum.photos/seed/cricket-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/cricket-2026-1/800/600",
-      "https://picsum.photos/seed/cricket-2026-2/800/600",
-      "https://picsum.photos/seed/cricket-2026-3/800/600",
-      "https://picsum.photos/seed/cricket-2026-4/800/600"
-    ]
+    description: "Department-level cricket knockout rounds.",
+    time: "10:00 AM",
+    location: "Cricket Ground",
+    hostName: "Cricket Committee",
+    contact: "+91 9334455667",
+    status: "APPROVED",
+    category: "Sports",
+    img: `https://picsum.photos/seed/cricket-2026-thumb/400/300`,
+    images: makeImages("Cricket Cup 2026", deterministicCount(30)),
   },
   {
     id: 7,
     title: "Badminton League 2026",
     date: "Jun 18, 2026",
-    summary: "Singles & doubles badminton league.",
-    img: "https://picsum.photos/seed/badminton-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/badminton-2026-1/800/600",
-      "https://picsum.photos/seed/badminton-2026-2/800/600",
-      "https://picsum.photos/seed/badminton-2026-3/800/600",
-      "https://picsum.photos/seed/badminton-2026-4/800/600"
-    ]
+    description: "Singles & doubles badminton league.",
+    time: "03:30 PM",
+    location: "Badminton Hall",
+    hostName: "Badminton Club",
+    contact: "+91 9665544332",
+    status: "APPROVED",
+    category: "Sports",
+    img: `https://picsum.photos/seed/badminton-2026-thumb/400/300`,
+    images: makeImages("Badminton League 2026", deterministicCount(31)),
   },
   {
     id: 8,
     title: "Volleyball Championship 2026",
     date: "Jul 14, 2026",
-    summary: "Mens and womens volleyball knockout tournament.",
-    img: "https://picsum.photos/seed/volleyball-2026-thumb/400/300",
-    images: [
-      "https://picsum.photos/seed/volleyball-2026-1/800/600",
-      "https://picsum.photos/seed/volleyball-2026-2/800/600",
-      "https://picsum.photos/seed/volleyball-2026-3/800/600",
-      "https://picsum.photos/seed/volleyball-2026-4/800/600"
-    ]
-  }
+    description: "Mens and womens volleyball knockout tournament.",
+    time: "12:00 PM",
+    location: "Volleyball Arena",
+    hostName: "Volleyball Association",
+    contact: "+91 9778899001",
+    status: "APPROVED",
+    category: "Sports",
+    img: `https://picsum.photos/seed/volleyball-2026-thumb/400/300`,
+    images: makeImages("Volleyball Championship 2026", deterministicCount(32)),
+  },
 ];
 
 module.exports = {
+  CATEGORY_OPTIONS,
   techEvents,
   pastEvents,
   comingEvents,
-  sportsEvents
+  sportsEvents,
 };

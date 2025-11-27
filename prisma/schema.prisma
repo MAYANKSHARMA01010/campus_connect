@@ -36,14 +36,15 @@ model EventRequest {
   title        String
   description  String
   category     String
-  date         DateTime?
-  time         String?
-  location     String?
-  hostName     String?
-  contact      String?
+  subCategory  String?
+  date         DateTime
+  time         String
+  location     String
+  hostName     String
+  contact      String
   status       RequestStatus @default(PENDING)
-  createdById  Int?
-  createdBy    User?         @relation(fields: [createdById], references: [id])
+  createdById  Int
+  createdBy    User         @relation(fields: [createdById], references: [id])
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   images       EventImage[]
