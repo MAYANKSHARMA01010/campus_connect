@@ -8,6 +8,7 @@ import {
     ScrollView,
     RefreshControl,
     Share,
+    Text as RNText,
 } from "react-native";
 import {
     Appbar,
@@ -65,6 +66,7 @@ export default function EventDetailsScreen({ route, navigation }) {
 
     function formatTime(dateString, timeString) {
         if (timeString) return timeString;
+        if (!dateString) return "-";
         return new Date(dateString).toLocaleTimeString("en-IN", {
             hour: "numeric",
             minute: "2-digit",
@@ -93,7 +95,7 @@ export default function EventDetailsScreen({ route, navigation }) {
                 message: `${event.title}\n${formatDate(event.date)} • ${formatTime(
                     event.date,
                     event.time
-                )}\n${event.location}\n\n${event.description}`,
+                )}\n${event.location || ""}\n\n${event.description || ""}`,
             });
         } catch (err) {
             console.log(err);
@@ -104,7 +106,7 @@ export default function EventDetailsScreen({ route, navigation }) {
         <View style={{ flex: 1, backgroundColor: "#F4F5F7" }}>
             <Appbar.Header elevated>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
-                <Appbar.Content title={event.title} />
+                <Appbar.Content title={event.title || "Event"} />
             </Appbar.Header>
 
             <ScrollView
@@ -122,14 +124,20 @@ export default function EventDetailsScreen({ route, navigation }) {
                         )}
                         scrollEventThrottle={16}
                     >
-                        {images.map((item, index) => (
-                            <Image
-                                key={index}
-                                source={{ uri: item.url }}
-                                style={styles.heroImage}
-                                resizeMode="cover"
-                            />
-                        ))}
+                        {images.length > 0 ? (
+                            images.map((item, index) => (
+                                <Image
+                                    key={index}
+                                    source={{ uri: item.url }}
+                                    style={styles.heroImage}
+                                    resizeMode="cover"
+                                />
+                            ))
+                        ) : (
+                            <View style={[styles.heroImage, styles.placeholder]}>
+                                <RNText style={{ color: "#666" }}>No images</RNText>
+                            </View>
+                        )}
                     </ScrollView>
 
                     <View style={styles.topButtons}>
@@ -140,6 +148,7 @@ export default function EventDetailsScreen({ route, navigation }) {
                             style={styles.roundBtn}
                             onPress={() => console.log("Bookmark")}
                         />
+                        <View style={{ width: 8 }} />
                         <IconButton
                             icon="calendar-plus"
                             size={26}
@@ -147,6 +156,7 @@ export default function EventDetailsScreen({ route, navigation }) {
                             style={styles.roundBtn}
                             onPress={() => console.log("Calendar")}
                         />
+                        <View style={{ width: 8 }} />
                         <IconButton
                             icon="share-variant"
                             size={26}
@@ -157,7 +167,7 @@ export default function EventDetailsScreen({ route, navigation }) {
                     </View>
 
                     <View style={styles.dotsContainer}>
-                        {images.map((_, i) => {
+                        {(images.length > 0 ? images : [0]).map((_, i) => {
                             const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
                             const dotW = scrollX.interpolate({
                                 inputRange,
@@ -173,9 +183,9 @@ export default function EventDetailsScreen({ route, navigation }) {
                     <Text style={styles.eventTitle}>{event.title}</Text>
 
                     <View style={styles.rowWrap}>
-                        <Chip style={styles.chip}>{event.category}</Chip>
-                        {event.subCategory && <Chip style={styles.chip}>{event.subCategory}</Chip>}
-                        <Chip style={styles.chip}>{formatDate(event.date)}</Chip>
+                        {event.category ? <Chip style={styles.chip}>{event.category}</Chip> : null}
+                        {event.subCategory ? <Chip style={styles.chip}>{event.subCategory}</Chip> : null}
+                        {event.date ? <Chip style={styles.chip}>{formatDate(event.date)}</Chip> : null}
                     </View>
                 </View>
 
@@ -193,51 +203,52 @@ export default function EventDetailsScreen({ route, navigation }) {
 
                 <View style={styles.cardsRow}>
                     <Surface style={[styles.infoCard, { flex: 1 }]}>
-                        <Text style={styles.label}>Location</Text>
-                        <Text style={styles.value}>{event.location}</Text>
-                        <Button mode="outlined" compact icon="map-marker">
-                            Open Maps
-                        </Button>
+                        <View style={styles.innerClip}>
+                            <Text style={styles.label}>Location</Text>
+                            <Text style={styles.value}>{event.location || "—"}</Text>
+                            <Button mode="outlined" compact icon="map-marker" onPress={() => { }}>
+                                Open Maps
+                            </Button>
+                        </View>
                     </Surface>
 
                     <Surface style={[styles.infoCard, { flex: 1 }]}>
-                        <Text style={styles.label}>Host</Text>
-                        <Text style={styles.value}>{event.hostName}</Text>
-                        <Button mode="outlined" compact icon="phone">
-                            Call
-                        </Button>
+                        <View style={styles.innerClip}>
+                            <Text style={styles.label}>Host</Text>
+                            <Text style={styles.value}>{event.hostName || "—"}</Text>
+                            <Button mode="outlined" compact icon="phone" onPress={() => { }}>
+                                Call
+                            </Button>
+                        </View>
                     </Surface>
                 </View>
 
                 <View style={styles.section}>
                     <Text style={styles.heading}>About</Text>
                     <Surface style={styles.surfaceBox}>
-                        <Text style={styles.desc}>{event.description}</Text>
+                        <Text style={styles.desc}>{event.description || "No description provided."}</Text>
                     </Surface>
                 </View>
 
                 <View style={styles.section}>
                     <Text style={styles.heading}>Details</Text>
 
-                    <Surface style={styles.detailsBox}>
-                        <View style={styles.detailRow}>
-                            <Text style={styles.label}>Category</Text>
-                            <Text style={styles.value}>{event.category}</Text>
-                        </View>
-                        <Divider />
-                        <View style={styles.detailRow}>
-                            <Text style={styles.label}>Sub-category</Text>
-                            <Text style={styles.value}>{event.subCategory || "—"}</Text>
-                        </View>
-                        <Divider />
-                        <View style={styles.detailRow}>
-                            <Text style={styles.label}>Status</Text>
-                            <Text style={styles.value}>{event.status}</Text>
-                        </View>
-                        <Divider />
-                        <View style={styles.detailRow}>
-                            <Text style={styles.label}>Contact</Text>
-                            <Text style={styles.value}>{event.contact}</Text>
+                    <Surface style={styles.detailsSurface}>
+                        <View style={styles.detailsBoxInner}>
+                            <View style={styles.detailRow}>
+                                <Text style={styles.label}>Category</Text>
+                                <Text style={styles.value}>{event.category || "—"}</Text>
+                            </View>
+                            <Divider />
+                            <View style={styles.detailRow}>
+                                <Text style={styles.label}>Sub-category</Text>
+                                <Text style={styles.value}>{event.subCategory || "—"}</Text>
+                            </View>
+                            <Divider />
+                            <View style={styles.detailRow}>
+                                <Text style={styles.label}>Contact</Text>
+                                <Text style={styles.value}>{event.contact || "—"}</Text>
+                            </View>
                         </View>
                     </Surface>
                 </View>
@@ -257,12 +268,17 @@ const styles = StyleSheet.create({
         width,
         height: 500,
     },
+    placeholder: {
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#EEE",
+    },
     topButtons: {
         position: "absolute",
         top: 16,
         right: 16,
         flexDirection: "row",
-        gap: 10,
+        alignItems: "center",
         zIndex: 10,
     },
     roundBtn: {
@@ -293,23 +309,29 @@ const styles = StyleSheet.create({
     rowWrap: {
         flexDirection: "row",
         flexWrap: "wrap",
-        gap: 10,
     },
     chip: {
         backgroundColor: "#EBEDFF",
+        marginRight: 8,
+        marginBottom: 8,
     },
     cardsRow: {
         flexDirection: "row",
-        gap: 14,
         paddingHorizontal: 20,
         paddingTop: 20,
     },
     infoCard: {
         flex: 1,
-        padding: 18,
+        padding: 0,
         borderRadius: 16,
         backgroundColor: "#fff",
         elevation: 3,
+        marginRight: 14,
+    },
+    innerClip: {
+        padding: 18,
+        borderRadius: 16,
+        overflow: "hidden",
     },
     label: {
         fontSize: 13,
@@ -339,11 +361,15 @@ const styles = StyleSheet.create({
         lineHeight: 22,
         color: "#444",
     },
-    detailsBox: {
+    detailsSurface: {
         backgroundColor: "#fff",
         borderRadius: 16,
-        overflow: "hidden",
         elevation: 2,
+        marginHorizontal: 0,
+    },
+    detailsBoxInner: {
+        overflow: "hidden",
+        borderRadius: 16,
     },
     detailRow: {
         padding: 16,

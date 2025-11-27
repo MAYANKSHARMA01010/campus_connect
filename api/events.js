@@ -31,10 +31,11 @@ export const getAllEvents = async () => {
     const res = await API.get("/events/home");
     return res.data.events;
   } catch (error) {
-    console.log("ERROR FETCHING EVENTS:", error.response?.data || error.message);
+    console.log("ERROR FETCHING EVENTS:", error);
     return [];
   }
 };
+
 
 export const getEventById = async (id) => {
   try {
