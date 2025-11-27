@@ -1,16 +1,12 @@
 import API from "./api";
 
-export const getMyProfile = async () => {
-  const res = await API.get("/users/me");
+export const getMyProfile = async (token) => {
+  const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+  const res = await API.get("/user/me", config);
   return res.data;
 };
 
-export const updateProfile = async (payload) => {
-  const res = await API.put("/users/me", payload);
-  return res.data;
-};
-
-export const getUserById = async (id) => {
-  const res = await API.get(`/users/${id}`);
+export const updateMyProfile = async (payload) => {
+  const res = await API.put("/user/update", payload);
   return res.data;
 };

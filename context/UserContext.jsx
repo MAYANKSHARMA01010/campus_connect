@@ -1,10 +1,11 @@
+// src/context/UserContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
 import API from "../api/api";
 import { loginUser, registerUser, logoutUser } from "../api/auth";
-import { getMyProfile } from "../api/user";
+import { getMyProfile, updateMyProfile } from "../api/user";
 
 const UserContext = createContext({
   user: null,
@@ -15,6 +16,7 @@ const UserContext = createContext({
   login: async () => {},
   logout: async () => {},
   fetchUser: async () => {},
+  updateProfile: async () => {},
 });
 
 export const UserProvider = ({ children }) => {
@@ -22,7 +24,6 @@ export const UserProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Sync API header when token changes
   useEffect(() => {
     if (token) {
       API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -31,7 +32,6 @@ export const UserProvider = ({ children }) => {
     }
   }, [token]);
 
-  // Load stored token at startup
   useEffect(() => {
     (async () => {
       try {
@@ -41,26 +41,26 @@ export const UserProvider = ({ children }) => {
           await fetchUser(storedToken);
         }
       } catch (err) {
-        console.log("UserProvider initialization error:", err);
+        console.log("UserProvider init error:", err);
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  // Fetch logged-in user profile
   const fetchUser = async (t = token) => {
     try {
       if (!t) return;
-      const profile = await getMyProfile();
-      setUser(profile.user ?? null);
+      const profile = await getMyProfile(t);
+      // server may return { user: {...} } or plain {...}
+      const u = profile.user ?? profile;
+      setUser(u ?? null);
     } catch (err) {
       console.log("fetchUser failed:", err?.response?.data || err);
       await logout();
     }
   };
 
-  // Register
   const register = async (data) => {
     try {
       await registerUser(data);
@@ -73,16 +73,18 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Login
   const login = async (credentials) => {
     try {
       const res = await loginUser(credentials);
-
       const t = res.token;
       const u = res.user ?? null;
 
-      await AsyncStorage.setItem("token", t);
+      if (!t) {
+        Alert.alert("Error", "Server did not return a token.");
+        return false;
+      }
 
+      await AsyncStorage.setItem("token", t);
       setToken(t);
       setUser(u);
 
@@ -95,15 +97,42 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Logout
+  const updateProfile = async (payload) => {
+    try {
+      // payload should be an object with fields you allow to change on server
+      const res = await updateMyProfile(payload);
+      // backend might return { user: {...} } or the updated user object directly
+      const updated = res.user ?? res;
+      if (!updated) {
+        // if server returned something else, re-fetch canonical user
+        await fetchUser();
+      } else {
+        setUser((prev) => ({ ...(prev ?? {}), ...(updated ?? {}) }));
+      }
+      Alert.alert("Success", "Profile updated.");
+      return { ok: true, user: updated ?? null };
+    } catch (err) {
+      console.log("updateProfile error:", err?.response?.data || err);
+      Alert.alert(
+        "Error",
+        err?.response?.data?.ERROR || "Unable to update profile. Try again."
+      );
+      return { ok: false, error: err };
+    }
+  };
+
   const logout = async () => {
     try {
       await logoutUser();
     } catch (err) {
-      console.log("logout error (ignored)", err?.response?.data || err);
+      console.log("logout error (server) ignored:", err?.response?.data || err);
     }
 
-    await AsyncStorage.removeItem("token");
+    try {
+      await AsyncStorage.removeItem("token");
+    } catch (err) {
+      console.log("AsyncStorage removeItem error:", err);
+    }
 
     setToken(null);
     setUser(null);
@@ -121,6 +150,7 @@ export const UserProvider = ({ children }) => {
         login,
         logout,
         fetchUser,
+        updateProfile,
       }}
     >
       {children}

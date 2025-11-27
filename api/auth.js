@@ -1,20 +1,29 @@
-// /api/auth.js
 import API from "./api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Register user
+/**
+ * Calls server register endpoint.
+ * Returns res.data (server response).
+ */
 export const registerUser = async (payload) => {
-  const res = await API.post("/auth/register", payload);
+  const res = await API.post("/user/register", payload);
   return res.data;
 };
 
-// Login user
+/**
+ * Calls server login endpoint.
+ * Returns res.data (should include token and user).
+ * Do NOT write token to AsyncStorage here — let the context manage storage.
+ */
 export const loginUser = async (payload) => {
-  const res = await API.post("/auth/login", payload);
+  const res = await API.post("/user/login", payload);
   return res.data;
 };
 
-// Logout (remove token locally)
+/**
+ * Call server logout endpoint. Do not remove local token here;
+ * let your context handle local storage & header cleanup.
+ */
 export const logoutUser = async () => {
-  await AsyncStorage.removeItem("token");
+  const res = await API.post("/user/logout");
+  return res.data;
 };
