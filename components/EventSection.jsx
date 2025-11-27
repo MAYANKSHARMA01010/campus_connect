@@ -16,7 +16,7 @@ export default function EventSection({ title, data }) {
     <TouchableOpacity
       activeOpacity={0.9}
       style={styles.card} 
-      onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
+      onPress={() => navigation.navigate("EventDetail", { id: item.id })}
     >
       <ImageBackground
         source={{ uri: item.images?.[0]?.url }}

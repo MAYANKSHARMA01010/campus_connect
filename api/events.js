@@ -4,7 +4,9 @@ import { Platform } from "react-native";
 export const createEventWithImages = async (payload, images) => {
   const form = new FormData();
 
-  Object.entries(payload).forEach(([key, value]) => form.append(key, value));
+  Object.entries(payload).forEach(([key, value]) => {
+    form.append(key, value);
+  });
 
   images.forEach((uri, index) => {
     const ext = uri.split(".").pop();
@@ -17,7 +19,7 @@ export const createEventWithImages = async (payload, images) => {
     });
   });
 
-  const res = await API.post("/events", form, {
+  const res = await API.post("/events/request", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 
@@ -41,15 +43,5 @@ export const getEventById = async (id) => {
   } catch (error) {
     console.log("ERROR FETCHING EVENT:", error.response?.data || error.message);
     return null;
-  }
-};
-
-export const rsvpEvent = async (id, status) => {
-  try {
-    const res = await API.post(`/events/${id}/rsvp`, { status });
-    return res.data;
-  } catch (error) {
-    console.log("ERROR RSVP:", error.response?.data || error.message);
-    throw error;
   }
 };
