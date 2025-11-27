@@ -15,11 +15,11 @@ export default function EventSection({ title, data }) {
   const renderCard = ({ item }) => (
     <TouchableOpacity
       activeOpacity={0.9}
-      style={styles.card}
+      style={styles.card} 
       onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
     >
       <ImageBackground
-        source={{ uri: item.image }}
+        source={{ uri: item.images?.[0]?.url }}
         style={styles.bgImage}
         imageStyle={styles.bgImageStyle}
       >
@@ -29,7 +29,9 @@ export default function EventSection({ title, data }) {
           <Text variant="titleLarge" style={styles.overlayTitle} numberOfLines={1}>
             {item.title}
           </Text>
-          <Text style={styles.overlayDate}>{item.date}</Text>
+          <Text style={styles.overlayDate}>
+            {item.date ? new Date(item.date).toDateString() : ""}
+          </Text>
           <Text style={styles.overlaySummary} numberOfLines={2}>
             {item.description}
           </Text>
@@ -37,7 +39,6 @@ export default function EventSection({ title, data }) {
       </ImageBackground>
     </TouchableOpacity>
   );
-
 
   const renderViewMoreCard = () => (
     <TouchableOpacity

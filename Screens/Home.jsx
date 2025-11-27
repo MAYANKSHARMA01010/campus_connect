@@ -30,25 +30,28 @@ export default function HomeScreen({ navigation }) {
 
   const loadEvents = async () => {
     const data = await getAllEvents();
-
     const today = new Date();
 
-    setUpcoming(data.filter((e) => new Date(e.date) > today));
-    setPast(data.filter((e) => new Date(e.date) < today));
+    setUpcoming(
+      data.filter(e => {
+        if (!e.date) return true;
+        return new Date(e.date) > today;
+      })
+    );
+
+    setPast(
+      data.filter(e => e.date && new Date(e.date) < today)
+    );
 
     setSportsCulture(
-      data.filter(
-        (e) =>
-          e.category?.toLowerCase() === "sports" ||
-          e.category?.toLowerCase() === "culture"
+      data.filter(e =>
+        ["sports", "culture"].includes(e.category?.toLowerCase())
       )
     );
 
     setEduTech(
-      data.filter(
-        (e) =>
-          e.category?.toLowerCase() === "tech" ||
-          e.category?.toLowerCase() === "education"
+      data.filter(e =>
+        ["tech", "education"].includes(e.category?.toLowerCase())
       )
     );
   };
@@ -170,7 +173,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FDF7F9",
-    paddingBottom: 50,
+    paddingBottom: 120,
   },
   appbar: {
     backgroundColor: "#fff",
