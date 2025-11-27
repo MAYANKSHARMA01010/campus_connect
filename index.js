@@ -25,6 +25,23 @@ app.get("/test-db", async (req, res) => {
   }
 });
 
+// Event testing Route
+app.get('/get-all-events', async (req, res) => {
+  try {
+    const data = await prisma.eventRequest.findMany({
+      include: {
+        images: true
+      }
+    });
+
+    return res.status(200).json(data);
+  } 
+  catch (err) {
+    console.error("❌ Error fetching events:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 // Backend test Route
 app.get("/", (req, res) => {
   res.status(200).send("<h1>Backend Running Successfully 🚀</h1>");

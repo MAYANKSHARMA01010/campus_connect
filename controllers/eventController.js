@@ -47,7 +47,7 @@ async function createEventController(req, res) {
             message: "Event request submitted successfully",
             event: createdEvent,
         });
-    } 
+    }
     catch (err) {
         console.error("createEventController ERROR:", err);
         return res.status(500).json({ ERROR: "Internal Server Error" });
@@ -60,19 +60,50 @@ async function getAllEventsController(req, res) {
         const events = await prisma.eventRequest.findMany({
             include: {
                 images: true,
-                createdBy: { select: { id: true, name: true, username: true } },
             },
-            orderBy: { createdAt: "desc" },
+            orderBy: {
+                id: 'asc'
+            }
         });
 
         return res.status(200).json({ events });
-    } 
+    }
     catch (err) {
         console.error("getAllEventsController ERROR:", err);
         return res.status(500).json({ ERROR: "Failed to fetch events" });
     }
 }
 
+async function getAllEventsForHomeSecreenController(req, res) {
+    try {
+        const events = await prisma.eventRequest.findMany({
+            where: {
+                status: "APPROVED"
+            },
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                category: true,
+                images: {
+                    select: {
+                        id: true,
+                        url: true,
+                    },
+                },
+            },
+            orderBy: {
+                id: "asc"
+            }
+        });
+
+        return res.status(200).json({ events });
+    }
+    catch (err) {
+        console.error("getAllEventsController ERROR:", err);
+        return res.status(500).json({ ERROR: "Failed to fetch events" });
+    }
+}
 
 async function getEventByIdController(req, res) {
     try {
@@ -82,14 +113,16 @@ async function getEventByIdController(req, res) {
             where: { id },
             include: {
                 images: true,
-                createdBy: { select: { id: true, name: true, username: true } },
             },
+            orderBy: {
+                id: 'asc'
+            }
         });
 
         if (!event) return res.status(404).json({ ERROR: "Event not found" });
 
         return res.status(200).json({ event });
-    } 
+    }
     catch (err) {
         console.error("getEventByIdController ERROR:", err);
         return res.status(500).json({ ERROR: "Internal Server Error" });
@@ -99,5 +132,6 @@ async function getEventByIdController(req, res) {
 module.exports = {
     createEventController,
     getAllEventsController,
+    getAllEventsForHomeSecreenController,
     getEventByIdController,
 };
