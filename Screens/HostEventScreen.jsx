@@ -67,7 +67,6 @@ export default function HostEventScreen({ navigation }) {
 
   const handleChange = (k, v) => setForm({ ...form, [k]: v });
 
-  // ------------ PICK IMAGES ------------
   const pickImages = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -104,7 +103,6 @@ export default function HostEventScreen({ navigation }) {
     }));
   };
 
-  // ------------ VALIDATION ------------
   const validate = () => {
     const err = {};
     if (!form.title.trim()) err.title = "Required";
@@ -122,7 +120,6 @@ export default function HostEventScreen({ navigation }) {
 
   const errors = validate();
 
-  // ------------ CLOUDINARY UPLOAD ------------
   async function uploadLocalImageToCloudinary(uri) {
     if (!CLOUD_NAME || !UPLOAD_PRESET) throw new Error("Cloudinary config missing");
 
@@ -154,7 +151,6 @@ export default function HostEventScreen({ navigation }) {
     return json.secure_url;
   }
 
-  // ------------ SUBMIT EVENT ------------
   const submit = async () => {
     console.log("submit pressed", { user, token, form });
 
@@ -204,7 +200,6 @@ export default function HostEventScreen({ navigation }) {
         }
       }
 
-      // Maintain order of images
       const finalImages = [];
       let idx = 0;
 
@@ -228,7 +223,6 @@ export default function HostEventScreen({ navigation }) {
     }
   };
 
-  // ------------ SEND TO BACKEND ------------
   async function sendEventToServer(imageUrls) {
     const payload = {
       title: form.title,
@@ -258,7 +252,6 @@ export default function HostEventScreen({ navigation }) {
     }
   }
 
-  // ---------------- UI ----------------
   return (
     <>
       <StatusBar barStyle="light-content" />
@@ -298,7 +291,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.description}
           </HelperText>
 
-          {/* CATEGORY */}
           <Menu
             visible={categoryMenuVisible}
             onDismiss={() => setCategoryMenuVisible(false)}
@@ -329,7 +321,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.category}
           </HelperText>
 
-          {/* DATE */}
           <TouchableOpacity onPress={() => setDatePickerVisible(true)} style={styles.dropdown}>
             <Text style={{ color: form.date ? "#000" : "#777" }}>
               {form.date || "Select Date *"}
@@ -353,7 +344,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.date}
           </HelperText>
 
-          {/* TIME */}
           <TouchableOpacity onPress={() => setTimePickerVisible(true)} style={styles.dropdown}>
             <Text style={{ color: form.time ? "#000" : "#777" }}>
               {form.time || "Select Time *"}
@@ -411,7 +401,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.contact}
           </HelperText>
 
-          {/* IMAGES */}
           <Text style={styles.sectionTitle}>Upload Images *</Text>
           <Text style={styles.sectionSubtitle}>Minimum 4 required</Text>
 

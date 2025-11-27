@@ -18,7 +18,6 @@ import { getAllEvents } from "../api/events";
 
 export default function HomeScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = React.useState("");
-
   const [upcoming, setUpcoming] = React.useState([]);
   const [past, setPast] = React.useState([]);
   const [sportsCulture, setSportsCulture] = React.useState([]);
@@ -28,30 +27,36 @@ export default function HomeScreen({ navigation }) {
     loadEvents();
   }, []);
 
+  const sortByDate = (arr) =>
+    [...arr].sort((a, b) => new Date(a.date) - new Date(b.date));
+
   const loadEvents = async () => {
     const data = await getAllEvents();
     const today = new Date();
 
-    setUpcoming(
-      data.filter(e => {
-        if (!e.date) return true;
-        return new Date(e.date) > today;
-      })
-    );
+    const valid = data.filter((e) => e.date);
 
-    setPast(
-      data.filter(e => e.date && new Date(e.date) < today)
-    );
+    const upcomingSorted = sortByDate(valid.filter((e) => new Date(e.date) >= today));
+    const pastSorted = sortByDate(valid.filter((e) => new Date(e.date) < today)).reverse();
+
+    setUpcoming(upcomingSorted);
+    setPast(pastSorted);
 
     setSportsCulture(
-      data.filter(e =>
-        ["sports", "culture"].includes(e.category?.toLowerCase())
+      sortByDate(
+        data.filter((e) =>
+          ["sports", "culture"].includes(e.category?.toLowerCase())
+        )
       )
     );
 
     setEduTech(
-      data.filter(e =>
-        ["tech", "education"].includes(e.category?.toLowerCase())
+      sortByDate(
+        data.filter((e) =>
+          ["tech", "education", "seminar", "workshop"].includes(
+            e.category?.toLowerCase()
+          )
+        )
       )
     );
   };
