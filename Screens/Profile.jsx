@@ -6,8 +6,9 @@ import { useAuth } from "../context/UserContext";
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
 
-  const joinedDate = user?.joinedDate || "12 Feb 2025";
-  const memberSince = user?.memberSince || "08 Jan 2025";
+  const joinedDate = user?.createdAt
+    ? new Date(user.createdAt).toDateString()
+    : "Not available";
 
   return (
     <Surface style={styles.container}>
@@ -44,11 +45,6 @@ export default function ProfileScreen({ navigation }) {
             <Text style={styles.label}>Joined Campus Connect</Text>
             <Text style={styles.value}>{joinedDate}</Text>
           </View>
-
-          <View style={styles.gridItem}>
-            <Text style={styles.label}>Member Since</Text>
-            <Text style={styles.value}>{memberSince}</Text>
-          </View>
         </View>
 
         <Button
@@ -62,7 +58,10 @@ export default function ProfileScreen({ navigation }) {
 
         <Button
           mode="outlined"
-          onPress={logout}
+          onPress={() => {
+            logout();
+            navigation.replace("Login");
+          }}
           style={styles.logoutBtn}
           textColor="#E91E63"
         >
@@ -102,8 +101,6 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 15,
   },
-
-  /** GRID */
   grid: {
     width: "100%",
     flexDirection: "row",
@@ -119,7 +116,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     elevation: 2,
   },
-
   label: {
     fontSize: 12,
     color: "#777",
@@ -130,7 +126,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#222",
   },
-
   editBtn: {
     width: "80%",
     borderRadius: 10,

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Text, TextInput, Button, ActivityIndicator, Surface } from "react-native-paper";
 import { useAuth } from "../context/UserContext";
 
@@ -23,10 +23,10 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (Object.values(form).some((v) => !v))
-      return alert("Please fill all fields");
+      return Alert.alert("Missing Fields", "Please fill all fields");
 
     if (form.password !== form.confirm_password)
-      return alert("Passwords do not match");
+      return Alert.alert("Password Error", "Passwords do not match");
 
     setLoading(true);
     const success = await register(form);
@@ -37,7 +37,6 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={styles.screen}>
-
       <View style={styles.header}>
         <Text style={styles.headerText}>Campus Connect</Text>
       </View>
