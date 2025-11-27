@@ -55,22 +55,50 @@ async function createEventController(req, res) {
 
 async function getAllEventsController(req, res) {
     try {
+        const { page = 1, limit = 8, category, sort } = req.query;
+
+        const where = {
+            status: "APPROVED",
+        };
+        
+        if (category && category !== "all") {
+            where.category = category;
+        }
+
+        let orderBy = { id: "desc" }; 
+        if (sort === "recent") orderBy = { id: "desc" };
+        if (sort === "location") orderBy = { location: "asc" };
+        if (sort === "duration") orderBy = { duration: "asc" };
+
         const events = await prisma.eventRequest.findMany({
+            where,
+            skip: (page - 1) * Number(limit),
+            take: Number(limit),
+            orderBy,
             include: {
                 images: true,
             },
-            orderBy: {
-                id: 'asc'
-            }
         });
 
-        return res.status(200).json({ events });
-    }
-    catch (err) {
-        console.error("getAllEventsController ERROR:", err);
-        return res.status(500).json({ ERROR: "Failed to fetch events" });
+        const categories = await prisma.eventRequest.findMany({
+            where: { status: "APPROVED" },
+            select: { category: true },
+            distinct: ["category"],
+        });
+
+        const total = await prisma.eventRequest.count({ where });
+
+        return res.json({
+            events,
+            categories: categories.map((c) => c.category),
+            total,
+        });
+    } catch (error) {
+        console.error("🔥 getAllEventsController ERROR:", error);
+        return res.status(500).json({ error: "Backend error", reason: error.message });
     }
 }
+
 
 async function getAllEventsForHomeSecreenController(req, res) {
     try {
