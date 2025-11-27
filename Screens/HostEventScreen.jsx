@@ -24,9 +24,9 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-import API from "../api/api";
 import { useAuth } from "../context/UserContext";
 import { CLOUD_NAME, UPLOAD_PRESET } from "@env";
+import API from "../api/api";
 
 const CATEGORY_OPTIONS = [
   "Music",

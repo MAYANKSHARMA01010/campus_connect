@@ -7,7 +7,7 @@ import {
     Button,
     ActivityIndicator,
 } from "react-native-paper";
-import { getEvent, rsvpEvent } from "../api/api";
+import { getAllEvents, getEventById, rsvpEvent } from "../api/events";
 
 export default function EventDetail({ route, navigation }) {
     const { eventId } = route.params;
@@ -19,7 +19,7 @@ export default function EventDetail({ route, navigation }) {
         let mounted = true;
         (async () => {
             try {
-                const data = await getEvent(eventId);
+                const data = await getEventById(eventId);
                 if (mounted) setEvent(data);
             } 
             catch (err) {

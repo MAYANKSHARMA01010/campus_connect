@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
+
 import API from "../api/api";
+import { loginUser, registerUser, logoutUser } from "../api/auth";
+import { getMyProfile } from "../api/user";
 
 const UserContext = createContext({
   user: null,
@@ -19,6 +22,7 @@ export const UserProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Sync API header when token changes
   useEffect(() => {
     if (token) {
       API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -27,6 +31,7 @@ export const UserProvider = ({ children }) => {
     }
   }, [token]);
 
+  // Load stored token at startup
   useEffect(() => {
     (async () => {
       try {
@@ -43,63 +48,62 @@ export const UserProvider = ({ children }) => {
     })();
   }, []);
 
+  // Fetch logged-in user profile
   const fetchUser = async (t = token) => {
     try {
       if (!t) return;
-      const res = await API.get("/user/me", {
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      setUser(res.data.user ?? null);
+      const profile = await getMyProfile();
+      setUser(profile.user ?? null);
     } catch (err) {
-      console.log("fetchUser failed:", err?.response?.status, err?.response?.data);
+      console.log("fetchUser failed:", err?.response?.data || err);
       await logout();
     }
   };
 
+  // Register
   const register = async (data) => {
     try {
-      await API.post("/user/register", data);
+      await registerUser(data);
       Alert.alert("Success", "Account created successfully!");
       return true;
     } catch (err) {
       console.log("register error:", err?.response?.data || err);
-      Alert.alert("Error", err.response?.data?.ERROR || "Registration failed");
+      Alert.alert("Error", err?.response?.data?.ERROR || "Registration failed");
       return false;
     }
   };
 
+  // Login
   const login = async (credentials) => {
     try {
-      const res = await API.post("/user/login", credentials);
-      const t = res.data.token;
-      const u = res.data.user ?? null;
+      const res = await loginUser(credentials);
+
+      const t = res.token;
+      const u = res.user ?? null;
+
+      await AsyncStorage.setItem("token", t);
 
       setToken(t);
-      API.defaults.headers.common["Authorization"] = `Bearer ${t}`;
-      await AsyncStorage.setItem("token", t);
       setUser(u);
 
       Alert.alert("Success", "Login successful!");
       return true;
     } catch (err) {
       console.log("login error:", err?.response?.data || err);
-      Alert.alert("Error", err.response?.data?.ERROR || "Invalid credentials");
+      Alert.alert("Error", err?.response?.data?.ERROR || "Invalid credentials");
       return false;
     }
   };
 
+  // Logout
   const logout = async () => {
     try {
-      await API.post("/user/logout");
+      await logoutUser();
     } catch (err) {
-      console.log("logout server call failed (ignored):", err?.response?.data || err);
+      console.log("logout error (ignored)", err?.response?.data || err);
     }
 
-    try {
-      await AsyncStorage.removeItem("token");
-    } catch (e) {
-      console.log("AsyncStorage removeItem failed:", e);
-    }
+    await AsyncStorage.removeItem("token");
 
     setToken(null);
     setUser(null);
