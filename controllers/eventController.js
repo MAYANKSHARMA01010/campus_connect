@@ -82,6 +82,7 @@ async function getAllEventsForHomeSecreenController(req, res) {
                 id: true,
                 title: true,
                 description: true,
+                date: true,
                 category: true,
                 images: {
                     select: {
