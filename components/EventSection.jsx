@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { memo, useCallback } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -9,56 +9,67 @@ import {
 import { Text, Surface } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 
-export default function EventSection({ title, data }) {
+const Card = memo(({ item, navigation }) => (
+  <TouchableOpacity
+    activeOpacity={0.9}
+    style={styles.card}
+    onPress={() => navigation.navigate("EventDetail", { id: item.id })}
+  >
+    <ImageBackground
+      source={{ uri: item.images?.[0]?.url }}
+      style={styles.bgImage}
+      imageStyle={styles.bgImageStyle}
+    >
+      <View style={styles.gradientOverlay} />
+
+      <View style={styles.overlayContent}>
+        <Text variant="titleLarge" style={styles.overlayTitle} numberOfLines={1}>
+          {item.title}
+        </Text>
+        <Text style={styles.overlayDate}>
+          {item.date ? new Date(item.date).toDateString() : ""}
+        </Text>
+        <Text style={styles.overlaySummary} numberOfLines={2}>
+          {item.description}
+        </Text>
+      </View>
+    </ImageBackground>
+  </TouchableOpacity>
+));
+
+export default function EventSection({ data }) {
   const navigation = useNavigation();
 
-  const renderCard = ({ item }) => (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      style={styles.card} 
-      onPress={() => navigation.navigate("EventDetail", { id: item.id })}
-    >
-      <ImageBackground
-        source={{ uri: item.images?.[0]?.url }}
-        style={styles.bgImage}
-        imageStyle={styles.bgImageStyle}
-      >
-        <View style={styles.gradientOverlay} />
-
-        <View style={styles.overlayContent}>
-          <Text variant="titleLarge" style={styles.overlayTitle} numberOfLines={1}>
-            {item.title}
-          </Text>
-          <Text style={styles.overlayDate}>
-            {item.date ? new Date(item.date).toDateString() : ""}
-          </Text>
-          <Text style={styles.overlaySummary} numberOfLines={2}>
-            {item.description}
-          </Text>
-        </View>
-      </ImageBackground>
-    </TouchableOpacity>
+  const renderItem = useCallback(
+    ({ item }) => <Card item={item} navigation={navigation} />,
+    [navigation]
   );
 
-  const renderViewMoreCard = () => (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={() => navigation.navigate("Events")}
-      style={styles.viewMoreCard}
-    >
-      <Text style={styles.viewMoreText}>View More</Text>
-    </TouchableOpacity>
+  const renderViewMore = useCallback(
+    () => (
+      <TouchableOpacity
+        style={styles.viewMoreCard}
+        onPress={() => navigation.navigate("Events")}
+      >
+        <Text style={styles.viewMoreText}>View More</Text>
+      </TouchableOpacity>
+    ),
+    [navigation]
   );
 
   return (
     <Surface style={styles.section} elevation={0}>
       <FlatList
-        data={data.slice(0, 6)}
         horizontal
-        showsHorizontalScrollIndicator={false}
+        data={data.slice(0, 6)}
+        renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={renderCard}
-        ListFooterComponent={renderViewMoreCard}
+        showsHorizontalScrollIndicator={false}
+        initialNumToRender={4}
+        maxToRenderPerBatch={4}
+        windowSize={7}
+        removeClippedSubviews
+        ListFooterComponent={renderViewMore}
         contentContainerStyle={styles.scrollContainer}
       />
     </Surface>

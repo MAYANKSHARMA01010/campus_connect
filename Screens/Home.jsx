@@ -23,49 +23,58 @@ export default function HomeScreen({ navigation }) {
   const [sportsCulture, setSportsCulture] = React.useState([]);
   const [eduTech, setEduTech] = React.useState([]);
 
-  React.useEffect(() => {
-    loadEvents();
-  }, []);
+  const sortByDate = React.useCallback(
+    (arr, asc = true) => {
+      return [...arr].sort((a, b) =>
+        asc
+          ? new Date(a.date).getTime() - new Date(b.date).getTime()
+          : new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+    },
+    []
+  );
 
-  const sortByDate = (arr) =>
-    [...arr].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const loadEvents = React.useCallback(async () => {
+    try {
+      const data = await getAllEvents();
+      const today = new Date();
 
-  const loadEvents = async () => {
-    const data = await getAllEvents();
-    const today = new Date();
+      const valid = data.filter((e) => e?.date);
 
-    const valid = data.filter((e) => e.date);
+      setUpcoming(
+        sortByDate(valid.filter((e) => new Date(e.date) >= today))
+      );
 
-    const upcomingSorted = sortByDate(valid.filter((e) => new Date(e.date) >= today));
-    const pastSorted = sortByDate(valid.filter((e) => new Date(e.date) < today)).reverse();
+      setPast(sortByDate(valid.filter((e) => new Date(e.date) < today), false));
 
-    setUpcoming(upcomingSorted);
-    setPast(pastSorted);
-
-    setSportsCulture(
-      sortByDate(
-        data.filter((e) =>
-          ["sports", "culture"].includes(e.category?.toLowerCase())
-        )
-      )
-    );
-
-    setEduTech(
-      sortByDate(
-        data.filter((e) =>
-          ["tech", "education", "seminar", "workshop"].includes(
-            e.category?.toLowerCase()
+      setSportsCulture(
+        sortByDate(
+          data.filter((e) =>
+            ["sports", "culture"].includes(e.category?.toLowerCase())
           )
         )
-      )
-    );
-  };
+      );
+
+      setEduTech(
+        sortByDate(
+          data.filter((e) =>
+            ["tech", "education", "seminar", "workshop"].includes(
+              e.category?.toLowerCase()
+            )
+          )
+        )
+      );
+    } catch (err) {
+      console.log("LoadEvents error:", err);
+    }
+  }, [sortByDate]);
+
+  React.useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-    >
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
       <Appbar.Header style={styles.appbar}>
         <Text variant="headlineSmall" style={styles.appName}>
           CampusConnect
@@ -96,43 +105,27 @@ export default function HomeScreen({ navigation }) {
       </ImageBackground>
 
       <View style={{ marginTop: 20 }}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>🎉 Coming Up!</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
-            <Text style={styles.viewAllText}>View All →</Text>
-          </TouchableOpacity>
-        </View>
-        <EventSection data={upcoming} />
+        <Section title="🎉 Coming Up!" data={upcoming} navigation={navigation} />
       </View>
 
       <View style={{ marginTop: 20 }}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>🕒 The Past Ones</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
-            <Text style={styles.viewAllText}>View All →</Text>
-          </TouchableOpacity>
-        </View>
-        <EventSection data={past} />
+        <Section title="🕒 The Past Ones" data={past} navigation={navigation} />
       </View>
 
       <View style={{ marginTop: 20 }}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>🏅 Sports & Culture</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
-            <Text style={styles.viewAllText}>View All →</Text>
-          </TouchableOpacity>
-        </View>
-        <EventSection data={sportsCulture} />
+        <Section
+          title="🏅 Sports & Culture"
+          data={sportsCulture}
+          navigation={navigation}
+        />
       </View>
 
       <View style={{ marginTop: 20 }}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>💡 Education & Tech</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
-            <Text style={styles.viewAllText}>View All →</Text>
-          </TouchableOpacity>
-        </View>
-        <EventSection data={eduTech} />
+        <Section
+          title="💡 Education & Tech"
+          data={eduTech}
+          navigation={navigation}
+        />
       </View>
 
       <Surface style={styles.hostCard}>
@@ -151,11 +144,7 @@ export default function HomeScreen({ navigation }) {
       </Surface>
 
       <View style={styles.statsRow}>
-        {[
-          { num: "50+", label: "Colleges" },
-          { num: "200+", label: "Events" },
-          { num: "5K+", label: "Participants" },
-        ].map((item, index) => (
+        {[{ num: "50+", label: "Colleges" }, { num: "200+", label: "Events" }, { num: "5K+", label: "Participants" }].map((item, index) => (
           <Surface key={index} style={styles.statCard}>
             <Text style={styles.statNumber}>{item.num}</Text>
             <Text style={styles.statLabel}>{item.label}</Text>
@@ -166,38 +155,38 @@ export default function HomeScreen({ navigation }) {
       <Surface style={styles.aboutCard}>
         <Text style={styles.aboutTitle}>About CampusConnect</Text>
         <Text style={styles.aboutText}>
-          CampusConnect is your one-stop platform to explore, register,
-          and participate in college events — from cultural fests to tech
-          summits. Discover opportunities and grow your skills!
+          CampusConnect is your one-stop platform to explore, register, and participate
+          in college events — from cultural fests to tech summits.
         </Text>
       </Surface>
     </ScrollView>
   );
 }
 
+const Section = React.memo(({ title, data, navigation }) => (
+  <View>
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <TouchableOpacity onPress={() => navigation.navigate("Events")}>
+        <Text style={styles.viewAllText}>View All →</Text>
+      </TouchableOpacity>
+    </View>
+
+    <EventSection data={data} />
+  </View>
+));
+
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#FDF7F9",
-    paddingBottom: 120,
-  },
+  container: { backgroundColor: "#FDF7F9", paddingBottom: 120 },
   appbar: {
     backgroundColor: "#fff",
     elevation: 3,
     paddingHorizontal: 16,
     justifyContent: "space-between",
   },
-  appName: {
-    color: "#E91E63",
-    fontWeight: "800",
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-  },
-  searchbar: {
-    borderRadius: 14,
-    elevation: 2,
-  },
+  appName: { color: "#E91E63", fontWeight: "800" },
+  searchContainer: { paddingHorizontal: 16, paddingTop: 14 },
+  searchbar: { borderRadius: 14, elevation: 2 },
   heroBanner: {
     height: 200,
     marginHorizontal: 16,
@@ -206,35 +195,16 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     justifyContent: "flex-end",
   },
-  heroOverlay: {
-    backgroundColor: "rgba(0,0,0,0.35)",
-    padding: 14,
-  },
-  heroTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "800",
-  },
-  heroSubtitle: {
-    color: "#eee",
-    marginTop: 3,
-  },
+  heroOverlay: { backgroundColor: "rgba(0,0,0,0.35)", padding: 14 },
+  heroTitle: { color: "#fff", fontSize: 22, fontWeight: "800" },
+  heroSubtitle: { color: "#eee", marginTop: 3 },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 18,
-    marginBottom: 4,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#C2185B",
-  },
-  viewAllText: {
-    color: "#E91E63",
-    marginTop: 4,
-    fontWeight: "600",
-  },
+  sectionTitle: { fontSize: 18, fontWeight: "700", color: "#C2185B" },
+  viewAllText: { color: "#E91E63", marginTop: 4, fontWeight: "600" },
   hostCard: {
     marginHorizontal: 16,
     marginTop: 30,
@@ -254,10 +224,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 12,
   },
-  hostBtn: {
-    borderRadius: 8,
-    backgroundColor: "#E91E63",
-  },
+  hostBtn: { borderRadius: 8, backgroundColor: "#E91E63" },
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -276,11 +243,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#E91E63",
   },
-  statLabel: {
-    color: "#444",
-    marginTop: 2,
-    fontWeight: "500",
-  },
+  statLabel: { color: "#444", marginTop: 2, fontWeight: "500" },
   aboutCard: {
     margin: 30,
     padding: 20,
@@ -294,8 +257,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 6,
   },
-  aboutText: {
-    color: "#444",
-    lineHeight: 20,
-  },
+  aboutText: { color: "#444", lineHeight: 20 },
 });
