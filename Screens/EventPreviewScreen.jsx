@@ -8,7 +8,6 @@ export default function EventPreviewScreen({ route, navigation }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  // publish: call the onPublish callback passed from HostEventScreen
   const publishEvent = async () => {
     if (!onPublish || typeof onPublish !== "function") {
       Alert.alert("Error", "Publish function not available.");
