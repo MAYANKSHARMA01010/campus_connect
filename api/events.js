@@ -36,7 +36,6 @@ export const getAllEvents = async () => {
   }
 };
 
-
 export const getEventById = async (id) => {
   try {
     const res = await API.get(`/events/${id}`);
@@ -44,5 +43,15 @@ export const getEventById = async (id) => {
   } catch (error) {
     console.log("ERROR FETCHING EVENT:", error.response?.data || error.message);
     return null;
+  }
+};
+
+export const searchEvents = async (query) => {
+  try {
+    const res = await API.get(`/events/search?q=${encodeURIComponent(query)}`);
+    return res.data;
+  } catch (err) {
+    console.error("SEARCH API ERROR:", err.response?.data || err.message);
+    throw err;
   }
 };
