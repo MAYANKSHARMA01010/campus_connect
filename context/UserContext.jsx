@@ -1,4 +1,3 @@
-// src/context/UserContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
@@ -52,7 +51,6 @@ export const UserProvider = ({ children }) => {
     try {
       if (!t) return;
       const profile = await getMyProfile(t);
-      // server may return { user: {...} } or plain {...}
       const u = profile.user ?? profile;
       setUser(u ?? null);
     } catch (err) {
@@ -99,12 +97,9 @@ export const UserProvider = ({ children }) => {
 
   const updateProfile = async (payload) => {
     try {
-      // payload should be an object with fields you allow to change on server
       const res = await updateMyProfile(payload);
-      // backend might return { user: {...} } or the updated user object directly
       const updated = res.user ?? res;
       if (!updated) {
-        // if server returned something else, re-fetch canonical user
         await fetchUser();
       } else {
         setUser((prev) => ({ ...(prev ?? {}), ...(updated ?? {}) }));

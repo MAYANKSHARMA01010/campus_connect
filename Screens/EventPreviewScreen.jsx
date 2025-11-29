@@ -1,4 +1,3 @@
-// EventPreviewScreen.js
 import React, { useState } from "react";
 import { View, Image, StyleSheet, ScrollView, Alert } from "react-native";
 import { Text, Button, Surface, ActivityIndicator, Appbar } from "react-native-paper";
@@ -18,16 +17,13 @@ export default function EventPreviewScreen({ route, navigation }) {
 
     try {
       setLoading(true);
-      // onPublish returns { success: true } or throws on error
       const result = await onPublish();
       setLoading(false);
 
       if (result && result.success) {
-        // try to pop two screens (Preview -> HostEvent -> back to list)
         try {
           navigation.pop(2);
         } catch (e) {
-          // fallback
           navigation.navigate("MainTabs");
         }
       } else {

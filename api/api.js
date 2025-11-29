@@ -11,14 +11,12 @@ const API = axios.create({
   timeout: 15000,
 });
 
-// attach token from AsyncStorage on every request
 API.interceptors.request.use(
   async (config) => {
     try {
       const token = await AsyncStorage.getItem("token");
       if (token) config.headers.Authorization = `Bearer ${token}`;
     } catch (err) {
-      // ignore
       console.log("api intercept request error:", err);
     }
     return config;
@@ -26,7 +24,6 @@ API.interceptors.request.use(
   (err) => Promise.reject(err)
 );
 
-// handle 401 globally (remove token locally)
 API.interceptors.response.use(
   (res) => res,
   async (err) => {

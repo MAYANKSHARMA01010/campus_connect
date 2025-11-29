@@ -20,30 +20,25 @@ import { LinearGradient } from "expo-linear-gradient";
 
 const LIMIT = 8;
 
-// ---------------------- DATE FORMATTER ----------------------
 const formatEventDate = (rawDate) => {
   if (!rawDate) return {};
 
   const date = new Date(rawDate);
   const now = new Date();
 
-  // Day Name
   const day = date.toLocaleDateString("en-US", { weekday: "long" });
 
-  // Full Date
   const formattedDate = date.toLocaleDateString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 
-  // Time
   const time = date.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  // Days until event
   const diffTime = date.setHours(0, 0, 0, 0) - now.setHours(0, 0, 0, 0);
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
@@ -71,7 +66,6 @@ export default function EventScreen({ navigation }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // ---------- Fetch events ----------
   const fetchEvents = useCallback(
     async (reset = false) => {
       try {
@@ -113,7 +107,6 @@ export default function EventScreen({ navigation }) {
     [activeCategory, sortType, page]
   );
 
-  // Fetch on filter/sort change
   useEffect(() => {
     fetchEvents(true);
   }, [activeCategory, sortType]);
@@ -130,7 +123,6 @@ export default function EventScreen({ navigation }) {
     fetchEvents(true);
   }, []);
 
-  // ---------- Shimmer Loader ----------
   const ShimmerCard = () => (
     <View style={styles.shimmerCard}>
       <LinearGradient
@@ -140,7 +132,6 @@ export default function EventScreen({ navigation }) {
     </View>
   );
 
-  // ---------- Event Card ----------
   const renderItem = useCallback(
     ({ item }) => {
       const { day, formattedDate, time, startsIn } = formatEventDate(item.date);
@@ -164,21 +155,17 @@ export default function EventScreen({ navigation }) {
               )}
 
               <View style={styles.cardContent}>
-
-                {/* Title */}
                 <Text variant="titleMedium" style={styles.cardTitle}>
                   {item.title}
                 </Text>
 
                 <Text style={styles.cardInfo}>📍 {item.location}</Text>
 
-                {/* Date Format (new layout) */}
                 <View style={styles.dateWrapper}>
                   <Text style={styles.dateText}>🗓 Date: {formattedDate}</Text>
                   <Text style={styles.dateText}>⏰ Time: {time}</Text>
                   <Text style={styles.dateText}>📅 Day: {day}</Text>
 
-                  {/* Starts in X days */}
                   <Text style={styles.startsIn}>{startsIn}</Text>
                 </View>
               </View>
@@ -192,7 +179,6 @@ export default function EventScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <LinearGradient colors={["#0057ff", "#3a86ff"]} style={styles.header}>
         <Text style={styles.headerTitle}>Campus Events</Text>
         <Text style={styles.headerSubtitle}>Discover what's happening</Text>
@@ -215,7 +201,6 @@ export default function EventScreen({ navigation }) {
         </Menu>
       </LinearGradient>
 
-      {/* Category Filter */}
       <FlatList
         data={categories}
         horizontal
@@ -237,7 +222,6 @@ export default function EventScreen({ navigation }) {
         )}
       />
 
-      {/* Events List */}
       {loading ? (
         <>
           <ShimmerCard />
@@ -264,7 +248,6 @@ export default function EventScreen({ navigation }) {
   );
 }
 
-// --------------------- STYLES ---------------------
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f7f9fc" },
 

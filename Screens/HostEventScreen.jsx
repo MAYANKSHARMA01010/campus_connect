@@ -1,4 +1,3 @@
-// HostEventScreen.js
 import React, { useState } from "react";
 import {
   View,
@@ -69,7 +68,6 @@ export default function HostEventScreen({ navigation }) {
 
   const handleChange = (key, val) => setForm((p) => ({ ...p, [key]: val }));
 
-  // Validation
   const validate = () => {
     const err = {};
     if (!form.title.trim()) err.title = "Required";
@@ -86,7 +84,6 @@ export default function HostEventScreen({ navigation }) {
   };
   const errors = validate();
 
-  // Image picker robust
   const pickImages = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -124,7 +121,6 @@ export default function HostEventScreen({ navigation }) {
 
   const removeImage = (uri) => setForm((prev) => ({ ...prev, images: prev.images.filter((i) => i !== uri) }));
 
-  // Cloudinary upload for single local image
   async function uploadLocalImageToCloudinary(uri) {
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
       throw new Error("Cloudinary config missing (CLOUD_NAME / UPLOAD_PRESET)");
@@ -156,7 +152,6 @@ export default function HostEventScreen({ navigation }) {
     return json.secure_url;
   }
 
-  // sendEventToServer sends imageUrls to your backend
   async function sendEventToServer(imageUrls) {
     const payload = {
       title: form.title,
@@ -175,8 +170,6 @@ export default function HostEventScreen({ navigation }) {
     return res.data;
   }
 
-  // submit: upload local images -> send to server
-  // IMPORTANT: this returns { success: true } or throws
   const submit = async () => {
     setTouched({
       title: true,
@@ -220,7 +213,6 @@ export default function HostEventScreen({ navigation }) {
 
       await sendEventToServer(finalImages);
 
-      // success — return true for caller to handle navigation
       return { success: true };
     } finally {
       setLoading(false);
@@ -229,7 +221,6 @@ export default function HostEventScreen({ navigation }) {
     }
   };
 
-  // Navigate to preview and pass the publish callback
   const goToPreview = () => {
     setTouched({
       title: true,
@@ -245,7 +236,6 @@ export default function HostEventScreen({ navigation }) {
       return;
     }
 
-    // Passing a function through navigation params is okay in RN — preview will call it
     navigation.navigate("EventPreview", { form, onPublish: submit });
   };
 
@@ -262,7 +252,6 @@ export default function HostEventScreen({ navigation }) {
           <Text style={styles.title}>Create your Event</Text>
           <Text style={styles.subtitle}>Fill details to host a campus event 🎉</Text>
 
-          {/* Title */}
           <TextInput
             label="Event Title *"
             mode="outlined"
@@ -275,7 +264,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.title}
           </HelperText>
 
-          {/* Description */}
           <TextInput
             label="Description *"
             mode="outlined"
@@ -289,7 +277,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.description}
           </HelperText>
 
-          {/* Category */}
           <Menu
             visible={categoryMenuVisible}
             onDismiss={() => {
@@ -321,7 +308,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.category}
           </HelperText>
 
-          {/* Date */}
           <TouchableOpacity onPress={() => setDatePickerVisible(true)} style={styles.dropdown}>
             <Text style={{ color: form.date ? "#000" : "#777" }}>{form.date || "Select Date *"}</Text>
             <IconButton icon="calendar" size={22} />
@@ -345,7 +331,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.date}
           </HelperText>
 
-          {/* Time */}
           <TouchableOpacity onPress={() => setTimePickerVisible(true)} style={styles.dropdown}>
             <Text style={{ color: form.time ? "#000" : "#777" }}>{form.time || "Select Time *"}</Text>
             <IconButton icon="clock" size={22} />
@@ -370,7 +355,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.time}
           </HelperText>
 
-          {/* Optional */}
           <TextInput label="Location" mode="outlined" style={styles.input} value={form.location} onChangeText={(v) => handleChange("location", v)} />
           <TextInput label="Host Name" mode="outlined" style={styles.input} value={form.hostName} onChangeText={(v) => handleChange("hostName", v)} />
           <TextInput
@@ -386,7 +370,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.contact}
           </HelperText>
 
-          {/* Images */}
           <Text style={styles.sectionTitle}>Upload Images *</Text>
           <Text style={styles.sectionSubtitle}>Minimum 4 required</Text>
 
