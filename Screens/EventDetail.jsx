@@ -1,13 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
     View,
     StyleSheet,
-    Dimensions,
-    Animated,
     RefreshControl,
     ScrollView,
     Share,
-    Text as RNText,
     Linking,
 } from "react-native";
 import {
@@ -15,15 +12,13 @@ import {
     Text,
     ActivityIndicator,
     Surface,
-    IconButton,
     Button,
     Chip,
     Divider,
 } from "react-native-paper";
-import { Image } from "expo-image";
 import { getEventById } from "../api/events";
 
-const { width } = Dimensions.get("window");
+import EventHeroSlider from "../components/EventHeroSlider";
 
 export default function EventDetailsScreen({ route, navigation }) {
     const { id } = route.params;
@@ -32,8 +27,6 @@ export default function EventDetailsScreen({ route, navigation }) {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [timeLeft, setTimeLeft] = useState("");
-
-    const scrollX = useRef(new Animated.Value(0)).current;
 
     const loadEvent = useCallback(async () => {
         try {
@@ -52,10 +45,10 @@ export default function EventDetailsScreen({ route, navigation }) {
         loadEvent();
     }, [loadEvent]);
 
-    const onRefresh = useCallback(() => {
+    const onRefresh = () => {
         setRefreshing(true);
         loadEvent();
-    }, [loadEvent]);
+    };
 
     const formatDate = useCallback((d) => {
         if (!d) return "-";
@@ -121,25 +114,6 @@ ${event?.description || ""}`,
         return () => clearInterval(timer);
     }, [updateTimeLeft]);
 
-    const renderImage = useCallback(({ item }) => {
-        if (!item?.url)
-            return (
-                <View style={[styles.heroImage, styles.placeholder]}>
-                    <RNText>No image</RNText>
-                </View>
-            );
-
-        return (
-            <Image
-                source={item.url}
-                style={styles.heroImage}
-                contentFit="cover"
-                transition={250}
-                cachePolicy="disk"
-            />
-        );
-    }, []);
-
     const handleCallHost = () => {
         if (!event?.contact) return;
         Linking.openURL(`tel:${event.contact}`);
@@ -177,69 +151,7 @@ ${event?.description || ""}`,
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
-                <View>
-                    <Animated.FlatList
-                        data={images.length ? images : [{}]}
-                        horizontal
-                        pagingEnabled
-                        keyExtractor={(_, i) => i.toString()}
-                        renderItem={renderImage}
-                        showsHorizontalScrollIndicator={false}
-                        onScroll={Animated.event(
-                            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                            { useNativeDriver: false }
-                        )}
-                        scrollEventThrottle={16}
-                        initialNumToRender={1}
-                        windowSize={3}
-                        removeClippedSubviews
-                    />
-
-                    <View style={styles.topButtons}>
-                        <IconButton
-                            icon="bookmark-outline"
-                            size={26}
-                            mode="contained-tonal"
-                            style={styles.roundBtn}
-                        />
-                        <IconButton
-                            icon="calendar-plus"
-                            size={26}
-                            mode="contained-tonal"
-                            style={styles.roundBtn}
-                        />
-                        <IconButton
-                            icon="share-variant"
-                            size={26}
-                            mode="contained-tonal"
-                            style={styles.roundBtn}
-                            onPress={onSharePress}
-                        />
-                    </View>
-
-                    <View style={styles.dotsContainer}>
-                        {(images.length ? images : [0]).map((_, i) => {
-                            const inputRange = [
-                                (i - 1) * width,
-                                i * width,
-                                (i + 1) * width,
-                            ];
-
-                            const dotW = scrollX.interpolate({
-                                inputRange,
-                                outputRange: [6, 16, 6],
-                                extrapolate: "clamp",
-                            });
-
-                            return (
-                                <Animated.View
-                                    key={i}
-                                    style={[styles.dot, { width: dotW }]}
-                                />
-                            );
-                        })}
-                    </View>
-                </View>
+                <EventHeroSlider images={images} onSharePress={onSharePress} />
 
                 <View style={styles.section}>
                     <Text style={styles.eventTitle}>{event.title}</Text>
@@ -263,9 +175,7 @@ ${event?.description || ""}`,
                         <View style={styles.innerClip}>
                             <Text style={styles.label}>Date</Text>
                             <Text style={styles.value}>{formatDate(event.date)}</Text>
-                            {!!timeLeft && (
-                                <Text style={styles.subValue}>{timeLeft}</Text>
-                            )}
+                            {!!timeLeft && <Text style={styles.subValue}>{timeLeft}</Text>}
                         </View>
                     </Surface>
 
@@ -336,39 +246,13 @@ ${event?.description || ""}`,
 
                     <Surface style={styles.detailsSurface}>
                         <View style={styles.detailsBoxInner}>
-                            <View style={styles.detailRow}>
-                                <Text style={styles.label}>Category</Text>
-                                <Text style={styles.value}>
-                                    {event.category || "—"}
-                                </Text>
-                            </View>
-
-                            <Divider />
-
-                            <View style={styles.detailRow}>
-                                <Text style={styles.label}>Sub-category</Text>
-                                <Text style={styles.value}>
-                                    {event.subCategory || "—"}
-                                </Text>
-                            </View>
-
-                            <Divider />
-
-                            <View style={styles.detailRow}>
-                                <Text style={styles.label}>Contact</Text>
-                                <Text style={styles.value}>
-                                    {event.contact || "—"}
-                                </Text>
-                            </View>
-
-                            <Divider />
-
-                            <View style={styles.detailRow}>
-                                <Text style={styles.label}>Email</Text>
-                                <Text style={styles.value}>
-                                    {event.email || event.hostEmail || "—"}
-                                </Text>
-                            </View>
+                            <Detail label="Category" value={event.category} />
+                            <Detail label="Sub-category" value={event.subCategory} />
+                            <Detail label="Contact" value={event.contact} />
+                            <Detail
+                                label="Email"
+                                value={event.email || event.hostEmail}
+                            />
                         </View>
                     </Surface>
                 </View>
@@ -383,53 +267,40 @@ ${event?.description || ""}`,
     );
 }
 
+const Detail = ({ label, value }) => (
+    <>
+        <View style={styles.detailRow}>
+            <Text style={styles.label}>{label}</Text>
+            <Text style={styles.value}>{value || "—"}</Text>
+        </View>
+        <Divider />
+    </>
+);
+
 const styles = StyleSheet.create({
-    heroImage: { width, height: 500 },
-    placeholder: {
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#EEE",
-    },
-    topButtons: {
-        position: "absolute",
-        top: 16,
-        right: 16,
-        flexDirection: "row",
-    },
-    roundBtn: {
-        marginLeft: 6,
-        backgroundColor: "rgba(255,255,255,0.45)",
-    },
-    dotsContainer: {
-        position: "absolute",
-        bottom: 16,
-        alignSelf: "center",
-        flexDirection: "row",
-    },
-    dot: {
-        height: 6,
-        borderRadius: 6,
-        backgroundColor: "#fff",
-        marginHorizontal: 4,
-    },
     section: { paddingHorizontal: 20, paddingTop: 20 },
+
     eventTitle: {
         fontSize: 28,
         fontWeight: "700",
         marginBottom: 10,
         color: "#111",
     },
+
     rowWrap: { flexDirection: "row", flexWrap: "wrap" },
+
     chip: {
         backgroundColor: "#EBEDFF",
         marginRight: 8,
         marginBottom: 8,
     },
+
     cardsRow: {
         flexDirection: "row",
         paddingHorizontal: 20,
         paddingTop: 20,
     },
+
     infoCard: {
         flex: 1,
         borderRadius: 16,
@@ -437,15 +308,18 @@ const styles = StyleSheet.create({
         elevation: 3,
         marginRight: 14,
     },
+
     innerClip: {
         padding: 18,
         borderRadius: 16,
         overflow: "hidden",
     },
+
     label: {
         color: "#616161",
         fontSize: 13,
     },
+
     value: {
         color: "#000",
         fontSize: 17,
@@ -453,44 +327,53 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         marginTop: 4,
     },
+
     subValue: {
         color: "#777",
         fontSize: 13,
         marginTop: -4,
     },
+
     heading: {
         fontSize: 22,
         fontWeight: "700",
         marginBottom: 14,
         color: "#111",
     },
+
     surfaceBox: {
         padding: 18,
         borderRadius: 16,
         backgroundColor: "#fff",
     },
+
     desc: {
         color: "#444",
         fontSize: 16,
         lineHeight: 22,
     },
+
     detailsSurface: {
         backgroundColor: "#fff",
         borderRadius: 16,
     },
+
     detailsBoxInner: {
         borderRadius: 16,
         overflow: "hidden",
     },
+
     detailRow: {
         padding: 16,
         flexDirection: "row",
         justifyContent: "space-between",
     },
+
     registerBtn: {
         paddingVertical: 8,
         borderRadius: 12,
     },
+
     center: {
         flex: 1,
         justifyContent: "center",
