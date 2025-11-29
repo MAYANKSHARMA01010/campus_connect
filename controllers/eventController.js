@@ -60,15 +60,15 @@ async function getAllEventsController(req, res) {
         const where = {
             status: "APPROVED",
         };
-        
+
         if (category && category !== "all") {
             where.category = category;
         }
 
-        let orderBy = { id: "desc" }; 
+        let orderBy = { id: "desc" };
         if (sort === "recent") orderBy = { id: "desc" };
         if (sort === "location") orderBy = { location: "asc" };
-        if (sort === "duration") orderBy = { duration: "asc" };
+        if (sort === "date") { orderBy = { date: "asc" } }
 
         const events = await prisma.eventRequest.findMany({
             where,
