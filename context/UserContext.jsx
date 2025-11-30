@@ -8,9 +8,12 @@ import { getMyProfile, updateMyProfile } from "../api/user";
 
 const UserContext = createContext({
   user: null,
+  role: null,
   token: null,
   loading: true,
   isLoggedIn: false,
+  isAdmin: false,
+  isUser: false,
   register: async () => {},
   login: async () => {},
   logout: async () => {},
@@ -21,6 +24,7 @@ const UserContext = createContext({
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,8 +39,12 @@ export const UserProvider = ({ children }) => {
     (async () => {
       try {
         const storedToken = await AsyncStorage.getItem("token");
+        const storedRole = await AsyncStorage.getItem("role");
+
+        if (storedToken) setToken(storedToken);
+        if (storedRole) setRole(storedRole);
+
         if (storedToken) {
-          setToken(storedToken);
           await fetchUser(storedToken);
         }
       } catch (err) {
@@ -50,9 +58,14 @@ export const UserProvider = ({ children }) => {
   const fetchUser = async (t = token) => {
     try {
       if (!t) return;
+
       const profile = await getMyProfile(t);
       const u = profile.user ?? profile;
-      setUser(u ?? null);
+
+      setUser(u);
+      setRole(u?.role || "USER");
+
+      await AsyncStorage.setItem("role", u?.role || "USER");
     } catch (err) {
       console.log("fetchUser failed:", err?.response?.data || err);
       await logout();
@@ -65,7 +78,6 @@ export const UserProvider = ({ children }) => {
       Alert.alert("Success", "Account created successfully!");
       return true;
     } catch (err) {
-      console.log("register error:", err?.response?.data || err);
       Alert.alert("Error", err?.response?.data?.ERROR || "Registration failed");
       return false;
     }
@@ -74,17 +86,23 @@ export const UserProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const res = await loginUser(credentials);
+
       const t = res.token;
-      const u = res.user ?? null;
+      const u = res.user;
 
       if (!t) {
-        Alert.alert("Error", "Server did not return a token.");
+        Alert.alert("Error", "Server did not return token");
         return false;
       }
 
-      await AsyncStorage.setItem("token", t);
+      await AsyncStorage.multiSet([
+        ["token", t],
+        ["role", u?.role || "USER"],
+      ]);
+
       setToken(t);
       setUser(u);
+      setRole(u?.role || "USER");
 
       Alert.alert("Success", "Login successful!");
       return true;
@@ -99,19 +117,24 @@ export const UserProvider = ({ children }) => {
     try {
       const res = await updateMyProfile(payload);
       const updated = res.user ?? res;
+
       if (!updated) {
         await fetchUser();
       } else {
-        setUser((prev) => ({ ...(prev ?? {}), ...(updated ?? {}) }));
+        setUser((prev) => ({ ...(prev ?? {}), ...updated }));
+        setRole(updated?.role || role);
+
+        await AsyncStorage.setItem("role", updated?.role || role);
       }
+
       Alert.alert("Success", "Profile updated.");
       return { ok: true, user: updated ?? null };
     } catch (err) {
-      console.log("updateProfile error:", err?.response?.data || err);
       Alert.alert(
         "Error",
-        err?.response?.data?.ERROR || "Unable to update profile. Try again."
+        err?.response?.data?.ERROR || "Unable to update profile"
       );
+
       return { ok: false, error: err };
     }
   };
@@ -119,18 +142,16 @@ export const UserProvider = ({ children }) => {
   const logout = async () => {
     try {
       await logoutUser();
-    } catch (err) {
-      console.log("logout error (server) ignored:", err?.response?.data || err);
-    }
+    } catch (_) {}
 
     try {
-      await AsyncStorage.removeItem("token");
-    } catch (err) {
-      console.log("AsyncStorage removeItem error:", err);
-    }
+      await AsyncStorage.multiRemove(["token", "role"]);
+    } catch (_) {}
 
-    setToken(null);
     setUser(null);
+    setToken(null);
+    setRole(null);
+
     delete API.defaults.headers.common["Authorization"];
   };
 
@@ -138,9 +159,12 @@ export const UserProvider = ({ children }) => {
     <UserContext.Provider
       value={{
         user,
+        role,
         token,
         loading,
         isLoggedIn: !!user,
+        isAdmin: role === "ADMIN",
+        isUser: role === "USER",
         register,
         login,
         logout,

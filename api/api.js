@@ -1,7 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const LOCAL_URL = "http://10.7.29.152:5001"; // adjust for your environment
+const LOCAL_URL = "http://10.7.29.152:5001";
 const SERVER_URL = "https://campus-connect-backend-e7uf.onrender.com";
 
 export const BASE_URL = __DEV__ ? LOCAL_URL : SERVER_URL;
