@@ -11,11 +11,16 @@ async function createEventController(req, res) {
             location,
             hostName,
             contact,
+            email,
             imageUrls,
         } = req.body;
 
-        if (!title || !description || !category) {
+        if (!title || !description || !category || !email) {
             return res.status(400).json({ ERROR: "Required fields missing" });
+        }
+
+        if (!email.includes("@")) {
+            return res.status(400).json({ ERROR: "Invalid email" });
         }
 
         if (!Array.isArray(imageUrls) || imageUrls.length < 4) {
@@ -32,6 +37,7 @@ async function createEventController(req, res) {
                 location,
                 hostName,
                 contact,
+                email,
                 createdById: req.user.id,
                 images: {
                     create: imageUrls.map((url) => ({ url })),
@@ -68,7 +74,7 @@ async function getAllEventsController(req, res) {
         let orderBy = { id: "desc" };
         if (sort === "recent") orderBy = { id: "desc" };
         if (sort === "location") orderBy = { location: "asc" };
-        if (sort === "date") { orderBy = { date: "asc" } }
+        if (sort === "date") orderBy = { date: "asc" };
 
         const events = await prisma.eventRequest.findMany({
             where,
@@ -99,7 +105,6 @@ async function getAllEventsController(req, res) {
     }
 }
 
-
 async function getAllEventsForHomeSecreenController(req, res) {
     try {
         const events = await prisma.eventRequest.findMany({
@@ -112,6 +117,7 @@ async function getAllEventsForHomeSecreenController(req, res) {
                 description: true,
                 date: true,
                 category: true,
+                email: true,
                 images: {
                     select: {
                         id: true,
@@ -147,6 +153,13 @@ async function getEventByIdController(req, res) {
                 images: {
                     orderBy: { id: "asc" },
                 },
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        username: true,
+                    },
+                }
             },
         });
 
@@ -158,7 +171,6 @@ async function getEventByIdController(req, res) {
         return res.status(500).json({ ERROR: "Internal Server Error" });
     }
 }
-
 
 const searchEventsController = async (req, res) => {
     try {
@@ -175,48 +187,16 @@ const searchEventsController = async (req, res) => {
         const whereCondition = {
             AND: [
                 status ? { status } : {},
-
                 category ? { category } : {},
-
                 q
                     ? {
                         OR: [
-                            {
-                                title: {
-                                    contains: q,
-                                    mode: "insensitive",
-                                },
-                            },
-                            {
-                                description: {
-                                    contains: q,
-                                    mode: "insensitive",
-                                },
-                            },
-                            {
-                                hostName: {
-                                    contains: q,
-                                    mode: "insensitive",
-                                },
-                            },
-                            {
-                                location: {
-                                    contains: q,
-                                    mode: "insensitive",
-                                },
-                            },
-                            {
-                                category: {
-                                    contains: q,
-                                    mode: "insensitive",
-                                },
-                            },
-                            {
-                                subCategory: {
-                                    contains: q,
-                                    mode: "insensitive",
-                                },
-                            },
+                            { title: { contains: q, mode: "insensitive" } },
+                            { description: { contains: q, mode: "insensitive" } },
+                            { hostName: { contains: q, mode: "insensitive" } },
+                            { location: { contains: q, mode: "insensitive" } },
+                            { category: { contains: q, mode: "insensitive" } },
+                            { subCategory: { contains: q, mode: "insensitive" } },
                         ],
                     }
                     : {},
@@ -231,7 +211,6 @@ const searchEventsController = async (req, res) => {
                 orderBy: {
                     createdAt: "desc",
                 },
-
                 include: {
                     images: true,
                     createdBy: {
@@ -243,10 +222,7 @@ const searchEventsController = async (req, res) => {
                     },
                 },
             }),
-
-            prisma.eventRequest.count({
-                where: whereCondition,
-            }),
+            prisma.eventRequest.count({ where: whereCondition }),
         ]);
 
         return res.status(200).json({
