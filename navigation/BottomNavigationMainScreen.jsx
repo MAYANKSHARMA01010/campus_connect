@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet, Pressable, Animated, Dimensions } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BlurView } from "expo-blur";
-import { Entypo, Ionicons, MaterialIcons, FontAwesome6 } from "@expo/vector-icons";
+import { Entypo, Ionicons, MaterialIcons, FontAwesome6, } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/UserContext";
 
@@ -17,7 +17,10 @@ const Tabs = createBottomTabNavigator();
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const TAB_WIDTH = (SCREEN_WIDTH * 0.9) / 5;
 
-const animatedScale = Array(5).fill(0).map(() => new Animated.Value(1));
+const animatedScale = Array(5)
+  .fill(0)
+  .map(() => new Animated.Value(1));
+
 const animatedPillX = new Animated.Value(0);
 
 function animateTab(index) {
@@ -40,6 +43,7 @@ function animateTab(index) {
 
 function CustomTabBar({ state, navigation }) {
   const insets = useSafeAreaInsets();
+  const { role } = useAuth();
 
   return (
     <View style={[styles.mainContainer, { paddingBottom: insets.bottom + 5 }]}>
@@ -73,11 +77,7 @@ function CustomTabBar({ state, navigation }) {
             ),
 
             HostButton: (
-              <MaterialIcons
-                name="add-circle"
-                size={30}
-                color="#E91E63"
-              />
+              <MaterialIcons name="add-circle" size={30} color="#E91E63" />
             ),
 
             Events: (
@@ -105,7 +105,10 @@ function CustomTabBar({ state, navigation }) {
                 animateTab(index);
 
                 if (route.name === "HostButton") {
-                  navigation.getParent()?.navigate("HostEvent");
+                  const target =
+                    role === "ADMIN" ? "ManageEvents" : "HostEvent";
+
+                  navigation.getParent()?.navigate(target);
                   return;
                 }
 
@@ -132,7 +135,6 @@ export default function BottomNavigationMainScreen() {
       tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tabs.Screen name="Home" component={HomeScreen} />
-
       <Tabs.Screen name="Search" component={SearchScreen} />
 
       <Tabs.Screen
@@ -176,7 +178,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: TAB_WIDTH - 8,
     height: 44,
-    backgroundColor: "rgba(255, 255, 255, 0.55)",
+    backgroundColor: "rgba(255,255,255,0.55)",
     borderRadius: 28,
     left: 4,
   },
