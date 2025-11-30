@@ -242,10 +242,67 @@ const searchEventsController = async (req, res) => {
     }
 };
 
+async function getAdminEventsController(req, res) {
+    try {
+        const {
+            search = "",
+            status,
+            sortBy = "recent",
+            pageNumber = 1,
+            pageSize = 10,
+        } = req.query;
+
+        const page = Number(pageNumber);
+        const limit = Number(pageSize);
+        const skip = (page - 1) * limit;
+
+        const where = {
+            title: {
+                contains: search,
+                mode: "insensitive",
+            },
+        };
+
+        if (status) where.status = status;
+
+        let orderBy = { createdAt: "desc" };
+        if (sortBy === "oldest") orderBy = { createdAt: "asc" };
+        if (sortBy === "az") orderBy = { title: "asc" };
+        if (sortBy === "upcoming") orderBy = { date: "asc" };
+        if (sortBy === "past") orderBy = { date: "desc" };
+
+        const [events, total] = await Promise.all([
+            prisma.eventRequest.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy,
+                include: {
+                    images: true,
+                },
+            }),
+
+            prisma.eventRequest.count({ where }),
+        ]);
+
+        return res.json({
+            events,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        });
+
+    } catch (err) {
+        console.error("ADMIN FETCH ERROR:", err);
+        return res.status(500).json({ error: "Admin fetch failed" });
+    }
+}
+
 module.exports = {
     createEventController,
     getAllEventsController,
     getAllEventsForHomeSecreenController,
     getEventByIdController,
     searchEventsController,
+    getAdminEventsController,
 };

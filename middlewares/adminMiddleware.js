@@ -1,5 +1,4 @@
-
-module.exports = function isAdmin(req, res, next) {
+function isAdmin(req, res, next) {
     try {
         if (!req.user) return res.status(401).json({ ERROR: "Not authenticated" });
 
@@ -14,3 +13,5 @@ module.exports = function isAdmin(req, res, next) {
         return res.status(500).json({ ERROR: "Server error" });
     }
 };
+
+module.exports = { isAdmin }
