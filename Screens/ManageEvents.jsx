@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useCallback, memo } from "react";
+import React, { useEffect, useState, useCallback, memo, useRef } from "react";
 import {
     View,
     StyleSheet,
     FlatList,
     Alert,
-    TouchableOpacity,
     RefreshControl,
 } from "react-native";
 
@@ -25,7 +24,7 @@ import API from "../api/api";
 
 const LIMIT = 10;
 
-const STATUS_FILTERS = ["all", "active", "pending", "archived", "rejected"];
+const STATUS_FILTERS = ["all", "APPROVED", "PENDING", "REJECTED"];
 
 const SORT_OPTIONS = [
     { label: "Newest", value: "recent" },
@@ -35,60 +34,62 @@ const SORT_OPTIONS = [
     { label: "A - Z", value: "az" },
 ];
 
-const EventRow = memo(({ item, onEdit, onDelete, onToggleStatus }) => {
+const EventRow = memo(({ item, onDelete, onToggleStatus }) => {
     const statusColor =
-        item.status === "active"
+        item.status === "APPROVED"
             ? "#4CAF50"
-            : item.status === "pending"
+            : item.status === "PENDING"
                 ? "#FF9800"
-                : item.status === "archived"
-                    ? "#9E9E9E"
-                    : "#F44336";
+                : "#F44336";
 
     return (
-        <Surface style={styles.card}>
-            {!!item?.images?.[0]?.url && (
-                <Image
-                    source={item.images[0].url}
-                    style={styles.thumb}
-                    contentFit="cover"
-                    cachePolicy="disk"
-                />
-            )}
+        <Surface style={styles.cardContainer}>
+            <View style={styles.card}>
+                {!!item?.images?.[0]?.url && (
+                    <Image
+                        source={item.images[0].url}
+                        style={styles.thumb}
+                        contentFit="cover"
+                        cachePolicy="disk"
+                        transition={200}
+                    />
+                )}
 
-            <View style={styles.cardBody}>
-                <Text numberOfLines={1} style={styles.title}>
-                    {item.title}
-                </Text>
+                <View style={styles.cardBody}>
+                    <Text numberOfLines={1} style={styles.title}>
+                        {item.title}
+                    </Text>
 
-                <Text style={styles.subtitle}>
-                    {item.location || "No location"}
-                </Text>
+                    <Text style={styles.subtitle}>
+                        {item.location || "No location"}
+                    </Text>
 
-                <Text style={[styles.badge, { backgroundColor: statusColor }]}>
-                    {item.status?.toUpperCase()}
-                </Text>
+                    <Text style={[styles.badge, { backgroundColor: statusColor }]}>
+                        {item.status}
+                    </Text>
 
-                <View style={styles.actions}>
-                    <Button compact onPress={() => onEdit(item)}>
-                        Edit
-                    </Button>
+                    <View style={styles.actions}>
+                        <Button
+                            compact
+                            mode="contained"
+                            onPress={() =>
+                                onToggleStatus(
+                                    item,
+                                    item.status === "APPROVED" ? "REJECTED" : "APPROVED"
+                                )
+                            }
+                        >
+                            {item.status === "APPROVED" ? "Reject" : "Approve"}
+                        </Button>
 
-                    <Button
-                        compact
-                        mode="contained"
-                        onPress={() => onToggleStatus(item)}
-                    >
-                        {item.status === "active" ? "Archive" : "Publish"}
-                    </Button>
-
-                    <Button
-                        compact
-                        textColor="#F44336"
-                        onPress={() => onDelete(item)}
-                    >
-                        Delete
-                    </Button>
+                        <Button
+                            compact
+                            textColor="#F44336"
+                            onPress={() => onDelete(item)}
+                        >
+                            Delete
+                        </Button>
+                    </View>
                 </View>
             </View>
         </Surface>
@@ -107,8 +108,13 @@ export default function ManageEventsScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
 
+    const activeRequest = useRef(0);
+
     const loadEvents = useCallback(
         async (reset = false) => {
+            const reqId = ++activeRequest.current;
+            const currentPage = reset ? 1 : page;
+
             try {
                 if (reset) {
                     setLoading(true);
@@ -117,16 +123,16 @@ export default function ManageEventsScreen({ navigation }) {
 
                 const res = await API.get("/events/admin", {
                     params: {
-                        q: search,
+                        search,
                         status:
-                            statusFilter !== "all"
-                                ? statusFilter
-                                : undefined,
-                        sort,
-                        page: reset ? 1 : page,
-                        limit: LIMIT,
+                            statusFilter !== "all" ? statusFilter : undefined,
+                        sortBy: sort,
+                        pageNumber: currentPage,
+                        pageSize: LIMIT,
                     },
                 });
+
+                if (activeRequest.current !== reqId) return;
 
                 const list = res?.data?.events || [];
 
@@ -134,15 +140,20 @@ export default function ManageEventsScreen({ navigation }) {
 
                 reset
                     ? setEvents(list)
-                    : setEvents((p) => [...p, ...list]);
+                    : setEvents((prev) => [...prev, ...list]);
 
                 setPage((p) => p + 1);
-            } catch (e) {
-                console.log("ADMIN FETCH ERROR:", e?.message);
+            } catch (err) {
+                console.log(
+                    "ADMIN FETCH ERROR:",
+                    err?.response?.data || err.message
+                );
             } finally {
-                setLoading(false);
-                setRefreshing(false);
-                setLoadingMore(false);
+                if (activeRequest.current === reqId) {
+                    setLoading(false);
+                    setRefreshing(false);
+                    setLoadingMore(false);
+                }
             }
         },
         [search, statusFilter, sort, page]
@@ -152,18 +163,18 @@ export default function ManageEventsScreen({ navigation }) {
         loadEvents(true);
     }, [search, statusFilter, sort]);
 
-    const onRefresh = () => {
+    const onRefresh = useCallback(() => {
         setRefreshing(true);
         loadEvents(true);
-    };
+    }, [loadEvents]);
 
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (loadingMore || events.length >= total) return;
         setLoadingMore(true);
         loadEvents(false);
-    };
+    }, [loadingMore, events.length, total, loadEvents]);
 
-    const onDelete = (event) =>
+    const onDelete = useCallback((event) => {
         Alert.alert("Delete Event?", `"${event.title}" will be removed.`, [
             { text: "Cancel" },
             {
@@ -175,25 +186,17 @@ export default function ManageEventsScreen({ navigation }) {
                 },
             },
         ]);
+    }, []);
 
-    const onToggleStatus = async (event) => {
-        await API.patch(`/events/${event.id}/status`, {
-            status:
-                event.status === "active"
-                    ? "archived"
-                    : "active",
-        });
+    const onToggleStatus = useCallback(async (event, status) => {
+        await API.patch(`/events/${event.id}/status`, { status });
         onRefresh();
-    };
-
-    const onEdit = (event) =>
-        navigation.navigate("EditEvent", { event });
+    }, []);
 
     const renderItem = useCallback(
         ({ item }) => (
             <EventRow
                 item={item}
-                onEdit={onEdit}
                 onDelete={onDelete}
                 onToggleStatus={onToggleStatus}
             />
@@ -204,9 +207,7 @@ export default function ManageEventsScreen({ navigation }) {
     return (
         <View style={styles.root}>
             <Appbar.Header>
-                <Appbar.BackAction
-                    onPress={() => navigation.goBack()}
-                />
+                <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="Manage Events" />
 
                 <Menu
@@ -246,6 +247,7 @@ export default function ManageEventsScreen({ navigation }) {
                     value={search}
                     onChangeText={setSearch}
                     style={styles.search}
+                    autoCapitalize="none"
                 />
 
                 <View style={styles.filterRow}>
@@ -256,7 +258,7 @@ export default function ManageEventsScreen({ navigation }) {
                             onPress={() => setStatusFilter(s)}
                             style={styles.chip}
                         >
-                            {s.toUpperCase()}
+                            {s}
                         </Chip>
                     ))}
                 </View>
@@ -269,10 +271,8 @@ export default function ManageEventsScreen({ navigation }) {
             ) : (
                 <FlatList
                     data={events}
-                    keyExtractor={(item) =>
-                        item.id.toString()
-                    }
                     renderItem={renderItem}
+                    keyExtractor={(item) => item.id.toString()}
                     initialNumToRender={6}
                     maxToRenderPerBatch={6}
                     windowSize={10}
@@ -285,16 +285,10 @@ export default function ManageEventsScreen({ navigation }) {
                             onRefresh={onRefresh}
                         />
                     }
-                    contentContainerStyle={
-                        styles.listContent
-                    }
+                    contentContainerStyle={styles.listContent}
                     ListFooterComponent={
                         loadingMore && (
-                            <ActivityIndicator
-                                style={{
-                                    marginVertical: 14,
-                                }}
-                            />
+                            <ActivityIndicator style={{ marginVertical: 14 }} />
                         )
                     }
                 />
@@ -323,13 +317,17 @@ const styles = StyleSheet.create({
     chip: {
         borderRadius: 14,
     },
-    card: {
-        flexDirection: "row",
-        backgroundColor: "#fff",
+    cardContainer: {
         margin: 10,
         borderRadius: 14,
-        overflow: "hidden",
         elevation: 3,
+        backgroundColor: "#fff",
+    },
+    card: {
+        flexDirection: "row",
+        borderRadius: 14,
+        overflow: "hidden",
+        backgroundColor: "#fff",
     },
     thumb: {
         width: 90,
