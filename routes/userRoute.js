@@ -14,18 +14,19 @@ const {
     logoutUserController,
     getMeController,
     updateUserController,
+    getAllUsers,
 } = require("../controllers/userController")
 
-const { 
-    authenticate 
+const {
+    authenticate
 } = require("../utils/auth")
 
-
-userRouter.post("/register",createUserMiddleware,createUserController)
-userRouter.post("/login",loginUserMiddleware,loginUserController)
-userRouter.post('/logout',logoutUserMiddleware,logoutUserController)
-userRouter.get("/me",authenticate,getMeController)
+userRouter.post("/register", createUserMiddleware, createUserController)
+userRouter.post("/login", loginUserMiddleware, loginUserController)
+userRouter.post('/logout', logoutUserMiddleware, logoutUserController)
+userRouter.get("/me", authenticate, getMeController)
 userRouter.put("/update", authenticate, updateUserMiddleware, updateUserController);
+userRouter.get("/", getAllUsers)
 
 // Future addition ROUTES :-
 // /refresh
@@ -35,4 +36,3 @@ userRouter.put("/update", authenticate, updateUserMiddleware, updateUserControll
 // /delete
 
 module.exports = userRouter;
-  

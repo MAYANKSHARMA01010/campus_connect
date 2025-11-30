@@ -216,10 +216,40 @@ async function updateUserController(req, res) {
     }
 }
 
+async function getAllUsers(req, res) {
+    try {
+        const users = await prisma.user.findMany({
+            include: {
+                eventRequests: {
+                    include: {
+                        images: true,
+                    },
+                },
+            },
+            orderBy: {
+                id: "asc",
+            },
+        });
+
+        return res.status(200).json({
+            message: "Users fetched successfully",
+            count: users.length,
+            users,
+        });
+    }
+    catch (err) {
+        console.error("GetUsers error:", err);
+        return res.status(500).json({
+            ERROR: "Internal Server Error while getting all users",
+        });
+    }
+}
+
 module.exports = {
-    createUserController, 
+    createUserController,
     loginUserController,
     logoutUserController,
     getMeController,
     updateUserController,
+    getAllUsers,
 };
