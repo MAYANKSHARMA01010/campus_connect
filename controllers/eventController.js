@@ -61,10 +61,25 @@ async function createEventController(req, res) {
 
 async function getAllEventsController(req, res) {
     try {
-        const { page = 1, limit = 8, category, sort } = req.query;
+        const {
+            page = 1,
+            limit = 8,
+            category,
+            sort,
+            past = "false",
+        } = req.query;
+
+        const now = new Date();
+        const showPast = past === "true";
 
         const where = {
             status: "APPROVED",
+
+            ...(!showPast && {
+                date: {
+                    gte: now,
+                },
+            }),
         };
 
         if (category && category !== "all") {
@@ -99,6 +114,7 @@ async function getAllEventsController(req, res) {
             categories: categories.map((c) => c.category),
             total,
         });
+
     } catch (error) {
         console.error("🔥 getAllEventsController ERROR:", error);
         return res.status(500).json({ error: "Backend error", reason: error.message });
