@@ -298,6 +298,49 @@ async function getAdminEventsController(req, res) {
     }
 }
 
+async function updateEventStatusController(req, res) {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!["APPROVED", "REJECTED"].includes(status)) {
+            return res.status(400).json({ error: "Invalid status value" });
+        }
+
+        const updatedEvent = await prisma.eventRequest.update({
+            where: { id: Number(id) },
+            data: { status },
+        });
+
+        return res.json({
+            success: true,
+            message: "Event status updated",
+            event: updatedEvent,
+        });
+    } catch (err) {
+        console.error("UPDATE STATUS ERROR:", err);
+        return res.status(500).json({ error: "Failed to update event status" });
+    }
+};
+
+async function deleteEventController(req, res) {
+    try {
+        const { id } = req.params;
+
+        await prisma.eventRequest.delete({
+            where: { id: Number(id) },
+        });
+
+        return res.json({
+            success: true,
+            message: "Event deleted successfully",
+        });
+    } catch (err) {
+        console.error("DELETE EVENT ERROR:", err);
+        return res.status(500).json({ error: "Failed to delete event" });
+    }
+};
+
 module.exports = {
     createEventController,
     getAllEventsController,
@@ -305,4 +348,6 @@ module.exports = {
     getEventByIdController,
     searchEventsController,
     getAdminEventsController,
+    updateEventStatusController,
+    deleteEventController,
 };
