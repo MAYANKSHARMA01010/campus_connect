@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useCallback, memo, useRef } from "react";
+import React, { useCallback, useEffect, useReducer, memo } from "react";
+
 import {
     View,
     StyleSheet,
     FlatList,
     Alert,
     RefreshControl,
+    TouchableOpacity,
 } from "react-native";
 
 import {
@@ -20,11 +22,18 @@ import {
 } from "react-native-paper";
 
 import { Image } from "expo-image";
-import API from "../api/api";
+
+import {
+    eventReducer,
+    initialState,
+    fetchAdminEvents,
+    updateEventStatus,
+    deleteEvent,
+} from "../reducer/eventReducer";
 
 const LIMIT = 10;
 
-const STATUS_FILTERS = ["all", "APPROVED", "PENDING", "REJECTED"];
+const STATUS_FILTERS = ["All", "APPROVED", "PENDING", "REJECTED"];
 
 const SORT_OPTIONS = [
     { label: "Newest", value: "recent" },
@@ -34,174 +43,184 @@ const SORT_OPTIONS = [
     { label: "A - Z", value: "az" },
 ];
 
-const EventRow = memo(({ item, onDelete, onToggleStatus }) => {
-    const statusColor =
-        item.status === "APPROVED"
-            ? "#4CAF50"
-            : item.status === "PENDING"
-                ? "#FF9800"
-                : "#F44336";
+const EventRow = memo(
+    ({ item, onDelete, onToggleStatus, onOpen, actionLoading }) => {
+        const statusColor =
+            item.status === "APPROVED"
+                ? "#4CAF50"
+                : item.status === "PENDING"
+                    ? "#FF9800"
+                    : "#F44336";
 
-    return (
-        <Surface style={styles.cardContainer}>
-            <View style={styles.card}>
-                {!!item?.images?.[0]?.url && (
-                    <Image
-                        source={item.images[0].url}
-                        style={styles.thumb}
-                        contentFit="cover"
-                        cachePolicy="disk"
-                        transition={200}
-                    />
-                )}
+        const isBusy = actionLoading === item.id;
 
-                <View style={styles.cardBody}>
-                    <Text numberOfLines={1} style={styles.title}>
-                        {item.title}
-                    </Text>
+        return (
+            <TouchableOpacity activeOpacity={0.9} onPress={() => onOpen(item)}>
+                <Surface style={styles.cardContainer}>
+                    <View style={styles.card}>
+                        {!!item?.images?.[0]?.url && (
+                            <Image
+                                source={item.images[0].url}
+                                style={styles.thumb}
+                                contentFit="cover"
+                            />
+                        )}
 
-                    <Text style={styles.subtitle}>
-                        {item.location || "No location"}
-                    </Text>
+                        <View style={styles.cardBody}>
+                            <Text numberOfLines={1} style={styles.title}>
+                                {item.title}
+                            </Text>
 
-                    <Text style={[styles.badge, { backgroundColor: statusColor }]}>
-                        {item.status}
-                    </Text>
+                            <Text style={styles.subtitle}>
+                                {item.location || "No location"}
+                            </Text>
 
-                    <View style={styles.actions}>
-                        <Button
-                            compact
-                            mode="contained"
-                            onPress={() =>
-                                onToggleStatus(
-                                    item,
-                                    item.status === "APPROVED" ? "REJECTED" : "APPROVED"
-                                )
-                            }
-                        >
-                            {item.status === "APPROVED" ? "Reject" : "Approve"}
-                        </Button>
+                            <Text style={[styles.badge, { backgroundColor: statusColor }]}>
+                                {item.status}
+                            </Text>
 
-                        <Button
-                            compact
-                            textColor="#F44336"
-                            onPress={() => onDelete(item)}
-                        >
-                            Delete
-                        </Button>
+                            <View style={styles.actions}>
+                                {item.status === "PENDING" && (
+                                    <>
+                                        <Button
+                                            compact
+                                            mode="contained"
+                                            loading={isBusy}
+                                            onPress={() => onToggleStatus(item.id, "APPROVED")}
+                                        >
+                                            Approve
+                                        </Button>
+
+                                        <Button
+                                            compact
+                                            loading={isBusy}
+                                            textColor="#F44336"
+                                            onPress={() => onToggleStatus(item.id, "REJECTED")}
+                                        >
+                                            Reject
+                                        </Button>
+                                    </>
+                                )}
+
+                                {item.status === "APPROVED" && (
+                                    <>
+                                        <Button
+                                            compact
+                                            loading={isBusy}
+                                            textColor="#F44336"
+                                            onPress={() => onToggleStatus(item.id, "REJECTED")}
+                                        >
+                                            Reject
+                                        </Button>
+
+                                        <Button
+                                            compact
+                                            loading={isBusy}
+                                            textColor="#F44336"
+                                            onPress={() => onDelete(item.id)}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </>
+                                )}
+
+                                {item.status === "REJECTED" && (
+                                    <>
+                                        <Button
+                                            compact
+                                            mode="contained"
+                                            loading={isBusy}
+                                            onPress={() => onToggleStatus(item.id, "APPROVED")}
+                                        >
+                                            Approve
+                                        </Button>
+
+                                        <Button
+                                            compact
+                                            loading={isBusy}
+                                            textColor="#F44336"
+                                            onPress={() => onDelete(item.id)}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </>
+                                )}
+                            </View>
+                        </View>
                     </View>
-                </View>
-            </View>
-        </Surface>
-    );
-});
+                </Surface>
+            </TouchableOpacity>
+        );
+    }
+);
 
 export default function ManageEventsScreen({ navigation }) {
-    const [events, setEvents] = useState([]);
-    const [search, setSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [sort, setSort] = useState("recent");
-    const [menuVisible, setMenuVisible] = useState(false);
-    const [page, setPage] = useState(1);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [loadingMore, setLoadingMore] = useState(false);
+    const [state, dispatch] = useReducer(eventReducer, initialState);
 
-    const activeRequest = useRef(0);
+    const { events, total, loading, refreshing, loadingMore, actionLoading } =
+        state;
+
+    const [search, setSearch] = React.useState("");
+    const [statusFilter, setStatusFilter] = React.useState("all");
+    const [sort, setSort] = React.useState("recent");
+    const [page, setPage] = React.useState(1);
+    const [menuVisible, setMenuVisible] = React.useState(false);
 
     const loadEvents = useCallback(
         async (reset = false) => {
-            const reqId = ++activeRequest.current;
-            const currentPage = reset ? 1 : page;
+            const newPage = reset ? 1 : page;
 
-            try {
-                if (reset) {
-                    setLoading(true);
-                    setPage(1);
-                }
+            await fetchAdminEvents({
+                dispatch,
+                search,
+                statusFilter,
+                sort,
+                page: newPage,
+                limit: LIMIT,
+                reset,
+            });
 
-                const res = await API.get("/events/admin", {
-                    params: {
-                        search,
-                        status:
-                            statusFilter !== "all" ? statusFilter : undefined,
-                        sortBy: sort,
-                        pageNumber: currentPage,
-                        pageSize: LIMIT,
-                    },
-                });
-
-                if (activeRequest.current !== reqId) return;
-
-                const list = res?.data?.events || [];
-
-                setTotal(res?.data?.total || 0);
-
-                reset
-                    ? setEvents(list)
-                    : setEvents((prev) => [...prev, ...list]);
-
-                setPage((p) => p + 1);
-            } catch (err) {
-                console.log(
-                    "ADMIN FETCH ERROR:",
-                    err?.response?.data || err.message
-                );
-            } finally {
-                if (activeRequest.current === reqId) {
-                    setLoading(false);
-                    setRefreshing(false);
-                    setLoadingMore(false);
-                }
-            }
+            setPage(reset ? 2 : page + 1);
         },
-        [search, statusFilter, sort, page]
+        [dispatch, search, statusFilter, sort, page]
     );
 
     useEffect(() => {
         loadEvents(true);
     }, [search, statusFilter, sort]);
 
-    const onRefresh = useCallback(() => {
-        setRefreshing(true);
-        loadEvents(true);
-    }, [loadEvents]);
+    const onRefresh = () => loadEvents(true);
 
-    const loadMore = useCallback(() => {
+    const loadMore = () => {
         if (loadingMore || events.length >= total) return;
-        setLoadingMore(true);
         loadEvents(false);
-    }, [loadingMore, events.length, total, loadEvents]);
+    };
 
-    const onDelete = useCallback((event) => {
-        Alert.alert("Delete Event?", `"${event.title}" will be removed.`, [
+    const onToggleStatus = (id, status) =>
+        updateEventStatus(dispatch, id, status, () => loadEvents(true));
+
+    const onDelete = (id) => {
+        Alert.alert("Delete Event?", "This event will be removed.", [
             { text: "Cancel" },
             {
                 text: "Delete",
                 style: "destructive",
-                onPress: async () => {
-                    await API.delete(`/events/${event.id}`);
-                    onRefresh();
-                },
+                onPress: () => deleteEvent(dispatch, id, () => loadEvents(true)),
             },
         ]);
-    }, []);
+    };
 
-    const onToggleStatus = useCallback(async (event, status) => {
-        await API.patch(`/events/${event.id}/status`, { status });
-        onRefresh();
-    }, []);
+    const onOpen = (event) =>
+        navigation.navigate("EventDetail", { id: event.id });
 
-    const renderItem = useCallback(
-        ({ item }) => (
-            <EventRow
-                item={item}
-                onDelete={onDelete}
-                onToggleStatus={onToggleStatus}
-            />
-        ),
-        []
+    const renderItem = ({ item }) => (
+        <EventRow
+            item={item}
+            onToggleStatus={onToggleStatus}
+            onDelete={onDelete}
+            onOpen={onOpen}
+            actionLoading={actionLoading}
+        />
     );
 
     return (
@@ -230,33 +249,24 @@ export default function ManageEventsScreen({ navigation }) {
                             }}
                         />
                     ))}
-
-                    <Menu.Item
-                        title="Refresh"
-                        onPress={() => {
-                            setMenuVisible(false);
-                            onRefresh();
-                        }}
-                    />
+                    <Menu.Item title="Refresh" onPress={onRefresh} />
                 </Menu>
             </Appbar.Header>
 
             <View style={styles.header}>
                 <Searchbar
-                    placeholder="Search events…"
+                    placeholder="Search events..."
                     value={search}
                     onChangeText={setSearch}
                     style={styles.search}
-                    autoCapitalize="none"
                 />
 
                 <View style={styles.filterRow}>
                     {STATUS_FILTERS.map((s) => (
                         <Chip
                             key={s}
-                            selected={statusFilter === s}
-                            onPress={() => setStatusFilter(s)}
-                            style={styles.chip}
+                            selected={statusFilter === s.toLowerCase()}
+                            onPress={() => setStatusFilter(s === "All" ? "all" : s)}
                         >
                             {s}
                         </Chip>
@@ -272,25 +282,16 @@ export default function ManageEventsScreen({ navigation }) {
                 <FlatList
                     data={events}
                     renderItem={renderItem}
-                    keyExtractor={(item) => item.id.toString()}
-                    initialNumToRender={6}
-                    maxToRenderPerBatch={6}
-                    windowSize={10}
-                    removeClippedSubviews
+                    keyExtractor={(i) => i.id.toString()}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    }
                     onEndReached={loadMore}
                     onEndReachedThreshold={0.4}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                        />
+                    ListFooterComponent={
+                        loadingMore && <ActivityIndicator style={{ marginVertical: 14 }} />
                     }
                     contentContainerStyle={styles.listContent}
-                    ListFooterComponent={
-                        loadingMore && (
-                            <ActivityIndicator style={{ marginVertical: 14 }} />
-                        )
-                    }
                 />
             )}
         </View>
@@ -298,62 +299,39 @@ export default function ManageEventsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    root: {
-        flex: 1,
-        backgroundColor: "#F6F8FB",
-    },
-    header: {
-        padding: 12,
-    },
-    search: {
-        borderRadius: 14,
-    },
+    root: { flex: 1, backgroundColor: "#F6F8FB" },
+    header: { padding: 12 },
+    search: { borderRadius: 14 },
     filterRow: {
         flexDirection: "row",
-        gap: 8,
         marginTop: 10,
+        gap: 8,
         flexWrap: "wrap",
-    },
-    chip: {
-        borderRadius: 14,
     },
     cardContainer: {
         margin: 10,
         borderRadius: 14,
-        elevation: 3,
         backgroundColor: "#fff",
+        elevation: 3,
     },
     card: {
         flexDirection: "row",
-        borderRadius: 14,
         overflow: "hidden",
-        backgroundColor: "#fff",
+        borderRadius: 14,
     },
-    thumb: {
-        width: 90,
-        height: "100%",
-    },
-    cardBody: {
-        flex: 1,
-        padding: 10,
-    },
-    title: {
-        fontWeight: "700",
-        fontSize: 16,
-    },
-    subtitle: {
-        color: "#666",
-        marginTop: 2,
-    },
+    thumb: { width: 90, height: "100%" },
+    cardBody: { flex: 1, padding: 10 },
+    title: { fontWeight: "700", fontSize: 16 },
+    subtitle: { color: "#666" },
     badge: {
         marginTop: 6,
-        alignSelf: "flex-start",
-        borderRadius: 8,
         paddingVertical: 2,
         paddingHorizontal: 8,
         fontSize: 11,
         color: "#fff",
         fontWeight: "700",
+        borderRadius: 8,
+        alignSelf: "flex-start",
     },
     actions: {
         marginTop: 12,
@@ -361,11 +339,6 @@ const styles = StyleSheet.create({
         gap: 6,
         justifyContent: "flex-end",
     },
-    center: {
-        flex: 1,
-        justifyContent: "center",
-    },
-    listContent: {
-        paddingBottom: 70,
-    },
+    center: { flex: 1, justifyContent: "center" },
+    listContent: { paddingBottom: 70 },
 });
