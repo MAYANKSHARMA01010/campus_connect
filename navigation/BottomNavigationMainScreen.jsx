@@ -1,5 +1,12 @@
 import React from "react";
-import { View, StyleSheet, Pressable, Animated, Dimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Animated,
+  Dimensions,
+  useColorScheme,
+} from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BlurView } from "expo-blur";
 import {
@@ -9,7 +16,11 @@ import {
   FontAwesome6,
 } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import { useAuth } from "../context/UserContext";
+import { useAppTheme } from "../theme/useAppTheme";
+import { Radius, Spacing, Dimension } from "../theme/theme";
+import { scale } from "../theme/layout";
 
 import HomeScreen from "../Screens/Home";
 import EventScreen from "../Screens/Events";
@@ -29,14 +40,14 @@ const animatedScale = Array(5)
 const animatedPillX = new Animated.Value(0);
 
 function animateTab(index) {
-  animatedScale.forEach((v, i) => {
+  animatedScale.forEach((v, i) =>
     Animated.spring(v, {
       toValue: i === index ? 1.22 : 1,
       useNativeDriver: true,
       friction: 6,
       tension: 160,
-    }).start();
-  });
+    }).start()
+  );
 
   Animated.spring(animatedPillX, {
     toValue: index * TAB_WIDTH,
@@ -49,14 +60,36 @@ function animateTab(index) {
 function CustomTabBar({ state, navigation }) {
   const insets = useSafeAreaInsets();
   const { role } = useAuth();
+  const colors = useAppTheme();
+  const scheme = useColorScheme();
 
   return (
-    <View style={[styles.mainContainer, { paddingBottom: insets.bottom + 5 }]}>
-      <BlurView intensity={90} tint="light" style={styles.tabContainer}>
+    <View
+      style={[
+        styles.mainContainer,
+        { paddingBottom: insets.bottom + Spacing.sm },
+      ]}
+    >
+      <BlurView
+        intensity={90}
+        tint={scheme === "dark" ? "dark" : "light"}
+        style={[
+          styles.tabContainer,
+          {
+            backgroundColor:
+              scheme === "dark"
+                ? "rgba(30,41,59,0.55)"
+                : "rgba(255,255,255,0.45)",
+            borderColor: colors.border,
+          },
+        ]}
+      >
         <Animated.View
           style={[
             styles.activePill,
             {
+              width: TAB_WIDTH - scale(8),
+              backgroundColor: colors.primary,
               transform: [{ translateX: animatedPillX }],
             },
           ]}
@@ -66,45 +99,25 @@ function CustomTabBar({ state, navigation }) {
           const isFocused = state.index === index;
           const scaleStyle = { transform: [{ scale: animatedScale[index] }] };
 
+          const iconColor = isFocused ? colors.primary : colors.muted;
+
           const ICONS = {
-            Home: (
-              <Entypo
-                name="home"
-                size={24}
-                color={isFocused ? "#E91E63" : "#bbb"}
-              />
-            ),
-
+            Home: <Entypo name="home" size={scale(24)} color={iconColor} />,
             Search: (
-              <Ionicons
-                name="search"
-                size={24}
-                color={isFocused ? "#E91E63" : "#bbb"}
-              />
+              <Ionicons name="search" size={scale(24)} color={iconColor} />
             ),
-
             HostButton: (
               <MaterialIcons
                 name="add-circle"
-                size={30}
-                color="#E91E63"
+                size={scale(32)}
+                color={colors.accent}
               />
             ),
-
             Events: (
-              <MaterialIcons
-                name="event"
-                size={24}
-                color={isFocused ? "#E91E63" : "#bbb"}
-              />
+              <MaterialIcons name="event" size={scale(24)} color={iconColor} />
             ),
-
             ProfileTab: (
-              <FontAwesome6
-                name="user"
-                size={22}
-                color={isFocused ? "#E91E63" : "#bbb"}
-              />
+              <FontAwesome6 name="user" size={scale(22)} color={iconColor} />
             ),
           };
 
@@ -148,10 +161,7 @@ export default function BottomNavigationMainScreen() {
       <Tabs.Screen name="Home" component={HomeScreen} />
       <Tabs.Screen name="Search" component={SearchScreen} />
 
-      <Tabs.Screen
-        name="HostButton"
-        options={{ tabBarButton: () => null }}
-      >
+      <Tabs.Screen name="HostButton" options={{ tabBarButton: () => null }}>
         {() => null}
       </Tabs.Screen>
 
@@ -177,21 +187,18 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: "row",
     width: "90%",
-    paddingVertical: 18,
-    borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.pill,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.35)",
   },
 
   activePill: {
     position: "absolute",
-    width: TAB_WIDTH - 8,
-    height: 44,
-    backgroundColor: "rgba(255,255,255,0.55)",
-    borderRadius: 28,
-    left: 4,
+    height: scale(44),
+    borderRadius: Radius.pill,
+    left: scale(4),
+    opacity: 0.2,
   },
 
   tabButton: {
@@ -201,9 +208,9 @@ const styles = StyleSheet.create({
   },
 
   iconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 40,
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(40),
     justifyContent: "center",
     alignItems: "center",
   },
