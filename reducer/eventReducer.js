@@ -1,21 +1,32 @@
 import API from "../api/api";
 
+/* -------------------------------------------------------------------------- */
+/*                                INITIAL STATE                               */
+/* -------------------------------------------------------------------------- */
+
 export const initialState = {
     events: [],
     total: 0,
+
     loading: false,
     refreshing: false,
     loadingMore: false,
+
     actionLoading: null,
 };
+
+/* -------------------------------------------------------------------------- */
+/*                                   REDUCER                                  */
+/* -------------------------------------------------------------------------- */
 
 export const eventReducer = (state, action) => {
     switch (action.type) {
         case "FETCH_START":
             return {
                 ...state,
-                loading: action.reset,
-                refreshing: !action.reset,
+                loading: action.reset === true,
+                refreshing: action.reset === false,
+                loadingMore: false,
             };
 
         case "FETCH_MORE":
@@ -30,9 +41,11 @@ export const eventReducer = (state, action) => {
                 loading: false,
                 refreshing: false,
                 loadingMore: false,
+
                 events: action.reset
                     ? action.payload.events
                     : [...state.events, ...action.payload.events],
+
                 total: action.payload.total,
             };
 
@@ -53,6 +66,10 @@ export const eventReducer = (state, action) => {
     }
 };
 
+/* -------------------------------------------------------------------------- */
+/*                               API FUNCTIONS                                */
+/* -------------------------------------------------------------------------- */
+
 export const fetchAdminEvents = async ({
     dispatch,
     search,
@@ -60,7 +77,7 @@ export const fetchAdminEvents = async ({
     sort,
     page,
     limit,
-    reset,
+    reset = false,
 }) => {
     try {
         dispatch({
@@ -70,9 +87,13 @@ export const fetchAdminEvents = async ({
 
         const res = await API.get("/events/admin", {
             params: {
-                search,
-                status: statusFilter !== "all" ? statusFilter : undefined,
-                sortBy: sort,
+                search: search || undefined,
+
+                status:
+                    statusFilter && statusFilter !== "all" ? statusFilter : undefined,
+
+                sortBy: sort || "recent",
+
                 pageNumber: page,
                 pageSize: limit,
             },
@@ -80,11 +101,11 @@ export const fetchAdminEvents = async ({
 
         dispatch({
             type: "FETCH_SUCCESS",
-            payload: {
-                events: res?.data?.events || [],
-                total: res?.data?.total || 0,
-            },
             reset,
+            payload: {
+                events: res?.data?.events ?? [],
+                total: res?.data?.total ?? 0,
+            },
         });
     } catch (err) {
         console.log("FETCH ERROR:", err?.response?.data || err.message);
@@ -92,11 +113,18 @@ export const fetchAdminEvents = async ({
     }
 };
 
+/* -------------------------------------------------------------------------- */
+
 export const updateEventStatus = async (dispatch, id, status, reload) => {
     try {
-        dispatch({ type: "ACTION_START", payload: id });
+        dispatch({
+            type: "ACTION_START",
+            payload: id,
+        });
 
-        await API.patch(`/events/admin/${id}/status`, { status });
+        await API.patch(`/events/admin/${id}/status`, {
+            status,
+        });
 
         await reload();
     } catch (err) {
@@ -106,9 +134,14 @@ export const updateEventStatus = async (dispatch, id, status, reload) => {
     }
 };
 
+/* -------------------------------------------------------------------------- */
+
 export const deleteEvent = async (dispatch, id, reload) => {
     try {
-        dispatch({ type: "ACTION_START", payload: id });
+        dispatch({
+            type: "ACTION_START",
+            payload: id,
+        });
 
         await API.delete(`/events/admin/${id}`);
 
