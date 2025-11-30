@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { Text, TextInput, Button, ActivityIndicator, Surface } from "react-native-paper";
+import {
+  Text,
+  TextInput,
+  Button,
+  ActivityIndicator,
+  Surface,
+} from "react-native-paper";
+
 import { useAuth } from "../context/UserContext";
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
 
 export default function LoginScreen({ navigation }) {
   const { login, isLoggedIn } = useAuth();
+  const colors = useAppTheme();
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -17,11 +28,14 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     if (!identifier || !password)
-      return Alert.alert("Missing Fields", "Please enter email/username and password");
+      return Alert.alert(
+        "Missing Fields",
+        "Please enter email/username and password"
+      );
 
     setLoading(true);
 
-    const success = await login(
+    await login(
       identifier.includes("@")
         ? { email: identifier, password }
         : { username: identifier, password }
@@ -31,14 +45,29 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.header}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      {/* HEADER */}
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <Text style={styles.headerText}>Campus Connect</Text>
       </View>
 
-      <Surface style={styles.card}>
-        <Text style={styles.title}>Welcome Back 👋</Text>
-        <Text style={styles.subtitle}>Login to continue your journey</Text>
+      {/* CARD */}
+      <Surface
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.surface,
+            borderRadius: Radius.xl,
+          },
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.primary }]}>
+          Welcome Back 👋
+        </Text>
+
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Login to continue your journey
+        </Text>
 
         <TextInput
           label="Email or Username"
@@ -67,64 +96,79 @@ export default function LoginScreen({ navigation }) {
           mode="contained"
           onPress={handleLogin}
           style={styles.button}
-          buttonColor="#E91E63"
+          buttonColor={colors.primary}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : "Login"}
+          {loading ? <ActivityIndicator color={colors.surface} /> : "Login"}
         </Button>
 
         <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.link}>Don’t have an account? Register</Text>
+          <Text style={[styles.link, { color: colors.primary }]}>
+            Don’t have an account? Register
+          </Text>
         </TouchableOpacity>
       </Surface>
     </View>
   );
 }
 
+// --------------------------------------------------
+
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F6F7FB" },
+  screen: {
+    flex: 1,
+  },
+
   header: {
-    height: 160,
-    backgroundColor: "#E91E63",
+    height: scale(160),
     justifyContent: "flex-end",
-    padding: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    elevation: 6,
+    padding: Spacing.xl,
+    borderBottomLeftRadius: Radius.lg,
+    borderBottomRightRadius: Radius.lg,
+    ...Shadows.card,
   },
-  headerText: { color: "#fff", fontSize: 28, fontWeight: "800" },
+
+  headerText: {
+    color: "#fff",
+    fontSize: Fonts.size.title,
+    fontWeight: Fonts.weight.bold,
+  },
+
   card: {
-    marginTop: -60,
-    marginHorizontal: 20,
-    backgroundColor: "#fff",
-    padding: 25,
-    borderRadius: 20,
-    elevation: 10,
+    marginTop: scale(-60),
+    marginHorizontal: Spacing.lg,
+    padding: Spacing.xl,
+    ...Shadows.card,
   },
+
   title: {
     textAlign: "center",
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 5,
-    color: "#E91E63",
+    fontSize: Fonts.size.xxl,
+    fontWeight: Fonts.weight.bold,
+    marginBottom: Spacing.xs,
   },
+
   subtitle: {
     textAlign: "center",
-    color: "#555",
-    marginBottom: 25,
-    fontSize: 14,
+    marginBottom: Spacing.xl,
+    fontSize: Fonts.size.md,
   },
+
   input: {
-    marginBottom: 16,
-    backgroundColor: "#FAFAFA",
-    borderRadius: 10,
+    marginBottom: Spacing.md,
+    borderRadius: Radius.md,
   },
-  button: { marginTop: 10, borderRadius: 10, paddingVertical: 6 },
+
+  button: {
+    marginTop: Spacing.sm,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.xs,
+  },
+
   link: {
     textAlign: "center",
-    color: "#E91E63",
-    marginTop: 18,
-    fontWeight: "600",
-    fontSize: 14,
+    marginTop: Spacing.lg,
+    fontWeight: Fonts.weight.semiBold,
+    fontSize: Fonts.size.md,
   },
 });

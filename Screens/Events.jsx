@@ -20,9 +20,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import API from "../api/api";
 import EventCard from "../components/EventCard";
 
+import { useAppTheme } from "../theme/useAppTheme";
+import { Spacing, Fonts, Radius } from "../theme/theme";
+import { scale } from "../theme/layout";
+
 const LIMIT = 8;
 
 export default function EventScreen({ navigation }) {
+  const colors = useAppTheme();
+
   const [events, setEvents] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState("all");
@@ -33,7 +39,6 @@ export default function EventScreen({ navigation }) {
   const [sortType, setSortType] = useState("recent");
   const [sortVisible, setSortVisible] = useState(false);
 
-  // ✅ NEW: past events toggle
   const [showPast, setShowPast] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -107,19 +112,25 @@ export default function EventScreen({ navigation }) {
     [navigation]
   );
 
-  const ShimmerCard = () => <View style={styles.shimmerCard} />;
+  const ShimmerCard = () => (
+    <View style={[styles.shimmerCard, { backgroundColor: colors.border }]} />
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <StatusBar barStyle="light-content" translucent />
 
+      {/* HEADER */}
       <LinearGradient
-        colors={["#1337e6", "#3ab1ff"]}
+        colors={[colors.primary, colors.accent]}
         style={styles.header}
       >
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.headerTitle}>Campus Events</Text>
+
             <Text style={styles.headerSubtitle}>Discover what's happening</Text>
           </View>
 
@@ -129,19 +140,29 @@ export default function EventScreen({ navigation }) {
             anchor={
               <IconButton
                 icon="sort-variant"
-                size={26}
+                size={scale(24)}
                 iconColor="#fff"
                 onPress={() => setSortVisible(true)}
               />
             }
           >
-            <Menu.Item title="Recent First" onPress={() => onSortSelect("recent")} />
-            <Menu.Item title="By Location" onPress={() => onSortSelect("location")} />
-            <Menu.Item title="By Duration" onPress={() => onSortSelect("duration")} />
+            <Menu.Item
+              title="Recent First"
+              onPress={() => onSortSelect("recent")}
+            />
+            <Menu.Item
+              title="By Location"
+              onPress={() => onSortSelect("location")}
+            />
+            <Menu.Item
+              title="By Duration"
+              onPress={() => onSortSelect("duration")}
+            />
           </Menu>
         </View>
       </LinearGradient>
 
+      {/* CATEGORY SELECTOR */}
       <FlatList
         data={categories}
         horizontal
@@ -154,28 +175,38 @@ export default function EventScreen({ navigation }) {
             onPress={() => setActiveCategory(item)}
             style={[
               styles.categoryChip,
-              activeCategory === item && styles.categoryActive,
+              {
+                backgroundColor:
+                  activeCategory === item ? colors.surface : colors.background,
+              },
             ]}
-            textStyle={styles.chipText}
+            textStyle={[styles.chipText, { color: colors.textPrimary }]}
           >
             {item.toUpperCase()}
           </Chip>
         )}
       />
 
+      {/* PAST EVENTS TOGGLE */}
       <View style={styles.pastToggleRow}>
         <Text style={styles.pastLabel}>Show past events</Text>
 
         <Chip
           selected={showPast}
           onPress={() => setShowPast((prev) => !prev)}
-          style={[styles.pastChip, showPast && styles.pastActive]}
+          style={[
+            styles.pastChip,
+            {
+              backgroundColor: showPast ? colors.surface : colors.background,
+            },
+          ]}
           textStyle={styles.chipText}
         >
           {showPast ? "ON" : "OFF"}
         </Chip>
       </View>
 
+      {/* LIST */}
       <Suspense fallback={<ShimmerCard />}>
         {loading ? (
           <>
@@ -193,10 +224,12 @@ export default function EventScreen({ navigation }) {
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
-            contentContainerStyle={{ paddingBottom: 70 }}
+            contentContainerStyle={{
+              paddingBottom: scale(70),
+            }}
             ListFooterComponent={
               loadingMore && (
-                <ActivityIndicator style={{ marginVertical: 12 }} />
+                <ActivityIndicator style={{ marginVertical: Spacing.md }} />
               )
             }
           />
@@ -209,16 +242,18 @@ export default function EventScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f7f9fc",
   },
 
   header: {
-    paddingHorizontal: 18,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight + 16 : 24,
-    paddingBottom: 18,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    elevation: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingTop:
+      Platform.OS === "android"
+        ? StatusBar.currentHeight + Spacing.lg
+        : Spacing.xl,
+
+    paddingBottom: Spacing.lg,
+    borderBottomLeftRadius: Radius.lg,
+    borderBottomRightRadius: Radius.lg,
   },
 
   headerRow: {
@@ -229,61 +264,49 @@ const styles = StyleSheet.create({
 
   headerTitle: {
     color: "#fff",
-    fontSize: 26,
-    fontWeight: "800",
+    fontSize: Fonts.size.xxl,
+    fontWeight: Fonts.weight.bold,
   },
 
   headerSubtitle: {
-    color: "#dfeaff",
-    marginTop: 3,
+    color: "#eef",
+    marginTop: Spacing.xs,
+    fontSize: Fonts.size.md,
   },
 
   categoryList: {
-    paddingVertical: 12,
-    paddingLeft: 10,
+    paddingVertical: Spacing.md,
+    paddingLeft: Spacing.md,
   },
 
   categoryChip: {
-    backgroundColor: "#eef3ff",
-    marginRight: 8,
-    height: 38,
+    marginRight: Spacing.sm,
+    height: scale(38),
     justifyContent: "center",
   },
 
-  categoryActive: {
-    backgroundColor: "#ffffff",
+  chipText: {
+    fontWeight: Fonts.weight.semiBold,
   },
 
-  chipText: {
-    color: "#1b2a4a",
-    fontWeight: "600",
-  },
   pastToggleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 14,
-    marginTop: 8,
-    paddingBottom: 8,
+    paddingHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
+    paddingBottom: Spacing.sm,
   },
 
   pastLabel: {
-    color: "#1b2a4a",
-    fontWeight: "600",
+    fontWeight: Fonts.weight.semiBold,
   },
 
-  pastChip: {
-    backgroundColor: "#eef3ff",
-  },
-
-  pastActive: {
-    backgroundColor: "#ffffff",
-  },
+  pastChip: {},
 
   shimmerCard: {
-    height: 200,
-    borderRadius: 14,
-    margin: 12,
-    backgroundColor: "#ddd",
+    height: scale(200),
+    borderRadius: Radius.md,
+    margin: Spacing.md,
   },
 });

@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+
 import {
   Surface,
   Text,
@@ -15,12 +16,19 @@ import {
   Chip,
   Divider,
 } from "react-native-paper";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { searchEvents } from "../api/events";
 import EventCard from "../components/EventCard";
 
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
+
 export default function SearchScreen() {
+  const colors = useAppTheme();
+
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
@@ -86,18 +94,21 @@ export default function SearchScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         style={styles.safe}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Surface style={styles.container}>
+        <Surface
+          style={[styles.container, { backgroundColor: colors.surface }]}
+        >
+          {/* HEADER */}
           <View style={styles.header}>
             <Searchbar
               placeholder="Search by event, host or location…"
               value={query}
               onChangeText={setQuery}
-              style={styles.search}
+              style={[styles.search, { backgroundColor: colors.surface }]}
               elevation={2}
               autoCorrect={false}
               autoCapitalize="none"
@@ -114,6 +125,7 @@ export default function SearchScreen() {
 
           <Divider />
 
+          {/* CONTENT */}
           <View style={styles.content}>
             {loading && (
               <View style={styles.center}>
@@ -123,7 +135,10 @@ export default function SearchScreen() {
 
             {!loading && error && (
               <View style={styles.center}>
-                <Text variant="bodyLarge" style={styles.error}>
+                <Text
+                  variant="bodyLarge"
+                  style={[styles.error, { color: colors.danger }]}
+                >
                   {error}
                 </Text>
               </View>
@@ -131,7 +146,10 @@ export default function SearchScreen() {
 
             {!loading && !error && results.length === 0 && (
               <View style={styles.center}>
-                <Text variant="bodyLarge" style={styles.empty}>
+                <Text
+                  variant="bodyLarge"
+                  style={[styles.empty, { color: colors.textSecondary }]}
+                >
                   {query ? "No results found" : "Start typing to search"}
                 </Text>
               </View>
@@ -141,20 +159,14 @@ export default function SearchScreen() {
               data={results}
               renderItem={renderItem}
               keyExtractor={(item) => String(item.id)}
-
               initialNumToRender={6}
               maxToRenderPerBatch={6}
               windowSize={8}
               removeClippedSubviews
-
               keyboardDismissMode="on-drag"
-
               contentContainerStyle={styles.list}
               refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                />
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
             />
           </View>
@@ -164,10 +176,11 @@ export default function SearchScreen() {
   );
 }
 
+// --------------------------------------------------
+
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff",
   },
 
   container: {
@@ -175,23 +188,24 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    paddingBottom: 6,
+    paddingBottom: Spacing.xs,
   },
 
   search: {
-    margin: 12,
-    borderRadius: 14,
+    margin: Spacing.md,
+    borderRadius: Radius.md,
+    ...Shadows.card,
   },
 
   chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    paddingHorizontal: 12,
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
   },
 
   chip: {
-    borderRadius: 12,
+    borderRadius: Radius.sm,
   },
 
   content: {
@@ -199,20 +213,20 @@ const styles = StyleSheet.create({
   },
 
   list: {
-    paddingHorizontal: 12,
-    paddingBottom: 30,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: scale(30),
   },
 
   center: {
-    paddingTop: 60,
+    paddingTop: scale(60),
     alignItems: "center",
   },
 
   empty: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
 
   error: {
-    color: "red",
+    fontWeight: Fonts.weight.medium,
   },
 });

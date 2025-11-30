@@ -7,6 +7,7 @@ import {
     Share,
     Linking,
 } from "react-native";
+
 import {
     Appbar,
     Text,
@@ -16,12 +17,19 @@ import {
     Chip,
     Divider,
 } from "react-native-paper";
-import { getEventById } from "../api/events";
 
+import { getEventById } from "../api/events";
 import EventHeroSlider from "../components/EventHeroSlider";
+
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
+
+// --------------------------------------------------
 
 export default function EventDetailsScreen({ route, navigation }) {
     const { id } = route.params;
+    const colors = useAppTheme();
 
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -128,21 +136,24 @@ ${event?.description || ""}`,
     if (loading)
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" />
+                <ActivityIndicator size="large" color={colors.primary} />
             </View>
         );
 
     if (!event)
         return (
             <View style={styles.center}>
-                <Text>Event not found</Text>
+                <Text>No event found</Text>
             </View>
         );
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#F4F5F7" }}>
-            <Appbar.Header elevated>
-                <Appbar.BackAction onPress={() => navigation.goBack()} />
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+            <Appbar.Header elevated={true}>
+                <Appbar.BackAction
+                    color={colors.textPrimary}
+                    onPress={() => navigation.goBack()}
+                />
                 <Appbar.Content title={event.title || "Event"} />
             </Appbar.Header>
 
@@ -154,7 +165,9 @@ ${event?.description || ""}`,
                 <EventHeroSlider images={images} onSharePress={onSharePress} />
 
                 <View style={styles.section}>
-                    <Text style={styles.eventTitle}>{event.title}</Text>
+                    <Text style={[styles.eventTitle, { color: colors.textPrimary }]}>
+                        {event.title}
+                    </Text>
 
                     <View style={styles.rowWrap}>
                         {!!event.category && (
@@ -171,47 +184,36 @@ ${event?.description || ""}`,
                 </View>
 
                 <View style={styles.cardsRow}>
-                    <Surface style={styles.infoCard}>
-                        <View style={styles.innerClip}>
-                            <Text style={styles.label}>Date</Text>
-                            <Text style={styles.value}>{formatDate(event.date)}</Text>
-                            {!!timeLeft && <Text style={styles.subValue}>{timeLeft}</Text>}
-                        </View>
-                    </Surface>
-
-                    <Surface style={styles.infoCard}>
-                        <View style={styles.innerClip}>
-                            <Text style={styles.label}>Time</Text>
-                            <Text style={styles.value}>
-                                {formatTime(event.date, event.time)}
-                            </Text>
-                        </View>
-                    </Surface>
+                    <InfoCard
+                        label="Date"
+                        value={formatDate(event.date)}
+                        subValue={timeLeft}
+                    />
+                    <InfoCard label="Time" value={formatTime(event.date, event.time)} />
                 </View>
 
                 <View style={styles.cardsRow}>
-                    <Surface style={[styles.infoCard, { flex: 1 }]}>
-                        <View style={styles.innerClip}>
-                            <Text style={styles.label}>Location</Text>
-                            <Text style={styles.value}>{event.location || "—"}</Text>
+                    <InfoCard
+                        label="Location"
+                        value={event.location || "—"}
+                        extra={
                             <Button mode="outlined" compact icon="map-marker">
                                 Open Maps
                             </Button>
-                        </View>
-                    </Surface>
+                        }
+                    />
 
-                    <Surface style={[styles.infoCard, { flex: 1 }]}>
-                        <View style={styles.innerClip}>
-                            <Text style={styles.label}>Host</Text>
-                            <Text style={styles.value}>{event.hostName || "—"}</Text>
-
-                            <View style={{ flexDirection: "row", marginTop: 10 }}>
+                    <InfoCard
+                        label="Host"
+                        value={event.hostName || "—"}
+                        extra={
+                            <View style={{ flexDirection: "row", marginTop: Spacing.sm }}>
                                 <Button
                                     mode="outlined"
                                     compact
                                     icon="phone"
                                     onPress={handleCallHost}
-                                    style={{ flex: 1, marginRight: 8 }}
+                                    style={{ flex: 1, marginRight: Spacing.sm }}
                                     disabled={!event?.contact}
                                 >
                                     Call
@@ -228,13 +230,18 @@ ${event?.description || ""}`,
                                     Email
                                 </Button>
                             </View>
-                        </View>
-                    </Surface>
+                        }
+                    />
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>About</Text>
-                    <Surface style={styles.surfaceBox}>
+                    <Text style={[styles.heading, { color: colors.textPrimary }]}>
+                        About
+                    </Text>
+
+                    <Surface
+                        style={[styles.surfaceBox, { backgroundColor: colors.surface }]}
+                    >
                         <Text style={styles.desc}>
                             {event.description || "No description provided."}
                         </Text>
@@ -242,23 +249,26 @@ ${event?.description || ""}`,
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.heading}>Details</Text>
+                    <Text style={[styles.heading, { color: colors.textPrimary }]}>
+                        Details
+                    </Text>
 
                     <Surface style={styles.detailsSurface}>
                         <View style={styles.detailsBoxInner}>
                             <Detail label="Category" value={event.category} />
-                            <Detail label="Sub-category" value={event.subCategory} />
+                            <Detail label="Sub category" value={event.subCategory} />
                             <Detail label="Contact" value={event.contact} />
-                            <Detail
-                                label="Email"
-                                value={event.email || event.hostEmail}
-                            />
+                            <Detail label="Email" value={event.email || event.hostEmail} />
                         </View>
                     </Surface>
                 </View>
 
-                <View style={{ padding: 20 }}>
-                    <Button mode="contained" style={styles.registerBtn}>
+                <View style={{ padding: Spacing.xl }}>
+                    <Button
+                        mode="contained"
+                        style={styles.registerBtn}
+                        buttonColor={colors.primary}
+                    >
                         RSVP / Register
                     </Button>
                 </View>
@@ -267,111 +277,140 @@ ${event?.description || ""}`,
     );
 }
 
-const Detail = ({ label, value }) => (
-    <>
-        <View style={styles.detailRow}>
-            <Text style={styles.label}>{label}</Text>
-            <Text style={styles.value}>{value || "—"}</Text>
-        </View>
-        <Divider />
-    </>
-);
+// --------------------------------------------------
+
+const InfoCard = ({ label, value, subValue, extra }) => {
+    const colors = useAppTheme();
+
+    return (
+        <Surface style={[styles.infoCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.innerClip}>
+                <Text style={styles.label}>{label}</Text>
+                <Text style={[styles.value, { color: colors.textPrimary }]}>
+                    {value || "—"}
+                </Text>
+
+                {!!subValue && <Text style={styles.subValue}>{subValue}</Text>}
+                {extra}
+            </View>
+        </Surface>
+    );
+};
+
+const Detail = ({ label, value }) => {
+    const colors = useAppTheme();
+
+    return (
+        <>
+            <View style={styles.detailRow}>
+                <Text style={styles.label}>{label}</Text>
+                <Text style={[styles.value, { color: colors.textPrimary }]}>
+                    {value || "—"}
+                </Text>
+            </View>
+            <Divider />
+        </>
+    );
+};
+
+// --------------------------------------------------
 
 const styles = StyleSheet.create({
-    section: { paddingHorizontal: 20, paddingTop: 20 },
-
-    eventTitle: {
-        fontSize: 28,
-        fontWeight: "700",
-        marginBottom: 10,
-        color: "#111",
+    section: {
+        paddingHorizontal: Spacing.xl,
+        paddingTop: Spacing.xl,
     },
 
-    rowWrap: { flexDirection: "row", flexWrap: "wrap" },
+    rowWrap: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+    },
 
     chip: {
-        backgroundColor: "#EBEDFF",
-        marginRight: 8,
-        marginBottom: 8,
+        marginRight: Spacing.sm,
+        marginBottom: Spacing.sm,
+    },
+
+    eventTitle: {
+        fontSize: scale(26),
+        fontWeight: Fonts.weight.bold,
+        marginBottom: Spacing.sm,
     },
 
     cardsRow: {
         flexDirection: "row",
-        paddingHorizontal: 20,
-        paddingTop: 20,
+        paddingHorizontal: Spacing.xl,
+        paddingTop: Spacing.xl,
     },
 
     infoCard: {
         flex: 1,
-        borderRadius: 16,
-        backgroundColor: "#fff",
-        elevation: 3,
-        marginRight: 14,
+        borderRadius: Radius.lg,
+        marginRight: Spacing.lg,
+        ...Shadows.card,
     },
 
     innerClip: {
-        padding: 18,
-        borderRadius: 16,
+        padding: Spacing.lg,
+        borderRadius: Radius.lg,
         overflow: "hidden",
     },
 
     label: {
-        color: "#616161",
-        fontSize: 13,
+        color: "#777",
+        fontSize: Fonts.size.sm,
     },
 
     value: {
-        color: "#000",
-        fontSize: 17,
-        fontWeight: "700",
-        marginBottom: 12,
-        marginTop: 4,
+        fontSize: Fonts.size.lg,
+        fontWeight: Fonts.weight.bold,
+        marginBottom: Spacing.sm,
+        marginTop: Spacing.xs,
     },
 
     subValue: {
+        fontSize: Fonts.size.sm,
         color: "#777",
-        fontSize: 13,
-        marginTop: -4,
+        marginTop: -Spacing.xs,
     },
 
     heading: {
-        fontSize: 22,
-        fontWeight: "700",
-        marginBottom: 14,
-        color: "#111",
+        fontSize: Fonts.size.xl,
+        fontWeight: Fonts.weight.bold,
+        marginBottom: Spacing.md,
     },
 
     surfaceBox: {
-        padding: 18,
-        borderRadius: 16,
-        backgroundColor: "#fff",
+        padding: Spacing.lg,
+        borderRadius: Radius.lg,
+        ...Shadows.card,
     },
 
     desc: {
-        color: "#444",
-        fontSize: 16,
+        color: "#555",
+        fontSize: Fonts.size.md,
         lineHeight: 22,
     },
 
     detailsSurface: {
-        backgroundColor: "#fff",
-        borderRadius: 16,
+        borderRadius: Radius.lg,
+        ...Shadows.card,
     },
 
     detailsBoxInner: {
-        borderRadius: 16,
+        borderRadius: Radius.lg,
         overflow: "hidden",
     },
 
     detailRow: {
-        padding: 16,
+        padding: Spacing.lg,
         flexDirection: "row",
         justifyContent: "space-between",
     },
 
     registerBtn: {
-        paddingVertical: 8,
-        borderRadius: 12,
+        paddingVertical: Spacing.sm,
+        borderRadius: Radius.md,
     },
 
     center: {

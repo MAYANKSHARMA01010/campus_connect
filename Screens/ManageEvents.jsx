@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useReducer, memo } from "react";
-
 import {
     View,
     StyleSheet,
@@ -31,6 +30,12 @@ import {
     deleteEvent,
 } from "../reducer/eventReducer";
 
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
+
+// --------------------------------------------------
+
 const LIMIT = 10;
 
 const STATUS_FILTERS = ["All", "APPROVED", "PENDING", "REJECTED"];
@@ -43,26 +48,33 @@ const SORT_OPTIONS = [
     { label: "A - Z", value: "az" },
 ];
 
+// --------------------------------------------------
+
 const EventRow = memo(
     ({ item, onDelete, onToggleStatus, onOpen, actionLoading }) => {
+        const colors = useAppTheme();
+
         const statusColor =
             item.status === "APPROVED"
-                ? "#4CAF50"
+                ? colors.secondary
                 : item.status === "PENDING"
-                    ? "#FF9800"
-                    : "#F44336";
+                    ? colors.accent
+                    : colors.danger;
 
         const isBusy = actionLoading === item.id;
 
         return (
             <TouchableOpacity activeOpacity={0.9} onPress={() => onOpen(item)}>
-                <Surface style={styles.cardContainer}>
+                <Surface
+                    style={[styles.cardContainer, { backgroundColor: colors.surface }]}
+                >
                     <View style={styles.card}>
                         {!!item?.images?.[0]?.url && (
                             <Image
                                 source={item.images[0].url}
                                 style={styles.thumb}
                                 contentFit="cover"
+                                transition={200}
                             />
                         )}
 
@@ -71,7 +83,7 @@ const EventRow = memo(
                                 {item.title}
                             </Text>
 
-                            <Text style={styles.subtitle}>
+                            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                                 {item.location || "No location"}
                             </Text>
 
@@ -86,6 +98,7 @@ const EventRow = memo(
                                             compact
                                             mode="contained"
                                             loading={isBusy}
+                                            buttonColor={colors.secondary}
                                             onPress={() => onToggleStatus(item.id, "APPROVED")}
                                         >
                                             Approve
@@ -94,7 +107,7 @@ const EventRow = memo(
                                         <Button
                                             compact
                                             loading={isBusy}
-                                            textColor="#F44336"
+                                            textColor={colors.danger}
                                             onPress={() => onToggleStatus(item.id, "REJECTED")}
                                         >
                                             Reject
@@ -107,7 +120,7 @@ const EventRow = memo(
                                         <Button
                                             compact
                                             loading={isBusy}
-                                            textColor="#F44336"
+                                            textColor={colors.danger}
                                             onPress={() => onToggleStatus(item.id, "REJECTED")}
                                         >
                                             Reject
@@ -116,7 +129,7 @@ const EventRow = memo(
                                         <Button
                                             compact
                                             loading={isBusy}
-                                            textColor="#F44336"
+                                            textColor={colors.danger}
                                             onPress={() => onDelete(item.id)}
                                         >
                                             Delete
@@ -130,6 +143,7 @@ const EventRow = memo(
                                             compact
                                             mode="contained"
                                             loading={isBusy}
+                                            buttonColor={colors.secondary}
                                             onPress={() => onToggleStatus(item.id, "APPROVED")}
                                         >
                                             Approve
@@ -138,7 +152,7 @@ const EventRow = memo(
                                         <Button
                                             compact
                                             loading={isBusy}
-                                            textColor="#F44336"
+                                            textColor={colors.danger}
                                             onPress={() => onDelete(item.id)}
                                         >
                                             Delete
@@ -154,7 +168,10 @@ const EventRow = memo(
     }
 );
 
+// --------------------------------------------------
+
 export default function ManageEventsScreen({ navigation }) {
+    const colors = useAppTheme();
     const [state, dispatch] = useReducer(eventReducer, initialState);
 
     const { events, total, loading, refreshing, loadingMore, actionLoading } =
@@ -224,7 +241,7 @@ export default function ManageEventsScreen({ navigation }) {
     );
 
     return (
-        <View style={styles.root}>
+        <View style={[styles.root, { backgroundColor: colors.background }]}>
             <Appbar.Header>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="Manage Events" />
@@ -258,19 +275,24 @@ export default function ManageEventsScreen({ navigation }) {
                     placeholder="Search events..."
                     value={search}
                     onChangeText={setSearch}
-                    style={styles.search}
+                    style={[styles.search, { backgroundColor: colors.surface }]}
                 />
 
                 <View style={styles.filterRow}>
-                    {STATUS_FILTERS.map((s) => (
-                        <Chip
-                            key={s}
-                            selected={statusFilter === s.toLowerCase()}
-                            onPress={() => setStatusFilter(s === "All" ? "all" : s)}
-                        >
-                            {s}
-                        </Chip>
-                    ))}
+                    {STATUS_FILTERS.map((s) => {
+                        const val = s === "All" ? "all" : s;
+                        const isActive = statusFilter === val;
+
+                        return (
+                            <Chip
+                                key={s}
+                                selected={isActive}
+                                onPress={() => setStatusFilter(val)}
+                            >
+                                {s}
+                            </Chip>
+                        );
+                    })}
                 </View>
             </View>
 
@@ -289,7 +311,9 @@ export default function ManageEventsScreen({ navigation }) {
                     onEndReached={loadMore}
                     onEndReachedThreshold={0.4}
                     ListFooterComponent={
-                        loadingMore && <ActivityIndicator style={{ marginVertical: 14 }} />
+                        loadingMore && (
+                            <ActivityIndicator style={{ marginVertical: Spacing.md }} />
+                        )
                     }
                     contentContainerStyle={styles.listContent}
                 />
@@ -298,47 +322,84 @@ export default function ManageEventsScreen({ navigation }) {
     );
 }
 
+// --------------------------------------------------
+
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#F6F8FB" },
-    header: { padding: 12 },
-    search: { borderRadius: 14 },
+    root: {
+        flex: 1,
+    },
+
+    header: {
+        padding: Spacing.md,
+    },
+
+    search: {
+        borderRadius: Radius.md,
+        ...Shadows.card,
+    },
+
     filterRow: {
         flexDirection: "row",
-        marginTop: 10,
-        gap: 8,
+        marginTop: Spacing.sm,
         flexWrap: "wrap",
+        gap: Spacing.sm,
     },
+
     cardContainer: {
-        margin: 10,
-        borderRadius: 14,
-        backgroundColor: "#fff",
-        elevation: 3,
+        margin: Spacing.sm,
+        borderRadius: Radius.lg,
+        ...Shadows.card,
     },
+
     card: {
         flexDirection: "row",
         overflow: "hidden",
-        borderRadius: 14,
+        borderRadius: Radius.lg,
     },
-    thumb: { width: 90, height: "100%" },
-    cardBody: { flex: 1, padding: 10 },
-    title: { fontWeight: "700", fontSize: 16 },
-    subtitle: { color: "#666" },
+
+    thumb: {
+        width: scale(90),
+        height: "100%",
+    },
+
+    cardBody: {
+        flex: 1,
+        padding: Spacing.sm,
+    },
+
+    title: {
+        fontWeight: Fonts.weight.semiBold,
+        fontSize: Fonts.size.md,
+    },
+
+    subtitle: {
+        fontSize: Fonts.size.sm,
+    },
+
     badge: {
-        marginTop: 6,
+        marginTop: Spacing.xs,
         paddingVertical: 2,
-        paddingHorizontal: 8,
-        fontSize: 11,
+        paddingHorizontal: Spacing.sm,
+        fontSize: Fonts.size.xs,
         color: "#fff",
-        fontWeight: "700",
-        borderRadius: 8,
+        fontWeight: Fonts.weight.bold,
+        borderRadius: Radius.sm,
         alignSelf: "flex-start",
     },
+
     actions: {
-        marginTop: 12,
+        marginTop: Spacing.sm,
         flexDirection: "row",
-        gap: 6,
+        gap: Spacing.sm,
         justifyContent: "flex-end",
     },
-    center: { flex: 1, justifyContent: "center" },
-    listContent: { paddingBottom: 70 },
+
+    center: {
+        flex: 1,
+        justifyContent: "center",
+    },
+
+    listContent: {
+        paddingBottom: scale(70),
+    },
 });

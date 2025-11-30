@@ -6,33 +6,31 @@ import {
   ImageBackground,
   TouchableOpacity,
 } from "react-native";
-import {
-  Appbar,
-  Searchbar,
-  Text,
-  Button,
-  Surface,
-} from "react-native-paper";
+import { Appbar, Searchbar, Text, Button, Surface } from "react-native-paper";
+
 import EventSection from "../components/EventSection";
 import { getAllEvents } from "../api/events";
 
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
+
 export default function HomeScreen({ navigation }) {
+  const colors = useAppTheme();
+
   const [searchQuery, setSearchQuery] = React.useState("");
   const [upcoming, setUpcoming] = React.useState([]);
   const [past, setPast] = React.useState([]);
   const [sportsCulture, setSportsCulture] = React.useState([]);
   const [eduTech, setEduTech] = React.useState([]);
 
-  const sortByDate = React.useCallback(
-    (arr, asc = true) => {
-      return [...arr].sort((a, b) =>
-        asc
-          ? new Date(a.date).getTime() - new Date(b.date).getTime()
-          : new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-    },
-    []
-  );
+  const sortByDate = React.useCallback((arr, asc = true) => {
+    return [...arr].sort((a, b) =>
+      asc
+        ? new Date(a.date).getTime() - new Date(b.date).getTime()
+        : new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, []);
 
   const loadEvents = React.useCallback(async () => {
     try {
@@ -41,11 +39,14 @@ export default function HomeScreen({ navigation }) {
 
       const valid = data.filter((e) => e?.date);
 
-      setUpcoming(
-        sortByDate(valid.filter((e) => new Date(e.date) >= today))
-      );
+      setUpcoming(sortByDate(valid.filter((e) => new Date(e.date) >= today)));
 
-      setPast(sortByDate(valid.filter((e) => new Date(e.date) < today), false));
+      setPast(
+        sortByDate(
+          valid.filter((e) => new Date(e.date) < today),
+          false
+        )
+      );
 
       setSportsCulture(
         sortByDate(
@@ -74,45 +75,67 @@ export default function HomeScreen({ navigation }) {
   }, [loadEvents]);
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
-      <Appbar.Header style={styles.appbar}>
-        <Text variant="headlineSmall" style={styles.appName}>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={[
+        styles.container,
+        { backgroundColor: colors.background },
+      ]}
+    >
+      {/* HEADER */}
+      <Appbar.Header
+        elevated
+        style={[styles.appbar, { backgroundColor: colors.surface }]}
+      >
+        <Text
+          variant="headlineSmall"
+          style={[styles.appName, { color: colors.primary }]}
+        >
           CampusConnect
         </Text>
-        <Appbar.Action icon="bell-outline" />
+
+        <Appbar.Action icon="bell-outline" color={colors.textPrimary} />
       </Appbar.Header>
 
+      {/* SEARCH */}
       <View style={styles.searchContainer}>
         <Searchbar
           placeholder="Search events, workshops, fests..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          style={styles.searchbar}
+          style={[styles.searchbar, { backgroundColor: colors.surface }]}
         />
       </View>
 
+      {/* HERO */}
       <ImageBackground
         source={{ uri: "https://picsum.photos/seed/campus-banner/800/500" }}
         style={styles.heroBanner}
-        imageStyle={{ borderRadius: 18 }}
+        imageStyle={{ borderRadius: Radius.lg }}
       >
         <View style={styles.heroOverlay}>
           <Text style={styles.heroTitle}>Discover Campus Events</Text>
+
           <Text style={styles.heroSubtitle}>
             Explore workshops, fests, sports & more!
           </Text>
         </View>
       </ImageBackground>
 
-      <View style={{ marginTop: 20 }}>
-        <Section title="🎉 Coming Up!" data={upcoming} navigation={navigation} />
+      {/* SECTIONS */}
+      <View style={{ marginTop: Spacing.lg }}>
+        <Section
+          title="🎉 Coming Up!"
+          data={upcoming}
+          navigation={navigation}
+        />
       </View>
 
-      <View style={{ marginTop: 20 }}>
+      <View style={{ marginTop: Spacing.lg }}>
         <Section title="🕒 The Past Ones" data={past} navigation={navigation} />
       </View>
 
-      <View style={{ marginTop: 20 }}>
+      <View style={{ marginTop: Spacing.lg }}>
         <Section
           title="🏅 Sports & Culture"
           data={sportsCulture}
@@ -120,7 +143,7 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
-      <View style={{ marginTop: 20 }}>
+      <View style={{ marginTop: Spacing.lg }}>
         <Section
           title="💡 Education & Tech"
           data={eduTech}
@@ -128,134 +151,236 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
-      <Surface style={styles.hostCard}>
-        <Text style={styles.hostTitle}>🎤 Want to Host an Event?</Text>
-        <Text style={styles.hostText}>
+      {/* HOST CTA */}
+      <Surface
+        style={[
+          styles.hostCard,
+          {
+            backgroundColor: colors.surface,
+            borderRadius: Radius.lg,
+          },
+        ]}
+      >
+        <Text style={[styles.hostTitle, { color: colors.primary }]}>
+          🎤 Want to Host an Event?
+        </Text>
+
+        <Text style={[styles.hostText, { color: colors.textSecondary }]}>
           Submit your event details and get featured on CampusConnect!
         </Text>
 
         <Button
           mode="contained"
           style={styles.hostBtn}
+          buttonColor={colors.primary}
           onPress={() => navigation.navigate("HostEvent")}
         >
           Raise a Request
         </Button>
       </Surface>
 
+      {/* STATS */}
       <View style={styles.statsRow}>
-        {[{ num: "50+", label: "Colleges" }, { num: "200+", label: "Events" }, { num: "5K+", label: "Participants" }].map((item, index) => (
-          <Surface key={index} style={styles.statCard}>
-            <Text style={styles.statNumber}>{item.num}</Text>
-            <Text style={styles.statLabel}>{item.label}</Text>
+        {[
+          { num: "50+", label: "Colleges" },
+          { num: "200+", label: "Events" },
+          { num: "5K+", label: "Participants" },
+        ].map((item, index) => (
+          <Surface
+            key={index}
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colors.surface,
+                borderRadius: Radius.md,
+              },
+            ]}
+          >
+            <Text style={[styles.statNumber, { color: colors.primary }]}>
+              {item.num}
+            </Text>
+
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+              {item.label}
+            </Text>
           </Surface>
         ))}
       </View>
 
-      <Surface style={styles.aboutCard}>
-        <Text style={styles.aboutTitle}>About CampusConnect</Text>
-        <Text style={styles.aboutText}>
-          CampusConnect is your one-stop platform to explore, register, and participate
-          in college events — from cultural fests to tech summits.
+      {/* ABOUT */}
+      <Surface
+        style={[
+          styles.aboutCard,
+          {
+            backgroundColor: colors.surface,
+            borderRadius: Radius.lg,
+          },
+        ]}
+      >
+        <Text style={[styles.aboutTitle, { color: colors.primary }]}>
+          About CampusConnect
+        </Text>
+
+        <Text style={[styles.aboutText, { color: colors.textSecondary }]}>
+          CampusConnect is your one-stop platform to explore, register, and
+          participate in college events — from cultural fests to tech summits.
         </Text>
       </Surface>
     </ScrollView>
   );
 }
 
-const Section = React.memo(({ title, data, navigation }) => (
-  <View>
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <TouchableOpacity onPress={() => navigation.navigate("Events")}>
-        <Text style={styles.viewAllText}>View All →</Text>
-      </TouchableOpacity>
-    </View>
+// --------------------------------------------------
 
-    <EventSection data={data} />
-  </View>
-));
+const Section = React.memo(({ title, data, navigation }) => {
+  const colors = useAppTheme();
+
+  return (
+    <View>
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.primary }]}>
+          {title}
+        </Text>
+
+        <TouchableOpacity onPress={() => navigation.navigate("Events")}>
+          <Text style={[styles.viewAllText, { color: colors.primary }]}>
+            View All →
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <EventSection data={data} />
+    </View>
+  );
+});
+
+// --------------------------------------------------
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#FDF7F9", paddingBottom: 120 },
+  container: {
+    paddingBottom: scale(110),
+  },
+
   appbar: {
-    backgroundColor: "#fff",
-    elevation: 3,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     justifyContent: "space-between",
   },
-  appName: { color: "#E91E63", fontWeight: "800" },
-  searchContainer: { paddingHorizontal: 16, paddingTop: 14 },
-  searchbar: { borderRadius: 14, elevation: 2 },
+
+  appName: {
+    fontWeight: Fonts.weight.bold,
+  },
+
+  searchContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+  },
+
+  searchbar: {
+    borderRadius: Radius.md,
+    ...Shadows.card,
+  },
+
   heroBanner: {
-    height: 200,
-    marginHorizontal: 16,
-    marginTop: 18,
-    borderRadius: 18,
+    height: scale(200),
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    borderRadius: Radius.lg,
     overflow: "hidden",
     justifyContent: "flex-end",
   },
-  heroOverlay: { backgroundColor: "rgba(0,0,0,0.35)", padding: 14 },
-  heroTitle: { color: "#fff", fontSize: 22, fontWeight: "800" },
-  heroSubtitle: { color: "#eee", marginTop: 3 },
+
+  heroOverlay: {
+    backgroundColor: "rgba(0,0,0,0.35)",
+    padding: Spacing.md,
+  },
+
+  heroTitle: {
+    color: "#fff",
+    fontSize: Fonts.size.xl,
+    fontWeight: Fonts.weight.bold,
+  },
+
+  heroSubtitle: {
+    color: "#eee",
+    marginTop: Spacing.xs,
+  },
+
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 18,
+    paddingHorizontal: Spacing.lg,
   },
-  sectionTitle: { fontSize: 18, fontWeight: "700", color: "#C2185B" },
-  viewAllText: { color: "#E91E63", marginTop: 4, fontWeight: "600" },
+
+  sectionTitle: {
+    fontSize: Fonts.size.lg,
+    fontWeight: Fonts.weight.bold,
+  },
+
+  viewAllText: {
+    marginTop: Spacing.xs,
+    fontWeight: Fonts.weight.semiBold,
+  },
+
   hostCard: {
-    marginHorizontal: 16,
-    marginTop: 30,
-    padding: 20,
-    borderRadius: 18,
-    backgroundColor: "#FFE4EC",
+    marginHorizontal: Spacing.lg,
+    marginTop: scale(30),
+    padding: Spacing.xl,
     alignItems: "center",
+    ...Shadows.card,
   },
+
   hostTitle: {
-    color: "#C2185B",
-    fontWeight: "700",
-    fontSize: 18,
-    marginBottom: 6,
+    fontWeight: Fonts.weight.bold,
+    fontSize: Fonts.size.lg,
+    marginBottom: Spacing.xs,
   },
+
   hostText: {
-    color: "#555",
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
+    fontSize: Fonts.size.md,
   },
-  hostBtn: { borderRadius: 8, backgroundColor: "#E91E63" },
+
+  hostBtn: {
+    borderRadius: Radius.sm,
+  },
+
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginTop: 28,
+    marginTop: scale(28),
   },
+
   statCard: {
-    width: 100,
-    paddingVertical: 12,
+    width: scale(95),
+    paddingVertical: Spacing.md,
     alignItems: "center",
-    borderRadius: 14,
-    backgroundColor: "#fff",
-    elevation: 2,
+    ...Shadows.card,
   },
+
   statNumber: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#E91E63",
+    fontSize: Fonts.size.xl,
+    fontWeight: Fonts.weight.bold,
   },
-  statLabel: { color: "#444", marginTop: 2, fontWeight: "500" },
+
+  statLabel: {
+    marginTop: Spacing.xs,
+    fontWeight: Fonts.weight.medium,
+  },
+
   aboutCard: {
-    margin: 30,
-    padding: 20,
-    borderRadius: 18,
-    backgroundColor: "#fff",
-    elevation: 2,
+    margin: Spacing.xl,
+    padding: Spacing.xl,
+    ...Shadows.card,
   },
+
   aboutTitle: {
-    color: "#E91E63",
-    fontWeight: "700",
-    fontSize: 18,
-    marginBottom: 6,
+    fontWeight: Fonts.weight.bold,
+    fontSize: Fonts.size.lg,
+    marginBottom: Spacing.xs,
   },
-  aboutText: { color: "#444", lineHeight: 20 },
+
+  aboutText: {
+    lineHeight: 20,
+  },
 });

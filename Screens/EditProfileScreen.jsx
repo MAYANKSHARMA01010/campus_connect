@@ -8,9 +8,13 @@ import {
   Surface,
   Menu,
 } from "react-native-paper";
+
 import { useAuth } from "../context/UserContext";
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
 
 export default function EditProfileScreen({ navigation }) {
+  const colors = useAppTheme();
   const { user, updateProfile } = useAuth();
 
   const [form, setForm] = useState({
@@ -40,9 +44,20 @@ export default function EditProfileScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.screen}>
-      <Surface style={styles.card}>
-        <Text variant="headlineMedium" style={styles.title}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      <Surface
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.surface,
+            borderRadius: Radius.xl,
+          },
+        ]}
+      >
+        <Text
+          variant="headlineMedium"
+          style={[styles.title, { color: colors.primary }]}
+        >
           Edit Profile ✏️
         </Text>
 
@@ -88,6 +103,7 @@ export default function EditProfileScreen({ navigation }) {
             }}
             title="Male"
           />
+
           <Menu.Item
             onPress={() => {
               handleChange("gender", "Female");
@@ -95,6 +111,7 @@ export default function EditProfileScreen({ navigation }) {
             }}
             title="Female"
           />
+
           <Menu.Item
             onPress={() => {
               handleChange("gender", "Prefer not to say");
@@ -107,11 +124,15 @@ export default function EditProfileScreen({ navigation }) {
         <Button
           mode="contained"
           onPress={handleSave}
-          style={styles.button}
-          buttonColor="#E91E63"
           disabled={loading}
+          buttonColor={colors.primary}
+          style={styles.button}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : "Save Changes"}
+          {loading ? (
+            <ActivityIndicator color={colors.surface} />
+          ) : (
+            "Save Changes"
+          )}
         </Button>
       </Surface>
     </View>
@@ -121,30 +142,29 @@ export default function EditProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
-    padding: 20,
+    padding: Spacing.xl,
     justifyContent: "center",
   },
+
   card: {
     width: "100%",
-    padding: 25,
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    elevation: 8,
+    padding: Spacing.xl,
+    ...Shadows.card,
   },
+
   title: {
     textAlign: "center",
-    marginBottom: 25,
-    fontWeight: "700",
-    color: "#E91E63",
+    marginBottom: Spacing.xl,
+    fontWeight: Fonts.weight.bold,
   },
+
   input: {
-    marginBottom: 16,
-    backgroundColor: "#FAFAFA",
+    marginBottom: Spacing.md,
   },
+
   button: {
-    marginTop: 12,
-    borderRadius: 10,
-    paddingVertical: 6,
+    marginTop: Spacing.md,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.xs,
   },
 });

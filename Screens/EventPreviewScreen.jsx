@@ -1,11 +1,23 @@
 import React, { useState } from "react";
 import { View, Image, StyleSheet, ScrollView, Alert } from "react-native";
-import { Text, Button, Surface, ActivityIndicator, Appbar } from "react-native-paper";
+import {
+  Text,
+  Button,
+  Surface,
+  ActivityIndicator,
+  Appbar,
+} from "react-native-paper";
+
 import { useAuth } from "../context/UserContext";
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
 
 export default function EventPreviewScreen({ route, navigation }) {
   const { form, onPublish } = route.params || {};
   const { user } = useAuth();
+  const colors = useAppTheme();
+
   const [loading, setLoading] = useState(false);
 
   const publishEvent = async () => {
@@ -35,47 +47,74 @@ export default function EventPreviewScreen({ route, navigation }) {
     }
   };
 
+  if (!form) return null;
+
   return (
     <>
-      <Appbar.Header style={{ backgroundColor: "#E91E63" }}>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="Preview Event" color="white" />
+      {/* THEMED HEADER */}
+      <Appbar.Header elevated style={{ backgroundColor: colors.surface }}>
+        <Appbar.BackAction
+          onPress={() => navigation.goBack()}
+          color={colors.textPrimary}
+        />
+        <Appbar.Content
+          title="Preview Event"
+          titleStyle={{ fontWeight: Fonts.weight.semiBold }}
+          color={colors.textPrimary}
+        />
       </Appbar.Header>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        <Surface style={styles.card}>
-          <Text style={styles.title}>{form.title}</Text>
-          <Text style={styles.subtitle}>{form.category}</Text>
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <Surface
+          style={[
+            styles.card,
+            {
+              borderRadius: Radius.xl,
+              backgroundColor: colors.surface,
+            },
+          ]}
+        >
+          <Text style={[styles.title, { color: colors.primary }]}>
+            {form.title}
+          </Text>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 10 }}>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {form.category}
+          </Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginVertical: Spacing.md }}
+          >
             {form.images.map((uri, i) => (
               <Image key={i} source={{ uri }} style={styles.image} />
             ))}
           </ScrollView>
 
-          <Text style={styles.label}>Description</Text>
-          <Text style={styles.value}>{form.description}</Text>
-
-          <Text style={styles.label}>Date</Text>
-          <Text style={styles.value}>{form.date}</Text>
-
-          <Text style={styles.label}>Time</Text>
-          <Text style={styles.value}>{form.time}</Text>
-
-          <Text style={styles.label}>Location</Text>
-          <Text style={styles.value}>{form.location || "Not provided"}</Text>
-
-          <Text style={styles.label}>Contact</Text>
-          <Text style={styles.value}>{form.contact || "Not provided"}</Text>
+          <Detail label="Description" value={form.description} />
+          <Detail label="Date" value={form.date} />
+          <Detail label="Time" value={form.time} />
+          <Detail label="Location" value={form.location || "Not provided"} />
+          <Detail label="Contact" value={form.contact || "Not provided"} />
 
           <Button
             mode="contained"
             style={styles.publishBtn}
             onPress={publishEvent}
-            buttonColor="#E91E63"
             disabled={loading}
+            buttonColor={colors.primary}
           >
-            {loading ? <ActivityIndicator color="#fff" /> : "Publish Event"}
+            {loading ? (
+              <ActivityIndicator color={colors.surface} />
+            ) : (
+              "Publish Event"
+            )}
           </Button>
         </Surface>
       </ScrollView>
@@ -83,13 +122,65 @@ export default function EventPreviewScreen({ route, navigation }) {
   );
 }
 
+function Detail({ label, value }) {
+  const colors = useAppTheme();
+
+  return (
+    <View style={styles.row}>
+      <Text style={[styles.label, { color: colors.textSecondary }]}>
+        {label}
+      </Text>
+
+      <Text style={[styles.value, { color: colors.textPrimary }]}>{value}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { padding: 16 },
-  card: { padding: 20, borderRadius: 20, elevation: 6, backgroundColor: "white" },
-  title: { fontSize: 22, fontWeight: "800", color: "#E91E63" },
-  subtitle: { fontSize: 16, color: "#777", marginBottom: 20 },
-  image: { width: 140, height: 110, borderRadius: 12, marginRight: 10 },
-  label: { marginTop: 14, fontSize: 14, fontWeight: "700", color: "#444" },
-  value: { fontSize: 14, color: "#333", marginTop: 3 },
-  publishBtn: { marginTop: 25, borderRadius: 12 },
+  container: {
+    padding: Spacing.lg,
+  },
+
+  card: {
+    padding: Spacing.xl,
+    ...Shadows.card,
+  },
+
+  title: {
+    fontSize: Fonts.size.xl,
+    fontWeight: Fonts.weight.bold,
+  },
+
+  subtitle: {
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.lg,
+    fontSize: Fonts.size.md,
+  },
+
+  image: {
+    width: scale(140),
+    height: scale(110),
+    borderRadius: Radius.md,
+    marginRight: Spacing.sm,
+  },
+
+  row: {
+    marginTop: Spacing.md,
+  },
+
+  label: {
+    fontSize: Fonts.size.sm,
+    fontWeight: Fonts.weight.semiBold,
+  },
+
+  value: {
+    marginTop: Spacing.xs,
+    fontSize: Fonts.size.md,
+  },
+
+  publishBtn: {
+    marginTop: Spacing.xl,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.sm,
+  },
 });

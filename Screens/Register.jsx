@@ -1,9 +1,20 @@
 import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { Text, TextInput, Button, ActivityIndicator, Surface } from "react-native-paper";
+import {
+  Text,
+  TextInput,
+  Button,
+  ActivityIndicator,
+  Surface,
+} from "react-native-paper";
+
 import { useAuth } from "../context/UserContext";
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
 
 export default function RegisterScreen({ navigation }) {
+  const colors = useAppTheme();
   const { register } = useAuth();
 
   const [form, setForm] = useState({
@@ -18,8 +29,7 @@ export default function RegisterScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleChange = (key, value) =>
-    setForm({ ...form, [key]: value });
+  const handleChange = (key, value) => setForm({ ...form, [key]: value });
 
   const handleRegister = async () => {
     if (Object.values(form).some((v) => !v))
@@ -36,14 +46,29 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.header}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      {/* HEADER */}
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <Text style={styles.headerText}>Campus Connect</Text>
       </View>
 
-      <Surface style={styles.card}>
-        <Text style={styles.title}>Create Account ✨</Text>
-        <Text style={styles.subtitle}>Join your campus community</Text>
+      {/* CARD */}
+      <Surface
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.surface,
+            borderRadius: Radius.xl,
+          },
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.primary }]}>
+          Create Account ✨
+        </Text>
+
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Join your campus community
+        </Text>
 
         <TextInput
           label="Full Name"
@@ -103,41 +128,79 @@ export default function RegisterScreen({ navigation }) {
           mode="contained"
           onPress={handleRegister}
           style={styles.button}
-          buttonColor="#E91E63"
+          buttonColor={colors.primary}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : "Register"}
+          {loading ? <ActivityIndicator color={colors.surface} /> : "Register"}
         </Button>
 
         <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-          <Text style={styles.link}>Already have an account? Login</Text>
+          <Text style={[styles.link, { color: colors.primary }]}>
+            Already have an account? Login
+          </Text>
         </TouchableOpacity>
       </Surface>
     </View>
   );
 }
 
+// --------------------------------------------------
+
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F6F7FB" },
+  screen: {
+    flex: 1,
+  },
+
   header: {
-    height: 160,
-    backgroundColor: "#E91E63",
+    height: scale(160),
     justifyContent: "flex-end",
-    padding: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    padding: Spacing.xl,
+    borderBottomLeftRadius: Radius.lg,
+    borderBottomRightRadius: Radius.lg,
+    ...Shadows.card,
   },
-  headerText: { color: "#FFF", fontSize: 28, fontWeight: "800" },
+
+  headerText: {
+    color: "#fff",
+    fontSize: Fonts.size.title,
+    fontWeight: Fonts.weight.bold,
+  },
+
   card: {
-    marginTop: -60,
-    marginHorizontal: 20,
-    backgroundColor: "#fff",
-    padding: 25,
-    borderRadius: 20,
+    marginTop: scale(-60),
+    marginHorizontal: Spacing.lg,
+    padding: Spacing.xl,
+    ...Shadows.card,
   },
-  title: { textAlign: "center", fontSize: 24, fontWeight: "700", color: "#E91E63" },
-  subtitle: { textAlign: "center", color: "#555", marginBottom: 25 },
-  input: { marginBottom: 16, backgroundColor: "#FAFAFA" },
-  button: { marginTop: 10, borderRadius: 10, paddingVertical: 6 },
-  link: { textAlign: "center", color: "#E91E63", marginTop: 18, fontWeight: "600" },
+
+  title: {
+    textAlign: "center",
+    fontSize: Fonts.size.xxl,
+    fontWeight: Fonts.weight.bold,
+    marginBottom: Spacing.xs,
+  },
+
+  subtitle: {
+    textAlign: "center",
+    marginBottom: Spacing.xl,
+    fontSize: Fonts.size.md,
+  },
+
+  input: {
+    marginBottom: Spacing.md,
+    borderRadius: Radius.md,
+  },
+
+  button: {
+    marginTop: Spacing.sm,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.xs,
+  },
+
+  link: {
+    textAlign: "center",
+    marginTop: Spacing.lg,
+    fontWeight: Fonts.weight.semiBold,
+    fontSize: Fonts.size.md,
+  },
 });

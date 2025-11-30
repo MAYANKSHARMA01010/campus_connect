@@ -29,6 +29,10 @@ import { useAuth } from "../context/UserContext";
 import { CLOUD_NAME, UPLOAD_PRESET } from "@env";
 import API from "../api/api";
 
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
+
 const CATEGORY_OPTIONS = [
   "Music",
   "Tech",
@@ -55,6 +59,7 @@ const INITIAL_FORM = {
 };
 
 export default function HostEventScreen({ navigation }) {
+  const colors = useAppTheme();
   const { user } = useAuth();
 
   const [form, setForm] = useState(INITIAL_FORM);
@@ -72,6 +77,8 @@ export default function HostEventScreen({ navigation }) {
   const handleChange = (key, val) =>
     setForm((prev) => ({ ...prev, [key]: val }));
 
+  // ---------------- VALIDATION ----------------
+
   const validate = () => {
     const err = {};
 
@@ -85,8 +92,7 @@ export default function HostEventScreen({ navigation }) {
     else if (!/^\S+@\S+\.\S+$/.test(form.email))
       err.email = "Enter valid email";
 
-    if (form.images.length < 4)
-      err.images = "Add at least 4 images";
+    if (form.images.length < 4) err.images = "Add at least 4 images";
 
     if (form.contact && !/^[0-9]{10}$/.test(form.contact))
       err.contact = "Enter valid 10-digit number";
@@ -96,30 +102,27 @@ export default function HostEventScreen({ navigation }) {
 
   const errors = validate();
 
+  // ---------------- SUB CATEGORY ----------------
+
   const addSubCategory = () => {
     const v = subCategoryInput.trim();
-    if (!v) return;
+    if (!v || form.subCategories.includes(v)) return;
 
-    if (form.subCategories.includes(v)) {
-      setSubCategoryInput("");
-      return;
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      subCategories: [...prev.subCategories, v],
+    setForm((p) => ({
+      ...p,
+      subCategories: [...p.subCategories, v],
     }));
 
     setSubCategoryInput("");
   };
 
   const removeSubCategory = (val) =>
-    setForm((prev) => ({
-      ...prev,
-      subCategories: prev.subCategories.filter(
-        (s) => s !== val
-      ),
+    setForm((p) => ({
+      ...p,
+      subCategories: p.subCategories.filter((s) => s !== val),
     }));
+
+  // ---------------- IMAGE PICKER ----------------
 
   const pickImages = async () => {
     try {
@@ -134,60 +137,45 @@ export default function HostEventScreen({ navigation }) {
         return;
       }
 
-      const result =
-        await ImagePicker.launchImageLibraryAsync({
-          mediaTypes:
-            ImagePicker.MediaTypeOptions.Images,
-          allowsMultipleSelection: true,
-          selectionLimit: 10,
-          quality: 0.8,
-        });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        selectionLimit: 10,
+        quality: 0.8,
+      });
 
       if (!result || result.canceled) return;
 
-      const uris = result.assets.map(
-        (a) => a.uri
-      );
+      const uris = result.assets.map((a) => a.uri);
 
-      setForm((prev) => ({
-        ...prev,
-        images: [...prev.images, ...uris].slice(
-          0,
-          10
-        ),
+      setForm((p) => ({
+        ...p,
+        images: [...p.images, ...uris].slice(0, 10),
       }));
     } catch (err) {
       console.log("pickImages error", err);
-      setSnack({
-        visible: true,
-        message: "Failed to pick images",
-      });
+      setSnack({ visible: true, message: "Failed to pick images" });
     }
   };
 
   const removeImage = (uri) =>
-    setForm((prev) => ({
-      ...prev,
-      images: prev.images.filter(
-        (i) => i !== uri
-      ),
+    setForm((p) => ({
+      ...p,
+      images: p.images.filter((i) => i !== uri),
     }));
+
+  // ---------------- CLOUD UPLOAD ----------------
 
   async function uploadLocalImage(uri) {
     if (!CLOUD_NAME || !UPLOAD_PRESET)
-      throw new Error(
-        "Cloudinary config missing"
-      );
+      throw new Error("Cloudinary config missing");
 
     const name = uri.split("/").pop();
     const ext = name.split(".").pop() || "jpg";
 
     const data = new FormData();
     data.append("file", {
-      uri:
-        Platform.OS === "android"
-          ? uri
-          : uri.replace("file://", ""),
+      uri: Platform.OS === "android" ? uri : uri.replace("file://", ""),
       name,
       type: `image/${ext === "jpg" ? "jpeg" : ext}`,
     });
@@ -200,11 +188,7 @@ export default function HostEventScreen({ navigation }) {
     );
 
     const json = await res.json();
-    if (!res.ok)
-      throw new Error(
-        json?.error?.message ||
-        "Image upload failed"
-      );
+    if (!res.ok) throw new Error(json?.error?.message || "Image upload failed");
 
     return json.secure_url;
   }
@@ -217,22 +201,18 @@ export default function HostEventScreen({ navigation }) {
       createdBy: user?.id ?? null,
     };
 
-    await API.post(
-      "/events/request",
-      payload
-    );
+    await API.post("/events/request", payload);
   }
 
+  // ---------------- SUBMIT ----------------
+
   const submit = async () => {
-    if (!user || Object.keys(errors).length)
-      return;
+    if (!user || Object.keys(errors).length) return;
 
     setLoading(true);
 
     try {
-      const localImages = form.images.filter(
-        (u) => !/^https?:\/\//.test(u)
-      );
+      const localImages = form.images.filter((u) => !/^https?:\/\//.test(u));
 
       setUploadingCount(0);
       setTotalToUpload(localImages.length);
@@ -240,8 +220,7 @@ export default function HostEventScreen({ navigation }) {
       const uploaded = [];
 
       for (let img of localImages) {
-        const url =
-          await uploadLocalImage(img);
+        const url = await uploadLocalImage(img);
         uploaded.push(url);
         setUploadingCount((c) => c + 1);
       }
@@ -261,10 +240,7 @@ export default function HostEventScreen({ navigation }) {
 
   const goToPreview = () => {
     if (Object.keys(errors).length) {
-      setSnack({
-        visible: true,
-        message: "Fix errors first",
-      });
+      setSnack({ visible: true, message: "Fix errors first" });
       return;
     }
 
@@ -274,44 +250,56 @@ export default function HostEventScreen({ navigation }) {
     });
   };
 
+  // ---------------- UI ----------------
+
   return (
     <>
       <StatusBar barStyle="light-content" />
 
-      <Appbar.Header style={{ backgroundColor: "#E91E63" }}>
+      <Appbar.Header elevated style={{ backgroundColor: colors.surface }}>
         <Appbar.BackAction
+          color={colors.textPrimary}
           onPress={() => navigation.goBack()}
         />
         <Appbar.Content
           title="Host Event"
-          color="white"
+          titleStyle={{ fontWeight: Fonts.weight.semiBold }}
+          color={colors.textPrimary}
         />
       </Appbar.Header>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        <Surface style={styles.card}>
-          <Text style={styles.title}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <Surface
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.surface,
+              borderRadius: Radius.xl,
+            },
+          ]}
+        >
+          <Text style={[styles.title, { color: colors.primary }]}>
             Create your Event
           </Text>
-
-          <Text style={styles.subtitle}>
-            Fill details to host a campus
-            event 🎉
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Fill details to host a campus event 🎉
           </Text>
+
+          {/* FORM INPUTS */}
 
           <TextInput
             label="Event Title *"
             mode="outlined"
             style={styles.input}
             value={form.title}
-            onChangeText={(v) =>
-              handleChange("title", v)
-            }
+            onChangeText={(v) => handleChange("title", v)}
           />
-          <HelperText
-            visible={!!errors.title}
-            type="error"
-          >
+          <HelperText visible={!!errors.title} type="error">
             {errors.title}
           </HelperText>
 
@@ -319,48 +307,34 @@ export default function HostEventScreen({ navigation }) {
             label="Description *"
             mode="outlined"
             multiline
-            style={[
-              styles.input,
-              { height: 100 },
-            ]}
+            style={[styles.input, { height: scale(100) }]}
             value={form.description}
-            onChangeText={(v) =>
-              handleChange("description", v)
-            }
+            onChangeText={(v) => handleChange("description", v)}
           />
-          <HelperText
-            visible={!!errors.description}
-            type="error"
-          >
+          <HelperText visible={!!errors.description} type="error">
             {errors.description}
           </HelperText>
 
+          {/* CATEGORY */}
+
           <Menu
             visible={categoryMenuVisible}
-            onDismiss={() =>
-              setCategoryMenuVisible(false)
-            }
+            onDismiss={() => setCategoryMenuVisible(false)}
             anchor={
               <TouchableOpacity
-                style={styles.dropdown}
-                onPress={() =>
-                  setCategoryMenuVisible(true)
-                }
+                style={[styles.dropdown, { borderColor: colors.border }]}
+                onPress={() => setCategoryMenuVisible(true)}
               >
                 <Text
                   style={{
                     color: form.category
-                      ? "#000"
-                      : "#777",
+                      ? colors.textPrimary
+                      : colors.textSecondary,
                   }}
                 >
-                  {form.category ||
-                    "Select Category *"}
+                  {form.category || "Select Category *"}
                 </Text>
-                <IconButton
-                  icon="chevron-down"
-                  size={22}
-                />
+                <IconButton icon="chevron-down" size={22} />
               </TouchableOpacity>
             }
           >
@@ -380,10 +354,7 @@ export default function HostEventScreen({ navigation }) {
             ))}
           </Menu>
 
-          <HelperText
-            visible={!!errors.category}
-            type="error"
-          >
+          <HelperText visible={!!errors.category} type="error">
             {errors.category}
           </HelperText>
 
@@ -394,155 +365,92 @@ export default function HostEventScreen({ navigation }) {
                 mode="outlined"
                 style={styles.input}
                 value={subCategoryInput}
-                onChangeText={
-                  setSubCategoryInput
-                }
-                right={
-                  <TextInput.Icon
-                    icon="plus"
-                    onPress={
-                      addSubCategory
-                    }
-                  />
-                }
+                onChangeText={setSubCategoryInput}
+                right={<TextInput.Icon icon="plus" onPress={addSubCategory} />}
               />
 
               <View style={styles.chipWrap}>
-                {form.subCategories.map(
-                  (s) => (
-                    <Chip
-                      key={s}
-                      style={styles.chip}
-                      onClose={() =>
-                        removeSubCategory(
-                          s
-                        )
-                      }
-                    >
-                      {s}
-                    </Chip>
-                  )
-                )}
+                {form.subCategories.map((s) => (
+                  <Chip
+                    key={s}
+                    style={styles.chip}
+                    onClose={() => removeSubCategory(s)}
+                  >
+                    {s}
+                  </Chip>
+                ))}
               </View>
             </>
           )}
 
+          {/* DATE */}
+
           <TouchableOpacity
-            onPress={() =>
-              setDatePickerVisible(true)
-            }
-            style={styles.dropdown}
+            onPress={() => setDatePickerVisible(true)}
+            style={[styles.dropdown, { borderColor: colors.border }]}
           >
             <Text
               style={{
-                color: form.date
-                  ? "#000"
-                  : "#777",
+                color: form.date ? colors.textPrimary : colors.textSecondary,
               }}
             >
-              {form.date ||
-                "Select Date *"}
+              {form.date || "Select Date *"}
             </Text>
-
-            <IconButton
-              icon="calendar"
-              size={22}
-            />
+            <IconButton icon="calendar" size={22} />
           </TouchableOpacity>
 
           {datePickerVisible && (
             <DateTimePicker
-              value={
-                form.date
-                  ? new Date(form.date)
-                  : new Date()
-              }
+              value={form.date ? new Date(form.date) : new Date()}
               mode="date"
-              display={
-                Platform.OS === "ios"
-                  ? "spinner"
-                  : "default"
-              }
+              display={Platform.OS === "ios" ? "spinner" : "default"}
               onChange={(e, d) => {
-                setDatePickerVisible(
-                  false
-                );
-                if (d)
-                  handleChange(
-                    "date",
-                    d
-                      .toISOString()
-                      .split("T")[0]
-                  );
+                setDatePickerVisible(false);
+                if (d) handleChange("date", d.toISOString().split("T")[0]);
               }}
             />
           )}
 
-          <HelperText
-            visible={!!errors.date}
-            type="error"
-          >
+          <HelperText visible={!!errors.date} type="error">
             {errors.date}
           </HelperText>
 
+          {/* TIME */}
+
           <TouchableOpacity
-            onPress={() =>
-              setTimePickerVisible(
-                true
-              )
-            }
-            style={styles.dropdown}
+            onPress={() => setTimePickerVisible(true)}
+            style={[styles.dropdown, { borderColor: colors.border }]}
           >
             <Text
               style={{
-                color: form.time
-                  ? "#000"
-                  : "#777",
+                color: form.time ? colors.textPrimary : colors.textSecondary,
               }}
             >
-              {form.time ||
-                "Select Time *"}
+              {form.time || "Select Time *"}
             </Text>
-
-            <IconButton
-              icon="clock"
-              size={22}
-            />
+            <IconButton icon="clock" size={22} />
           </TouchableOpacity>
 
           {timePickerVisible && (
             <DateTimePicker
               value={new Date()}
               mode="time"
-              display={
-                Platform.OS === "ios"
-                  ? "spinner"
-                  : "default"
-              }
+              display={Platform.OS === "ios" ? "spinner" : "default"}
               onChange={(e, d) => {
-                setTimePickerVisible(
-                  false
-                );
+                setTimePickerVisible(false);
                 if (d)
                   handleChange(
                     "time",
-                    d.toLocaleTimeString(
-                      [],
-                      {
-                        hour: "2-digit",
-                        minute:
-                          "2-digit",
-                      }
-                    )
+                    d.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                   );
               }}
             />
           )}
 
-          <HelperText
-            visible={!!errors.time}
-            type="error"
-          >
+          <HelperText visible={!!errors.time} type="error">
             {errors.time}
           </HelperText>
 
@@ -551,9 +459,7 @@ export default function HostEventScreen({ navigation }) {
             mode="outlined"
             style={styles.input}
             value={form.location}
-            onChangeText={(v) =>
-              handleChange("location", v)
-            }
+            onChangeText={(v) => handleChange("location", v)}
           />
 
           <TextInput
@@ -561,12 +467,7 @@ export default function HostEventScreen({ navigation }) {
             mode="outlined"
             style={styles.input}
             value={form.hostName}
-            onChangeText={(v) =>
-              handleChange(
-                "hostName",
-                v
-              )
-            }
+            onChangeText={(v) => handleChange("hostName", v)}
           />
 
           <TextInput
@@ -575,17 +476,9 @@ export default function HostEventScreen({ navigation }) {
             keyboardType="number-pad"
             style={styles.input}
             value={form.contact}
-            onChangeText={(v) =>
-              handleChange(
-                "contact",
-                v
-              )
-            }
+            onChangeText={(v) => handleChange("contact", v)}
           />
-          <HelperText
-            visible={!!errors.contact}
-            type="error"
-          >
+          <HelperText visible={!!errors.contact} type="error">
             {errors.contact}
           </HelperText>
 
@@ -594,61 +487,54 @@ export default function HostEventScreen({ navigation }) {
             mode="outlined"
             style={styles.input}
             value={form.email}
-            onChangeText={(v) =>
-              handleChange("email", v)
-            }
+            onChangeText={(v) => handleChange("email", v)}
           />
-          <HelperText
-            visible={!!errors.email}
-            type="error"
-          >
+          <HelperText visible={!!errors.email} type="error">
             {errors.email}
           </HelperText>
 
-          <Text style={styles.sectionTitle}>
-            Upload Images *
-          </Text>
+          {/* IMAGES */}
 
-          <Text style={styles.sectionSubtitle}>
-            Minimum 4 required
-          </Text>
+          <Text style={styles.sectionTitle}>Upload Images *</Text>
+
+          <Text style={styles.sectionSubtitle}>Minimum 4 required</Text>
 
           <View style={styles.imageGrid}>
             {form.images.map((uri, i) => (
-              <View
-                key={uri + i}
-                style={styles.imageBox}
-              >
+              <View key={uri + i} style={styles.imageBox}>
                 <Image
                   source={{ uri }}
-                  style={styles.image}
+                  style={[styles.image, { borderColor: colors.border }]}
                 />
 
                 <IconButton
                   icon="close"
                   size={18}
-                  style={styles.removeBtn}
-                  onPress={() =>
-                    removeImage(uri)
-                  }
+                  style={[
+                    styles.removeBtn,
+                    { backgroundColor: colors.surface },
+                  ]}
+                  onPress={() => removeImage(uri)}
                 />
               </View>
             ))}
 
             {form.images.length < 10 && (
               <TouchableOpacity
-                style={styles.addBox}
+                style={[
+                  styles.addBox,
+                  {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.background,
+                  },
+                ]}
                 onPress={pickImages}
               >
-                <IconButton
-                  icon="plus"
-                  size={30}
-                  iconColor="#E91E63"
-                />
+                <IconButton icon="plus" size={30} iconColor={colors.primary} />
                 <Text
                   style={{
-                    color: "#E91E63",
-                    fontWeight: "600",
+                    color: colors.primary,
+                    fontWeight: Fonts.weight.semiBold,
                   }}
                 >
                   Add
@@ -657,36 +543,26 @@ export default function HostEventScreen({ navigation }) {
             )}
           </View>
 
-          <HelperText
-            visible={!!errors.images}
-            type="error"
-          >
+          <HelperText visible={!!errors.images} type="error">
             {errors.images}
           </HelperText>
 
+          {/* UPLOAD STATUS */}
+
           {uploadingCount > 0 && (
-            <View
-              style={{
-                flexDirection:
-                  "row",
-                marginTop: 8,
-              }}
-            >
+            <View style={styles.uploadRow}>
               <ActivityIndicator size={20} />
-              <Text
-                style={{
-                  marginLeft: 10,
-                }}
-              >
-                Uploading {uploadingCount} /{" "}
-                {totalToUpload}
+              <Text style={{ marginLeft: Spacing.sm }}>
+                Uploading {uploadingCount} / {totalToUpload}
               </Text>
             </View>
           )}
 
+          {/* SUBMIT */}
+
           <Button
             mode="contained"
-            buttonColor="#E91E63"
+            buttonColor={colors.primary}
             loading={loading}
             onPress={goToPreview}
             style={styles.submitBtn}
@@ -697,12 +573,7 @@ export default function HostEventScreen({ navigation }) {
 
         <Snackbar
           visible={snack.visible}
-          onDismiss={() =>
-            setSnack((s) => ({
-              ...s,
-              visible: false,
-            }))
-          }
+          onDismiss={() => setSnack((s) => ({ ...s, visible: false }))}
         >
           {snack.message}
         </Snackbar>
@@ -711,78 +582,77 @@ export default function HostEventScreen({ navigation }) {
   );
 }
 
+// --------------------------------------------------
+
+const IMAGE_SIZE = scale(95);
+
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: Spacing.lg,
+    paddingBottom: scale(40),
   },
 
   card: {
-    padding: 20,
-    borderRadius: 20,
-    backgroundColor: "white",
-    elevation: 6,
+    padding: Spacing.xl,
+    ...Shadows.card,
   },
 
   title: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#E91E63",
+    fontSize: Fonts.size.xl,
+    fontWeight: Fonts.weight.bold,
   },
 
   subtitle: {
-    color: "#777",
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
+    fontSize: Fonts.size.md,
   },
 
   input: {
-    marginBottom: 12,
-    backgroundColor: "#FAFAFA",
+    marginBottom: Spacing.sm,
   },
 
   dropdown: {
-    height: 55,
+    height: scale(55),
     borderWidth: 1,
-    borderColor: "#aaa",
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 10,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
 
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    marginTop: 12,
+    fontSize: Fonts.size.md,
+    fontWeight: Fonts.weight.bold,
+    marginTop: Spacing.md,
   },
 
   sectionSubtitle: {
     color: "#777",
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
 
   submitBtn: {
-    marginTop: 20,
-    borderRadius: 12,
+    marginTop: Spacing.lg,
+    borderRadius: Radius.md,
   },
 
   chipWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 10,
+    marginBottom: Spacing.sm,
   },
 
   chip: {
-    marginRight: 8,
-    marginBottom: 8,
+    marginRight: Spacing.sm,
+    marginBottom: Spacing.sm,
   },
 
   imageGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: Spacing.sm,
   },
 
   imageBox: {
@@ -790,28 +660,30 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: 95,
-    height: 95,
-    borderRadius: 10,
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: "#ddd",
   },
 
   removeBtn: {
     position: "absolute",
     top: -6,
     right: -6,
-    backgroundColor: "white",
   },
 
   addBox: {
-    width: 95,
-    height: 95,
-    borderRadius: 12,
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
+    borderRadius: Radius.md,
     borderWidth: 2,
-    borderColor: "#E91E63",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFE4EC",
+  },
+
+  uploadRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.sm,
   },
 });

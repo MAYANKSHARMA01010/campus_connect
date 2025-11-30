@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, Alert, ScrollView } from "react-native";
+
 import {
     Appbar,
     List,
@@ -10,13 +11,19 @@ import {
 } from "react-native-paper";
 
 import { useNavigation } from "@react-navigation/native";
+
 import API from "../api/api";
+
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius } from "../theme/theme";
 
 export default function SettingsScreen({ user }) {
     const navigation = useNavigation();
+    const colors = useAppTheme();
 
     const isHost = user?.role !== "USER";
 
+    // 🔧 Visual selector only — system already controls theme via OS
     const [theme, setTheme] = useState("system");
 
     const [notifications, setNotifications] = useState({
@@ -64,12 +71,14 @@ export default function SettingsScreen({ user }) {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView
+            style={[styles.container, { backgroundColor: colors.background }]}
+        >
             <Appbar.Header>
                 <Appbar.Content title="Settings" />
             </Appbar.Header>
 
-            {/* ACCOUNT */}
+            {/* ---------------- ACCOUNT ---------------- */}
             <List.Section>
                 <List.Subheader>Account</List.Subheader>
 
@@ -96,7 +105,7 @@ export default function SettingsScreen({ user }) {
 
             <Divider />
 
-            {/* NOTIFICATIONS */}
+            {/* ---------------- NOTIFICATIONS ---------------- */}
             <List.Section>
                 <List.Subheader>Notifications</List.Subheader>
 
@@ -143,13 +152,18 @@ export default function SettingsScreen({ user }) {
 
             <Divider />
 
-            {/* THEME */}
+            {/* ---------------- THEME ---------------- */}
             <List.Section>
                 <List.Subheader>Appearance</List.Subheader>
 
                 <RadioButton.Group onValueChange={setTheme} value={theme}>
-                    <List.Item title="Light" right={() => <RadioButton value="light" />} />
+                    <List.Item
+                        title="Light"
+                        right={() => <RadioButton value="light" />}
+                    />
+
                     <List.Item title="Dark" right={() => <RadioButton value="dark" />} />
+
                     <List.Item
                         title="System"
                         right={() => <RadioButton value="system" />}
@@ -159,18 +173,23 @@ export default function SettingsScreen({ user }) {
 
             <Divider />
 
-            {/* ACTIONS */}
+            {/* ---------------- ACTIONS ---------------- */}
             <List.Section>
                 <List.Subheader>Account Actions</List.Subheader>
 
-                <Button mode="outlined" style={styles.btn} onPress={handleLogout}>
+                <Button
+                    mode="outlined"
+                    style={styles.btn}
+                    onPress={handleLogout}
+                    textColor={colors.primary}
+                >
                     Logout
                 </Button>
 
                 <Button
                     mode="contained"
-                    status="danger"
                     style={[styles.btn, styles.delete]}
+                    buttonColor={colors.danger}
                     onPress={handleDeleteAccount}
                 >
                     Delete Account
@@ -180,15 +199,20 @@ export default function SettingsScreen({ user }) {
     );
 }
 
+// ---------------------------------------------------
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+
     btn: {
-        marginHorizontal: 16,
-        marginVertical: 8,
+        marginHorizontal: Spacing.lg,
+        marginVertical: Spacing.sm,
+        borderRadius: Radius.md,
     },
+
     delete: {
-        backgroundColor: "#d32f2f",
+        marginTop: Spacing.md,
     },
 });
