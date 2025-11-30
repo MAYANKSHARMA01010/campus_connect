@@ -2,14 +2,19 @@ import React from "react";
 import { View, StyleSheet, Pressable, Animated, Dimensions } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BlurView } from "expo-blur";
-import { Entypo, Ionicons, MaterialIcons, FontAwesome6, } from "@expo/vector-icons";
+import {
+  Entypo,
+  Ionicons,
+  MaterialIcons,
+  FontAwesome6,
+} from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/UserContext";
 
 import HomeScreen from "../Screens/Home";
 import EventScreen from "../Screens/Events";
 import SearchScreen from "../Screens/Search";
-import ProfileStackNavigator from "./ProfileStackNavigator";
+import SettingsStackNavigator from "../Screens/SettingsScreen";
 import AuthStackNavigator from "./AuthStackNavigator";
 
 const Tabs = createBottomTabNavigator();
@@ -51,7 +56,9 @@ function CustomTabBar({ state, navigation }) {
         <Animated.View
           style={[
             styles.activePill,
-            { transform: [{ translateX: animatedPillX }] },
+            {
+              transform: [{ translateX: animatedPillX }],
+            },
           ]}
         />
 
@@ -77,7 +84,11 @@ function CustomTabBar({ state, navigation }) {
             ),
 
             HostButton: (
-              <MaterialIcons name="add-circle" size={30} color="#E91E63" />
+              <MaterialIcons
+                name="add-circle"
+                size={30}
+                color="#E91E63"
+              />
             ),
 
             Events: (
@@ -148,7 +159,7 @@ export default function BottomNavigationMainScreen() {
 
       <Tabs.Screen
         name="ProfileTab"
-        component={isLoggedIn ? ProfileStackNavigator : AuthStackNavigator}
+        component={isLoggedIn ? SettingsStackNavigator : AuthStackNavigator}
       />
     </Tabs.Navigator>
   );
