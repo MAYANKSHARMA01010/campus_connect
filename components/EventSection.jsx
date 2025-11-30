@@ -9,36 +9,65 @@ import {
 import { Text, Surface } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 
-const Card = memo(({ item, navigation }) => (
-  <TouchableOpacity
-    activeOpacity={0.9}
-    style={styles.card}
-    onPress={() => navigation.navigate("EventDetail", { id: item.id })}
-  >
-    <ImageBackground
-      source={{ uri: item.images?.[0]?.url }}
-      style={styles.bgImage}
-      imageStyle={styles.bgImageStyle}
-    >
-      <View style={styles.gradientOverlay} />
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
 
-      <View style={styles.overlayContent}>
-        <Text variant="titleLarge" style={styles.overlayTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text style={styles.overlayDate}>
-          {item.date ? new Date(item.date).toDateString() : ""}
-        </Text>
-        <Text style={styles.overlaySummary} numberOfLines={2}>
-          {item.description}
-        </Text>
-      </View>
-    </ImageBackground>
-  </TouchableOpacity>
-));
+const Card = memo(({ item, navigation }) => {
+  const colors = useAppTheme();
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.surface,
+          borderRadius: Radius.lg,
+        },
+      ]}
+      onPress={() => navigation.navigate("EventDetail", { id: item.id })}
+    >
+      <ImageBackground
+        source={{ uri: item.images?.[0]?.url }}
+        style={styles.bgImage}
+        imageStyle={[styles.bgImageStyle, { borderRadius: Radius.lg }]}
+      >
+        <View
+          style={[
+            styles.gradientOverlay,
+            { backgroundColor: "rgba(0,0,0,0.35)" },
+          ]}
+        />
+
+        <View style={styles.overlayContent}>
+          <Text
+            variant="titleLarge"
+            style={[styles.overlayTitle, { color: colors.surface }]}
+            numberOfLines={1}
+          >
+            {item.title}
+          </Text>
+
+          <Text style={[styles.overlayDate, { color: colors.accent }]}>
+            {item.date ? new Date(item.date).toDateString() : ""}
+          </Text>
+
+          <Text
+            style={[styles.overlaySummary, { color: colors.surface }]}
+            numberOfLines={2}
+          >
+            {item.description}
+          </Text>
+        </View>
+      </ImageBackground>
+    </TouchableOpacity>
+  );
+});
 
 export default function EventSection({ data }) {
   const navigation = useNavigation();
+  const colors = useAppTheme();
 
   const renderItem = useCallback(
     ({ item }) => <Card item={item} navigation={navigation} />,
@@ -48,13 +77,22 @@ export default function EventSection({ data }) {
   const renderViewMore = useCallback(
     () => (
       <TouchableOpacity
-        style={styles.viewMoreCard}
+        style={[
+          styles.viewMoreCard,
+          {
+            borderColor: colors.primary,
+            backgroundColor: colors.surface,
+            borderRadius: Radius.lg,
+          },
+        ]}
         onPress={() => navigation.navigate("Events")}
       >
-        <Text style={styles.viewMoreText}>View More</Text>
+        <Text style={[styles.viewMoreText, { color: colors.primary }]}>
+          View More
+        </Text>
       </TouchableOpacity>
     ),
-    [navigation]
+    [navigation, colors]
   );
 
   return (
@@ -76,68 +114,73 @@ export default function EventSection({ data }) {
   );
 }
 
+const CARD_WIDTH = scale(280);
+const CARD_HEIGHT = scale(340);
+
 const styles = StyleSheet.create({
   section: {
-    marginTop: 22,
-    marginBottom: 18,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
+
   scrollContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
   },
+
   card: {
-    width: 300,
-    height: 360,
-    borderRadius: 20,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
     overflow: "hidden",
-    marginRight: 18,
-    backgroundColor: "#fff",
-    elevation: 6,
+    marginRight: Spacing.lg,
+    ...Shadows.card,
   },
+
   bgImage: {
     flex: 1,
     justifyContent: "flex-end",
   },
+
   bgImageStyle: {
-    borderRadius: 20,
+    resizeMode: "cover",
   },
+
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.35)",
   },
+
   overlayContent: {
-    padding: 18,
+    padding: Spacing.md,
   },
+
   overlayTitle: {
-    color: "#fff",
-    fontWeight: "800",
-    fontSize: 22,
-    marginBottom: 4,
+    fontWeight: Fonts.weight.bold,
+    fontSize: Fonts.size.xl,
+    marginBottom: Spacing.xs,
   },
+
   overlayDate: {
-    color: "#FFD8E6",
-    fontSize: 13,
-    marginBottom: 8,
+    fontSize: Fonts.size.sm,
+    marginBottom: Spacing.sm,
   },
+
   overlaySummary: {
-    color: "#ffffffcc",
-    fontSize: 14,
+    fontSize: Fonts.size.md,
+    opacity: 0.9,
   },
+
   viewMoreCard: {
-    width: 300,
-    height: 360,
-    borderRadius: 20,
-    marginRight: 18,
-    borderWidth: 1.6,
-    borderColor: "#E91E63",
-    backgroundColor: "#fff",
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    marginRight: Spacing.lg,
     justifyContent: "center",
     alignItems: "center",
-    elevation: 4,
+    borderWidth: 1.6,
+    ...Shadows.card,
   },
+
   viewMoreText: {
-    color: "#E91E63",
-    fontWeight: "700",
-    fontSize: 18,
+    fontWeight: Fonts.weight.bold,
+    fontSize: Fonts.size.lg,
     letterSpacing: 0.5,
   },
 });

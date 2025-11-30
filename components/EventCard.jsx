@@ -3,6 +3,11 @@ import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Surface, Text } from "react-native-paper";
 import { Image } from "expo-image";
 
+import { useAppTheme } from "../theme/useAppTheme";
+import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
+import { scale } from "../theme/layout";
+
+// -------- DATE FORMATTER (UNCHANGED) --------
 const formatEventDate = (rawDate) => {
     if (!rawDate) return {};
 
@@ -28,11 +33,7 @@ const formatEventDate = (rawDate) => {
         date.getDate()
     );
 
-    const startOfNow = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate()
-    );
+    const startOfNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const diffDays = Math.floor(
         (startOfDate - startOfNow) / (1000 * 60 * 60 * 24)
@@ -48,7 +49,9 @@ const formatEventDate = (rawDate) => {
     return { day, formattedDate, time, startsIn };
 };
 
+// -------- EVENT CARD --------
 const EventCard = memo(({ item, navigation }) => {
+    const colors = useAppTheme();
     const { day, formattedDate, time, startsIn } = formatEventDate(item.date);
 
     return (
@@ -56,7 +59,15 @@ const EventCard = memo(({ item, navigation }) => {
             activeOpacity={0.88}
             onPress={() => navigation.navigate("EventDetail", { id: item.id })}
         >
-            <Surface style={styles.cardShadow}>
+            <Surface
+                style={[
+                    styles.cardShadow,
+                    {
+                        backgroundColor: colors.surface,
+                        borderRadius: Radius.lg,
+                    },
+                ]}
+            >
                 <View style={styles.cardContainer}>
                     {item.images?.length ? (
                         <Image
@@ -67,20 +78,38 @@ const EventCard = memo(({ item, navigation }) => {
                             cachePolicy="disk"
                         />
                     ) : (
-                        <View style={styles.noImageBox}>
-                            <Text style={{ color: "#aaa" }}>No Image</Text>
+                        <View
+                            style={[styles.noImageBox, { backgroundColor: colors.border }]}
+                        >
+                            <Text style={{ color: colors.muted }}>No Image</Text>
                         </View>
                     )}
 
                     <View style={styles.cardContent}>
-                        <Text style={styles.cardTitle}>{item.title}</Text>
-                        <Text style={styles.cardInfo}>📍 {item.location}</Text>
+                        <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                            {item.title}
+                        </Text>
+
+                        <Text style={[styles.cardInfo, { color: colors.textSecondary }]}>
+                            📍 {item.location}
+                        </Text>
 
                         <View style={styles.dateWrapper}>
-                            <Text style={styles.dateText}>🗓 {formattedDate}</Text>
-                            <Text style={styles.dateText}>⏰ {time}</Text>
-                            <Text style={styles.dateText}>📅 {day}</Text>
-                            <Text style={styles.startsIn}>{startsIn}</Text>
+                            <Text style={[styles.dateText, { color: colors.textSecondary }]}>
+                                🗓 {formattedDate}
+                            </Text>
+
+                            <Text style={[styles.dateText, { color: colors.textSecondary }]}>
+                                ⏰ {time}
+                            </Text>
+
+                            <Text style={[styles.dateText, { color: colors.textSecondary }]}>
+                                📅 {day}
+                            </Text>
+
+                            <Text style={[styles.startsIn, { color: colors.primary }]}>
+                                {startsIn}
+                            </Text>
                         </View>
                     </View>
                 </View>
@@ -91,57 +120,56 @@ const EventCard = memo(({ item, navigation }) => {
 
 export default EventCard;
 
+// -------- STYLES --------
 const styles = StyleSheet.create({
     cardShadow: {
-        backgroundColor: "#fff",
-        borderRadius: 14,
-        margin: 12,
-        elevation: 4,
+        margin: Spacing.md,
+        overflow: "hidden",
+        ...Shadows.card,
     },
 
     cardContainer: {
-        borderRadius: 14,
+        borderRadius: Radius.lg,
         overflow: "hidden",
     },
 
     cardImage: {
         width: "100%",
-        height: 350,
+        height: scale(280),
     },
 
     noImageBox: {
-        height: 200,
+        height: scale(200),
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#ececec",
     },
 
     cardContent: {
-        padding: 14,
+        padding: Spacing.md,
     },
 
     cardTitle: {
-        fontSize: 18,
-        fontWeight: "800",
+        fontSize: Fonts.size.lg,
+        fontWeight: Fonts.weight.bold,
     },
 
     cardInfo: {
-        color: "#556",
-        marginTop: 2,
+        marginTop: Spacing.xs,
+        fontSize: Fonts.size.md,
     },
 
     dateWrapper: {
-        marginTop: 8,
+        marginTop: Spacing.sm,
     },
 
     dateText: {
-        color: "#555",
+        fontSize: Fonts.size.sm,
         marginVertical: 1,
     },
 
     startsIn: {
-        fontWeight: "800",
-        color: "#0057ff",
-        marginTop: 5,
+        marginTop: Spacing.xs,
+        fontWeight: Fonts.weight.bold,
+        fontSize: Fonts.size.md,
     },
 });
