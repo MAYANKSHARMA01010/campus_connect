@@ -13,7 +13,12 @@ async function createUserController(req, res) {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = await prisma.user.create({
-            data: { name, username, email, password: hashedPassword },
+            data: {
+                name,
+                username,
+                email,
+                password: hashedPassword,
+            },
         });
 
         return res.status(201).json({
@@ -23,15 +28,22 @@ async function createUserController(req, res) {
                 name: newUser.name,
                 username: newUser.username,
                 email: newUser.email,
+                role: newUser.role,
             },
         });
     }
     catch (err) {
         console.error("CreateUser error:", err);
+
         if (err.code === "P2002") {
-            return res.status(400).json({ ERROR: "Email or Username already exists" });
+            return res.status(400).json({
+                ERROR: "Email or Username already exists"
+            });
         }
-        return res.status(500).json({ ERROR: "Internal Server Error while creating user" });
+
+        return res.status(500).json({
+            ERROR: "Internal Server Error while creating user"
+        });
     }
 }
 
@@ -52,12 +64,16 @@ async function loginUserController(req, res) {
         });
 
         if (!user) {
-            return res.status(404).json({ ERROR: "User not found" });
+            return res.status(404).json({
+                ERROR: "User not found"
+            });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ ERROR: "Invalid credentials" });
+            return res.status(401).json({
+                ERROR: "Invalid credentials"
+            });
         }
 
         const payload = {
@@ -65,12 +81,10 @@ async function loginUserController(req, res) {
             name: user.name,
             email: user.email,
             username: user.username,
+            role: user.role,
         };
 
         const token = createToken(payload);
-
-        // Avoid console logging tokens in production
-        // console.log("Generated JWT Token:", token);
 
         return res.status(200).json({
             message: "Login successful ✅",
@@ -80,40 +94,64 @@ async function loginUserController(req, res) {
                 name: user.name,
                 email: user.email,
                 username: user.username,
+                role: user.role,
             },
         });
     }
     catch (err) {
         console.error("Login Error:", err);
-        return res.status(500).json({ ERROR: "Internal Server Error" });
+        return res.status(500).json({
+            ERROR: "Internal Server Error"
+        });
     }
 }
 
 async function logoutUserController(req, res) {
     try {
-        return res.status(200).json({ message: "Logout successful" });
+        return res.status(200).json({
+            message: "Logout successful"
+        });
     }
     catch (error) {
         console.error("Logout error:", error);
-        return res.status(500).json({ ERROR: "Logout failed" });
+        return res.status(500).json({
+            ERROR: "Logout failed"
+        });
     }
 }
 
 async function getMeController(req, res) {
     try {
         const userId = req.user.id;
+
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { id: true, name: true, username: true, email: true, gender: true },
+            select: {
+                id: true,
+                name: true,
+                username: true,
+                email: true,
+                gender: true,
+                role: true,
+            },
         });
 
-        if (!user) return res.status(404).json({ ERROR: "User not found" });
+        if (!user) {
+            return res.status(404).json({
+                ERROR: "User not found"
+            });
+        }
 
-        return res.status(200).json({ message: "User fetched successfully", user });
+        return res.status(200).json({
+            message: "User fetched successfully",
+            user,
+        });
     }
     catch (error) {
         console.error("GetMe error:", error);
-        return res.status(500).json({ ERROR: "Internal Server Error" });
+        return res.status(500).json({
+            ERROR: "Internal Server Error"
+        });
     }
 }
 
@@ -125,11 +163,15 @@ async function updateUserController(req, res) {
         const updateData = {};
 
         if (name && name.trim()) updateData.name = name.trim();
-        if (username && username.trim()) updateData.username = username.trim().toLowerCase();
-        if (gender && gender.trim()) updateData.gender = gender.trim();
+        if (username && username.trim())
+            updateData.username = username.trim().toLowerCase();
+        if (gender && gender.trim())
+            updateData.gender = gender.trim();
 
         if (Object.keys(updateData).length === 0) {
-            return res.status(400).json({ ERROR: "No valid fields provided for update" });
+            return res.status(400).json({
+                ERROR: "No valid fields provided for update",
+            });
         }
 
         if (updateData.username) {
@@ -141,7 +183,9 @@ async function updateUserController(req, res) {
             });
 
             if (existingUser) {
-                return res.status(400).json({ ERROR: "Username already taken" });
+                return res.status(400).json({
+                    ERROR: "Username already taken",
+                });
             }
         }
 
@@ -154,6 +198,7 @@ async function updateUserController(req, res) {
                 username: true,
                 email: true,
                 gender: true,
+                role: true,
                 updatedAt: true,
             },
         });
@@ -172,7 +217,7 @@ async function updateUserController(req, res) {
 }
 
 module.exports = {
-    createUserController,
+    createUserController, 
     loginUserController,
     logoutUserController,
     getMeController,
