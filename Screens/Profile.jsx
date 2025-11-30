@@ -56,11 +56,11 @@ export default function ProfileScreen({ navigation }) {
           Edit Profile
         </Button>
 
+        {/* ✅ FIXED LOGOUT */}
         <Button
           mode="outlined"
-          onPress={() => {
-            logout();
-            navigation.replace("Login");
+          onPress={async () => {
+            await logout();
           }}
           style={styles.logoutBtn}
           textColor="#E91E63"
