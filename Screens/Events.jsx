@@ -33,6 +33,9 @@ export default function EventScreen({ navigation }) {
   const [sortType, setSortType] = useState("recent");
   const [sortVisible, setSortVisible] = useState(false);
 
+  // ✅ NEW: past events toggle
+  const [showPast, setShowPast] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -51,6 +54,7 @@ export default function EventScreen({ navigation }) {
             limit: LIMIT,
             category: activeCategory,
             sort: sortType,
+            past: showPast,
           },
         });
 
@@ -75,12 +79,12 @@ export default function EventScreen({ navigation }) {
         setLoadingMore(false);
       }
     },
-    [page, activeCategory, sortType]
+    [page, activeCategory, sortType, showPast]
   );
 
   useEffect(() => {
     fetchEvents(true);
-  }, [activeCategory, sortType]);
+  }, [activeCategory, sortType, showPast]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -159,6 +163,19 @@ export default function EventScreen({ navigation }) {
         )}
       />
 
+      <View style={styles.pastToggleRow}>
+        <Text style={styles.pastLabel}>Show past events</Text>
+
+        <Chip
+          selected={showPast}
+          onPress={() => setShowPast((prev) => !prev)}
+          style={[styles.pastChip, showPast && styles.pastActive]}
+          textStyle={styles.chipText}
+        >
+          {showPast ? "ON" : "OFF"}
+        </Chip>
+      </View>
+
       <Suspense fallback={<ShimmerCard />}>
         {loading ? (
           <>
@@ -178,7 +195,9 @@ export default function EventScreen({ navigation }) {
             }
             contentContainerStyle={{ paddingBottom: 70 }}
             ListFooterComponent={
-              loadingMore && <ActivityIndicator style={{ marginVertical: 12 }} />
+              loadingMore && (
+                <ActivityIndicator style={{ marginVertical: 12 }} />
+              )
             }
           />
         )}
@@ -238,6 +257,27 @@ const styles = StyleSheet.create({
   chipText: {
     color: "#1b2a4a",
     fontWeight: "600",
+  },
+  pastToggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    marginTop: 8,
+    paddingBottom: 8,
+  },
+
+  pastLabel: {
+    color: "#1b2a4a",
+    fontWeight: "600",
+  },
+
+  pastChip: {
+    backgroundColor: "#eef3ff",
+  },
+
+  pastActive: {
+    backgroundColor: "#ffffff",
   },
 
   shimmerCard: {
