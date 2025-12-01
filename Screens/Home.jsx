@@ -98,11 +98,12 @@ export default function HomeScreen({ navigation }) {
       </Appbar.Header>
 
       {/* SEARCH */}
-      <View style={styles.searchContainer}>
+      <View style={styles.searchCointainer}>
         <Searchbar
           placeholder="Search events, workshops, fests..."
           value={searchQuery}
           onChangeText={setSearchQuery}
+          onPress={() => { navigation.navigate('Search')}}
           style={[styles.searchbar, { backgroundColor: colors.surface }]}
         />
       </View>

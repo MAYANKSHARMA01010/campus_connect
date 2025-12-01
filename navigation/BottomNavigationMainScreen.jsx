@@ -19,13 +19,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/UserContext";
 import { useAppTheme } from "../theme/useAppTheme";
-import { Radius, Spacing, Dimension } from "../theme/theme";
+import { Radius, Spacing } from "../theme/theme";
 import { scale } from "../theme/layout";
 
 import HomeScreen from "../Screens/Home";
 import EventScreen from "../Screens/Events";
 import SearchScreen from "../Screens/Search";
-import SettingsStackNavigator from "../Screens/SettingsScreen";
+
+import SettingsStackNavigator from "./SettingsStackNavigator";
 import AuthStackNavigator from "./AuthStackNavigator";
 
 const Tabs = createBottomTabNavigator();
@@ -40,14 +41,14 @@ const animatedScale = Array(5)
 const animatedPillX = new Animated.Value(0);
 
 function animateTab(index) {
-  animatedScale.forEach((v, i) =>
+  animatedScale.forEach((v, i) => {
     Animated.spring(v, {
       toValue: i === index ? 1.22 : 1,
       useNativeDriver: true,
       friction: 6,
       tension: 160,
-    }).start()
-  );
+    }).start();
+  });
 
   Animated.spring(animatedPillX, {
     toValue: index * TAB_WIDTH,
@@ -167,6 +168,7 @@ export default function BottomNavigationMainScreen() {
 
       <Tabs.Screen name="Events" component={EventScreen} />
 
+      {/* ✅ 실제 Settings 또는 Auth Stack 연결 */}
       <Tabs.Screen
         name="ProfileTab"
         component={isLoggedIn ? SettingsStackNavigator : AuthStackNavigator}
@@ -199,6 +201,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     left: scale(4),
     opacity: 0.2,
+    marginTop: 15,
   },
 
   tabButton: {

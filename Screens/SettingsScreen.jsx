@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Alert, ScrollView } from "react-native";
+import { StyleSheet, Alert, ScrollView, View } from "react-native";
 
 import {
     Appbar,
@@ -11,19 +11,21 @@ import {
 } from "react-native-paper";
 
 import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import API from "../api/api";
-
+import { useAuth } from "../context/UserContext";
 import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius } from "../theme/theme";
+import { scale } from "../theme/layout";
 
-export default function SettingsScreen({ user }) {
+export default function SettingsScreen() {
     const navigation = useNavigation();
     const colors = useAppTheme();
+    const insets = useSafeAreaInsets();
+    const { user, logout } = useAuth();
 
     const isHost = user?.role !== "USER";
 
-    // 🔧 Visual selector only — system already controls theme via OS
     const [theme, setTheme] = useState("system");
 
     const [notifications, setNotifications] = useState({
@@ -41,9 +43,8 @@ export default function SettingsScreen({ user }) {
 
     const handleLogout = async () => {
         try {
-            await API.post("/auth/logout");
-            navigation.replace("Auth");
-        } catch (err) {
+            await logout(); // ✅ DO NOT navigate manually
+        } catch {
             Alert.alert("Error", "Logout failed");
         }
     };
@@ -60,7 +61,7 @@ export default function SettingsScreen({ user }) {
                     onPress: async () => {
                         try {
                             await API.delete("/users/me");
-                            navigation.replace("Auth");
+                            await logout(); // ✅ also clears local state
                         } catch (err) {
                             Alert.alert("Error", "Account deletion failed");
                         }
@@ -72,13 +73,19 @@ export default function SettingsScreen({ user }) {
 
     return (
         <ScrollView
-            style={[styles.container, { backgroundColor: colors.background }]}
+            contentContainerStyle={[
+                styles.content,
+                {
+                    paddingBottom: scale(140) + insets.bottom, // ✅ ensures buttons never hide under tab bar
+                },
+            ]}
+            style={{ backgroundColor: colors.background }}
         >
-            <Appbar.Header>
+            <Appbar.Header style={{ backgroundColor: colors.surface }}>
                 <Appbar.Content title="Settings" />
             </Appbar.Header>
 
-            {/* ---------------- ACCOUNT ---------------- */}
+            {/* ACCOUNT */}
             <List.Section>
                 <List.Subheader>Account</List.Subheader>
 
@@ -105,54 +112,32 @@ export default function SettingsScreen({ user }) {
 
             <Divider />
 
-            {/* ---------------- NOTIFICATIONS ---------------- */}
+            {/* NOTIFICATIONS */}
             <List.Section>
                 <List.Subheader>Notifications</List.Subheader>
 
-                <List.Item
-                    title="Event Reminders"
-                    right={() => (
-                        <Switch
-                            value={notifications.reminders}
-                            onValueChange={() => toggleNotification("reminders")}
-                        />
-                    )}
-                />
-
-                <List.Item
-                    title="New Events Nearby"
-                    right={() => (
-                        <Switch
-                            value={notifications.nearby}
-                            onValueChange={() => toggleNotification("nearby")}
-                        />
-                    )}
-                />
-
-                <List.Item
-                    title="Status Updates"
-                    right={() => (
-                        <Switch
-                            value={notifications.updates}
-                            onValueChange={() => toggleNotification("updates")}
-                        />
-                    )}
-                />
-
-                <List.Item
-                    title="Host Messages"
-                    right={() => (
-                        <Switch
-                            value={notifications.messages}
-                            onValueChange={() => toggleNotification("messages")}
-                        />
-                    )}
-                />
+                {[
+                    ["Event Reminders", "reminders"],
+                    ["New Events Nearby", "nearby"],
+                    ["Status Updates", "updates"],
+                    ["Host Messages", "messages"],
+                ].map(([title, key]) => (
+                    <List.Item
+                        key={key}
+                        title={title}
+                        right={() => (
+                            <Switch
+                                value={notifications[key]}
+                                onValueChange={() => toggleNotification(key)}
+                            />
+                        )}
+                    />
+                ))}
             </List.Section>
 
             <Divider />
 
-            {/* ---------------- THEME ---------------- */}
+            {/* APPEARANCE */}
             <List.Section>
                 <List.Subheader>Appearance</List.Subheader>
 
@@ -161,9 +146,7 @@ export default function SettingsScreen({ user }) {
                         title="Light"
                         right={() => <RadioButton value="light" />}
                     />
-
                     <List.Item title="Dark" right={() => <RadioButton value="dark" />} />
-
                     <List.Item
                         title="System"
                         right={() => <RadioButton value="system" />}
@@ -173,15 +156,15 @@ export default function SettingsScreen({ user }) {
 
             <Divider />
 
-            {/* ---------------- ACTIONS ---------------- */}
+            {/* ACTIONS */}
             <List.Section>
                 <List.Subheader>Account Actions</List.Subheader>
 
                 <Button
                     mode="outlined"
                     style={styles.btn}
-                    onPress={handleLogout}
                     textColor={colors.primary}
+                    onPress={handleLogout}
                 >
                     Logout
                 </Button>
@@ -199,11 +182,9 @@ export default function SettingsScreen({ user }) {
     );
 }
 
-// ---------------------------------------------------
-
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
+    content: {
+        flexGrow: 1,
     },
 
     btn: {

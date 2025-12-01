@@ -1,3 +1,5 @@
+// screens/EventScreen.jsx
+
 import React, { useEffect, useState, useCallback, Suspense } from "react";
 import {
   View,
@@ -130,7 +132,6 @@ export default function EventScreen({ navigation }) {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.headerTitle}>Campus Events</Text>
-
             <Text style={styles.headerSubtitle}>Discover what's happening</Text>
           </View>
 
@@ -162,48 +163,52 @@ export default function EventScreen({ navigation }) {
         </View>
       </LinearGradient>
 
-      {/* CATEGORY SELECTOR */}
+      {/* CATEGORY */}
       <FlatList
-        data={categories}
         horizontal
+        data={categories}
+        keyExtractor={(i) => i}
         showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item}
         contentContainerStyle={styles.categoryList}
         renderItem={({ item }) => (
-          <Chip
-            selected={activeCategory === item}
-            onPress={() => setActiveCategory(item)}
-            style={[
-              styles.categoryChip,
-              {
-                backgroundColor:
-                  activeCategory === item ? colors.surface : colors.background,
-              },
-            ]}
-            textStyle={[styles.chipText, { color: colors.textPrimary }]}
-          >
-            {item.toUpperCase()}
-          </Chip>
+          <View style={styles.chipWrapper}>
+            <Chip
+              selected={activeCategory === item}
+              onPress={() => setActiveCategory(item)}
+              style={[
+                styles.categoryChip,
+                {
+                  backgroundColor:
+                    activeCategory === item
+                      ? colors.surface
+                      : colors.background,
+                },
+              ]}
+              textStyle={[styles.chipText, { color: colors.textPrimary }]}
+            >
+              {item.toUpperCase()}
+            </Chip>
+          </View>
         )}
       />
 
-      {/* PAST EVENTS TOGGLE */}
+      {/* TOGGLE */}
       <View style={styles.pastToggleRow}>
         <Text style={styles.pastLabel}>Show past events</Text>
-
-        <Chip
-          selected={showPast}
-          onPress={() => setShowPast((prev) => !prev)}
-          style={[
-            styles.pastChip,
-            {
-              backgroundColor: showPast ? colors.surface : colors.background,
-            },
-          ]}
-          textStyle={styles.chipText}
-        >
-          {showPast ? "ON" : "OFF"}
-        </Chip>
+        <View style={styles.chipWrapper}>
+          <Chip
+            selected={showPast}
+            onPress={() => setShowPast(!showPast)}
+            style={[
+              styles.pastChip,
+              {
+                backgroundColor: showPast ? colors.surface : colors.background,
+              },
+            ]}
+          >
+            {showPast ? "ON" : "OFF"}
+          </Chip>
+        </View>
       </View>
 
       {/* LIST */}
@@ -218,15 +223,13 @@ export default function EventScreen({ navigation }) {
           <FlatList
             data={events}
             renderItem={renderItem}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => String(item.id)}
             onEndReached={loadMore}
             onEndReachedThreshold={0.45}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
-            contentContainerStyle={{
-              paddingBottom: scale(70),
-            }}
+            contentContainerStyle={{ paddingBottom: scale(70) }}
             ListFooterComponent={
               loadingMore && (
                 <ActivityIndicator style={{ marginVertical: Spacing.md }} />
@@ -240,9 +243,7 @@ export default function EventScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
 
   header: {
     paddingHorizontal: Spacing.lg,
@@ -250,7 +251,6 @@ const styles = StyleSheet.create({
       Platform.OS === "android"
         ? StatusBar.currentHeight + Spacing.lg
         : Spacing.xl,
-
     paddingBottom: Spacing.lg,
     borderBottomLeftRadius: Radius.lg,
     borderBottomRightRadius: Radius.lg,
@@ -270,13 +270,17 @@ const styles = StyleSheet.create({
 
   headerSubtitle: {
     color: "#eef",
-    marginTop: Spacing.xs,
     fontSize: Fonts.size.md,
   },
 
   categoryList: {
     paddingVertical: Spacing.md,
     paddingLeft: Spacing.md,
+  },
+
+  chipWrapper: {
+    borderRadius: Radius.md,
+    overflow: "hidden",
   },
 
   categoryChip: {

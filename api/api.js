@@ -15,9 +15,11 @@ API.interceptors.request.use(
   async (config) => {
     try {
       const token = await AsyncStorage.getItem("token");
-      if (token) config.headers.Authorization = `Bearer ${token}`;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     } catch (err) {
-      console.log("api intercept request error:", err);
+      console.log("API request interceptor error:", err);
     }
     return config;
   },
@@ -30,7 +32,7 @@ API.interceptors.response.use(
     if (err?.response?.status === 401) {
       try {
         await AsyncStorage.removeItem("token");
-      } catch (_) {}
+      } catch (_) { }
     }
     return Promise.reject(err);
   }
