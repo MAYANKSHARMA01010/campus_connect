@@ -14,7 +14,7 @@ app.use(express.json());
 app.use("/api/user", userRouter)
 app.use("/api/events", eventRouter);
 
-// DB testing Route
+
 app.get("/test-db", async (req, res) => {
   try {
     const users = await prisma.user.findMany();
@@ -25,7 +25,7 @@ app.get("/test-db", async (req, res) => {
   }
 });
 
-// Event testing Route
+
 app.get('/get-all-events', async (req, res) => {
   try {
     const data = await prisma.eventRequest.findMany({
@@ -42,7 +42,7 @@ app.get('/get-all-events', async (req, res) => {
   }
 });
 
-// Backend test Route
+
 app.get("/", (req, res) => {
   res.status(200).send("<h1>Backend Running Successfully 🚀</h1>");
 });

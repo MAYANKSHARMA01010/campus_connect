@@ -28,11 +28,11 @@ userRouter.get("/me", authenticate, getMeController)
 userRouter.put("/update", authenticate, updateUserMiddleware, updateUserController);
 userRouter.get("/", getAllUsers)
 
-// Future addition ROUTES :-
-// /refresh
-// /change-password
-// /forgot-password
-// /reset-password/:token
-// /delete
+
+
+
+
+
+
 
 module.exports = userRouter;
