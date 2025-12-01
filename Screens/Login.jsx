@@ -46,12 +46,12 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      {/* HEADER */}
+      
       <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <Text style={styles.headerText}>Campus Connect</Text>
       </View>
 
-      {/* CARD */}
+      
       <Surface
         style={[
           styles.card,
@@ -111,8 +111,6 @@ export default function LoginScreen({ navigation }) {
     </View>
   );
 }
-
-// --------------------------------------------------
 
 const styles = StyleSheet.create({
   screen: {

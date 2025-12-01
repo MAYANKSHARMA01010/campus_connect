@@ -1,9 +1,5 @@
 import API from "../api/api";
 
-/* -------------------------------------------------------------------------- */
-/*                                INITIAL STATE                               */
-/* -------------------------------------------------------------------------- */
-
 export const initialState = {
     events: [],
     total: 0,
@@ -14,10 +10,6 @@ export const initialState = {
 
     actionLoading: null,
 };
-
-/* -------------------------------------------------------------------------- */
-/*                                   REDUCER                                  */
-/* -------------------------------------------------------------------------- */
 
 export const eventReducer = (state, action) => {
     switch (action.type) {
@@ -66,10 +58,6 @@ export const eventReducer = (state, action) => {
     }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                               API FUNCTIONS                                */
-/* -------------------------------------------------------------------------- */
-
 export const fetchAdminEvents = async ({
     dispatch,
     search,
@@ -113,8 +101,6 @@ export const fetchAdminEvents = async ({
     }
 };
 
-/* -------------------------------------------------------------------------- */
-
 export const updateEventStatus = async (dispatch, id, status, reload) => {
     try {
         dispatch({
@@ -133,8 +119,6 @@ export const updateEventStatus = async (dispatch, id, status, reload) => {
         dispatch({ type: "ACTION_END" });
     }
 };
-
-/* -------------------------------------------------------------------------- */
 
 export const deleteEvent = async (dispatch, id, reload) => {
     try {

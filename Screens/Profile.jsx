@@ -23,7 +23,7 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <>
-      {/* ✅ HEADER WITH BACK */}
+      
       <Appbar.Header
         style={{ backgroundColor: colors.surface }}
         elevated
@@ -37,7 +37,7 @@ export default function ProfileScreen({ navigation }) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* ✅ HERO PROFILE */}
+        
         <View style={styles.hero}>
           <Avatar.Text
             size={scale(110)}
@@ -62,14 +62,14 @@ export default function ProfileScreen({ navigation }) {
 
         <Divider style={{ marginVertical: Spacing.lg }} />
 
-        {/* ✅ INFO GRID */}
+        
         <View style={styles.grid}>
           <InfoItem label="Email" value={user?.email} colors={colors} />
           <InfoItem label="Gender" value={user?.gender || "Not set"} colors={colors} />
           <InfoItem label="Joined" value={joinedDate} colors={colors} />
         </View>
 
-        {/* ✅ ACTIONS */}
+        
         <Button
           mode="contained"
           onPress={() => navigation.navigate("EditProfile")}

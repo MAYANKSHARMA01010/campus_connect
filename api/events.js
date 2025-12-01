@@ -1,8 +1,5 @@
 import API from "./api";
 
-/* ================================
-   CREATE EVENT WITH IMAGES
-================================ */
 export const createEventWithImages = async (payload, images) => {
   const form = new FormData();
 
@@ -30,9 +27,6 @@ export const createEventWithImages = async (payload, images) => {
   return res.data;
 };
 
-/* ================================
-   HOME EVENTS
-================================ */
 export const getAllEvents = async () => {
   try {
     const res = await API.get("/events/home");
@@ -43,9 +37,6 @@ export const getAllEvents = async () => {
   }
 };
 
-/* ================================
-   SINGLE EVENT
-================================ */
 export const getEventById = async (id) => {
   try {
     const res = await API.get(`/events/${id}`);
@@ -56,9 +47,6 @@ export const getEventById = async (id) => {
   }
 };
 
-/* ================================
-   SEARCH EVENTS
-================================ */
 export const searchEvents = async (query) => {
   try {
     const res = await API.get(`/events/search?q=${encodeURIComponent(query)}`);
@@ -69,9 +57,6 @@ export const searchEvents = async (query) => {
   }
 };
 
-/* ================================
-   USER => MY EVENTS
-================================ */
 export const getMyEvents = async () => {
   try {
     const res = await API.get("/events/me");
@@ -82,9 +67,6 @@ export const getMyEvents = async () => {
   }
 };
 
-/* ================================
-   USER => DELETE EVENT
-================================ */
 export const deleteMyEvent = async (id) => { 
   try {
     const safeId = Number(id);

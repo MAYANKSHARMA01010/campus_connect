@@ -25,8 +25,6 @@ import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
 import { scale } from "../theme/layout";
 
-// --------------------------------------------------
-
 export default function EventDetailsScreen({ route, navigation }) {
     const { id } = route.params;
     const colors = useAppTheme();
@@ -277,8 +275,6 @@ ${event?.description || ""}`,
     );
 }
 
-// --------------------------------------------------
-
 const InfoCard = ({ label, value, subValue, extra }) => {
     const colors = useAppTheme();
 
@@ -312,8 +308,6 @@ const Detail = ({ label, value }) => {
         </>
     );
 };
-
-// --------------------------------------------------
 
 const styles = StyleSheet.create({
     section: {

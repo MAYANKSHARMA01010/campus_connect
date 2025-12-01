@@ -34,8 +34,6 @@ import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
 import { scale } from "../theme/layout";
 
-// --------------------------------------------------
-
 const LIMIT = 10;
 
 const STATUS_FILTERS = ["All", "APPROVED", "PENDING", "REJECTED"];
@@ -47,8 +45,6 @@ const SORT_OPTIONS = [
     { label: "Past", value: "past" },
     { label: "A - Z", value: "az" },
 ];
-
-// --------------------------------------------------
 
 const EventRow = memo(
     ({ item, onDelete, onToggleStatus, onOpen, actionLoading }) => {
@@ -167,8 +163,6 @@ const EventRow = memo(
         );
     }
 );
-
-// --------------------------------------------------
 
 export default function ManageEventsScreen({ navigation }) {
     const colors = useAppTheme();
@@ -321,8 +315,6 @@ export default function ManageEventsScreen({ navigation }) {
         </View>
     );
 }
-
-// --------------------------------------------------
 
 const styles = StyleSheet.create({
     root: {

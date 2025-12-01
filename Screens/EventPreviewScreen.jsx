@@ -51,7 +51,7 @@ export default function EventPreviewScreen({ route, navigation }) {
 
   return (
     <>
-      {/* THEMED HEADER */}
+      
       <Appbar.Header elevated style={{ backgroundColor: colors.surface }}>
         <Appbar.BackAction
           onPress={() => navigation.goBack()}

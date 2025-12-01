@@ -68,7 +68,7 @@ export default function EventHeroSlider({ images = [], onSharePress }) {
                 removeClippedSubviews
             />
 
-            {/* Action Buttons */}
+            
             <View style={styles.topButtons}>
                 <IconButton
                     icon="bookmark-outline"
@@ -96,7 +96,7 @@ export default function EventHeroSlider({ images = [], onSharePress }) {
                 />
             </View>
 
-            {/* Slider Dots */}
+            
             <View style={styles.dotsContainer}>
                 {dotsData.map((_, i) => {
                     const inputRange = [(i - 1) * width, i * width, (i + 1) * width];

@@ -77,8 +77,6 @@ export default function HostEventScreen({ navigation }) {
   const handleChange = (key, val) =>
     setForm((prev) => ({ ...prev, [key]: val }));
 
-  // ---------------- VALIDATION ----------------
-
   const validate = () => {
     const err = {};
 
@@ -102,8 +100,6 @@ export default function HostEventScreen({ navigation }) {
 
   const errors = validate();
 
-  // ---------------- SUB CATEGORY ----------------
-
   const addSubCategory = () => {
     const v = subCategoryInput.trim();
     if (!v || form.subCategories.includes(v)) return;
@@ -121,8 +117,6 @@ export default function HostEventScreen({ navigation }) {
       ...p,
       subCategories: p.subCategories.filter((s) => s !== val),
     }));
-
-  // ---------------- IMAGE PICKER ----------------
 
   const pickImages = async () => {
     try {
@@ -164,8 +158,6 @@ export default function HostEventScreen({ navigation }) {
       images: p.images.filter((i) => i !== uri),
     }));
 
-  // ---------------- CLOUD UPLOAD ----------------
-
   async function uploadLocalImage(uri) {
     if (!CLOUD_NAME || !UPLOAD_PRESET)
       throw new Error("Cloudinary config missing");
@@ -203,8 +195,6 @@ export default function HostEventScreen({ navigation }) {
 
     await API.post("/events/request", payload);
   }
-
-  // ---------------- SUBMIT ----------------
 
   const submit = async () => {
     if (!user || Object.keys(errors).length) return;
@@ -250,8 +240,6 @@ export default function HostEventScreen({ navigation }) {
     });
   };
 
-  // ---------------- UI ----------------
-
   return (
     <>
       <StatusBar barStyle="light-content" />
@@ -290,7 +278,7 @@ export default function HostEventScreen({ navigation }) {
             Fill details to host a campus event 🎉
           </Text>
 
-          {/* FORM INPUTS */}
+          
 
           <TextInput
             label="Event Title *"
@@ -315,7 +303,7 @@ export default function HostEventScreen({ navigation }) {
             {errors.description}
           </HelperText>
 
-          {/* CATEGORY */}
+          
 
           <Menu
             visible={categoryMenuVisible}
@@ -383,7 +371,7 @@ export default function HostEventScreen({ navigation }) {
             </>
           )}
 
-          {/* DATE */}
+          
 
           <TouchableOpacity
             onPress={() => setDatePickerVisible(true)}
@@ -415,7 +403,7 @@ export default function HostEventScreen({ navigation }) {
             {errors.date}
           </HelperText>
 
-          {/* TIME */}
+          
 
           <TouchableOpacity
             onPress={() => setTimePickerVisible(true)}
@@ -493,7 +481,7 @@ export default function HostEventScreen({ navigation }) {
             {errors.email}
           </HelperText>
 
-          {/* IMAGES */}
+          
 
           <Text style={styles.sectionTitle}>Upload Images *</Text>
 
@@ -547,7 +535,7 @@ export default function HostEventScreen({ navigation }) {
             {errors.images}
           </HelperText>
 
-          {/* UPLOAD STATUS */}
+          
 
           {uploadingCount > 0 && (
             <View style={styles.uploadRow}>
@@ -558,7 +546,7 @@ export default function HostEventScreen({ navigation }) {
             </View>
           )}
 
-          {/* SUBMIT */}
+          
 
           <Button
             mode="contained"
@@ -581,8 +569,6 @@ export default function HostEventScreen({ navigation }) {
     </>
   );
 }
-
-// --------------------------------------------------
 
 const IMAGE_SIZE = scale(95);
 

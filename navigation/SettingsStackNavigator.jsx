@@ -26,7 +26,7 @@ export default function SettingsStackNavigator() {
         },
       }}
     >
-      {/* Settings uses its own Appbar */}
+      
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
@@ -42,7 +42,7 @@ export default function SettingsStackNavigator() {
       <Stack.Screen
         name="ManageEvents"
         component={ManageEvents}
-        options={{ title: "Manage Events" }}
+        options={{ title: "Manage Events",headerShown: false }}
       />
 
       <Stack.Screen

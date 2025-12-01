@@ -82,7 +82,7 @@ export default function HomeScreen({ navigation }) {
         { backgroundColor: colors.background },
       ]}
     >
-      {/* HEADER */}
+      
       <Appbar.Header
         elevated
         style={[styles.appbar, { backgroundColor: colors.surface }]}
@@ -97,7 +97,7 @@ export default function HomeScreen({ navigation }) {
         <Appbar.Action icon="bell-outline" color={colors.textPrimary} />
       </Appbar.Header>
 
-      {/* SEARCH */}
+      
       <View style={styles.searchCointainer}>
         <Searchbar
           placeholder="Search events, workshops, fests..."
@@ -108,7 +108,7 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
-      {/* HERO */}
+      
       <ImageBackground
         source={{ uri: "https://picsum.photos/seed/campus-banner/800/500" }}
         style={styles.heroBanner}
@@ -123,7 +123,7 @@ export default function HomeScreen({ navigation }) {
         </View>
       </ImageBackground>
 
-      {/* SECTIONS */}
+      
       <View style={{ marginTop: Spacing.lg }}>
         <Section
           title="🎉 Coming Up!"
@@ -152,7 +152,7 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
-      {/* HOST CTA */}
+      
       <Surface
         style={[
           styles.hostCard,
@@ -180,7 +180,7 @@ export default function HomeScreen({ navigation }) {
         </Button>
       </Surface>
 
-      {/* STATS */}
+      
       <View style={styles.statsRow}>
         {[
           { num: "50+", label: "Colleges" },
@@ -208,7 +208,7 @@ export default function HomeScreen({ navigation }) {
         ))}
       </View>
 
-      {/* ABOUT */}
+      
       <Surface
         style={[
           styles.aboutCard,
@@ -231,8 +231,6 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-// --------------------------------------------------
-
 const Section = React.memo(({ title, data, navigation }) => {
   const colors = useAppTheme();
 
@@ -254,8 +252,6 @@ const Section = React.memo(({ title, data, navigation }) => {
     </View>
   );
 });
-
-// --------------------------------------------------
 
 const styles = StyleSheet.create({
   container: {

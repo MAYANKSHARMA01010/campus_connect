@@ -102,7 +102,7 @@ export default function SearchScreen() {
         <Surface
           style={[styles.container, { backgroundColor: colors.surface }]}
         >
-          {/* HEADER */}
+          
           <View style={styles.header}>
             <Searchbar
               placeholder="Search by event, host or location…"
@@ -125,7 +125,7 @@ export default function SearchScreen() {
 
           <Divider />
 
-          {/* CONTENT */}
+          
           <View style={styles.content}>
             {loading && (
               <View style={styles.center}>
@@ -175,8 +175,6 @@ export default function SearchScreen() {
     </SafeAreaView>
   );
 }
-
-// --------------------------------------------------
 
 const styles = StyleSheet.create({
   safe: {

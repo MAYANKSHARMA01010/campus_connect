@@ -1,5 +1,3 @@
-// screens/EventScreen.jsx
-
 import React, { useEffect, useState, useCallback, Suspense } from "react";
 import {
   View,
@@ -124,7 +122,6 @@ export default function EventScreen({ navigation }) {
     >
       <StatusBar barStyle="light-content" translucent />
 
-      {/* HEADER */}
       <LinearGradient
         colors={[colors.primary, colors.accent]}
         style={styles.header}
@@ -163,7 +160,6 @@ export default function EventScreen({ navigation }) {
         </View>
       </LinearGradient>
 
-      {/* CATEGORY */}
       <FlatList
         horizontal
         data={categories}
@@ -192,7 +188,7 @@ export default function EventScreen({ navigation }) {
         )}
       />
 
-      {/* TOGGLE */}
+      
       <View style={styles.pastToggleRow}>
         <Text style={styles.pastLabel}>Show past events</Text>
         <View style={styles.chipWrapper}>
@@ -211,7 +207,7 @@ export default function EventScreen({ navigation }) {
         </View>
       </View>
 
-      {/* LIST */}
+      
       <Suspense fallback={<ShimmerCard />}>
         {loading ? (
           <>

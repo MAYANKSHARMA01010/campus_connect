@@ -7,7 +7,6 @@ import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
 import { scale } from "../theme/layout";
 
-// -------- DATE FORMATTER (UNCHANGED) --------
 const formatEventDate = (rawDate) => {
     if (!rawDate) return {};
 
@@ -49,7 +48,6 @@ const formatEventDate = (rawDate) => {
     return { day, formattedDate, time, startsIn };
 };
 
-// -------- EVENT CARD --------
 const EventCard = memo(({ item, navigation }) => {
     const colors = useAppTheme();
     const { day, formattedDate, time, startsIn } = formatEventDate(item.date);
@@ -120,7 +118,6 @@ const EventCard = memo(({ item, navigation }) => {
 
 export default EventCard;
 
-// -------- STYLES --------
 const styles = StyleSheet.create({
     cardShadow: {
         margin: Spacing.md,

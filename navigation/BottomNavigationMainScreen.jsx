@@ -168,7 +168,7 @@ export default function BottomNavigationMainScreen() {
 
       <Tabs.Screen name="Events" component={EventScreen} />
 
-      {/* ✅ 실제 Settings 또는 Auth Stack 연결 */}
+      
       <Tabs.Screen
         name="ProfileTab"
         component={isLoggedIn ? SettingsStackNavigator : AuthStackNavigator}
