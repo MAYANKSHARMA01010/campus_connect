@@ -52,8 +52,7 @@ async function createEventController(req, res) {
             message: "Event request submitted successfully",
             event: createdEvent,
         });
-    }
-    catch (err) {
+    } catch (err) {
         console.error("createEventController ERROR:", err);
         return res.status(500).json({ ERROR: "Internal Server Error" });
     }
@@ -61,13 +60,7 @@ async function createEventController(req, res) {
 
 async function getAllEventsController(req, res) {
     try {
-        const {
-            page = 1,
-            limit = 8,
-            category,
-            sort,
-            past = "false",
-        } = req.query;
+        const { page = 1, limit = 8, category, sort, past = "false" } = req.query;
 
         const now = new Date();
         const showPast = past === "true";
@@ -114,10 +107,11 @@ async function getAllEventsController(req, res) {
             categories: categories.map((c) => c.category),
             total,
         });
-
     } catch (error) {
         console.error("🔥 getAllEventsController ERROR:", error);
-        return res.status(500).json({ error: "Backend error", reason: error.message });
+        return res
+            .status(500)
+            .json({ error: "Backend error", reason: error.message });
     }
 }
 
@@ -125,7 +119,7 @@ async function getAllEventsForHomeSecreenController(req, res) {
     try {
         const events = await prisma.eventRequest.findMany({
             where: {
-                status: "APPROVED"
+                status: "APPROVED",
             },
             select: {
                 id: true,
@@ -142,13 +136,12 @@ async function getAllEventsForHomeSecreenController(req, res) {
                 },
             },
             orderBy: {
-                id: "asc"
-            }
+                id: "asc",
+            },
         });
 
         return res.status(200).json({ events });
-    }
-    catch (err) {
+    } catch (err) {
         console.error("getAllEventsForHomeSecreenController ERROR:", err);
         return res.status(500).json({ ERROR: "Failed to fetch events" });
     }
@@ -175,7 +168,7 @@ async function getEventByIdController(req, res) {
                         name: true,
                         username: true,
                     },
-                }
+                },
             },
         });
 
@@ -307,7 +300,6 @@ async function getAdminEventsController(req, res) {
             page,
             totalPages: Math.ceil(total / limit),
         });
-
     } catch (err) {
         console.error("ADMIN FETCH ERROR:", err);
         return res.status(500).json({ error: "Admin fetch failed" });
@@ -337,7 +329,7 @@ async function updateEventStatusController(req, res) {
         console.error("UPDATE STATUS ERROR:", err);
         return res.status(500).json({ error: "Failed to update event status" });
     }
-};
+}
 
 async function deleteEventController(req, res) {
     try {
@@ -355,7 +347,83 @@ async function deleteEventController(req, res) {
         console.error("DELETE EVENT ERROR:", err);
         return res.status(500).json({ error: "Failed to delete event" });
     }
-};
+}
+
+async function getMyEventsController(req, res) {
+    try {
+        const userId = req.user.id;
+
+        const events = await prisma.eventRequest.findMany({
+            where: {
+                createdById: userId,
+            },
+            include: {
+                images: true,
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+
+        res.json({
+            success: true,
+            total: events.length,
+            data: events,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch user events",
+        });
+    }
+}
+
+async function deleteMyEventController(req, res) {
+    try {
+        const userId = req.user.id;
+        const eventId = Number(req.params.id);
+
+        if (!eventId || Number.isNaN(eventId)) {
+            return res.status(400).json({
+                ERROR: "Invalid event id",
+            });
+        }
+
+        const event = await prisma.eventRequest.findFirst({
+            where: {
+                id: eventId,
+                createdById: userId,
+            },
+        });
+
+        if (!event) {
+            return res.status(404).json({
+                success: false,
+                message: "Event not found or unauthorized",
+            });
+        }
+
+        await prisma.eventImage.deleteMany({
+            where: { eventRequestId: eventId },
+        });
+
+        await prisma.eventRequest.delete({
+            where: { id: eventId },
+        });
+
+        return res.json({
+            success: true,
+            message: "Event deleted successfully",
+        });
+    } catch (err) {
+        console.error("DELETE MY EVENT ERROR:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to delete event",
+        });
+    }
+}
 
 module.exports = {
     createEventController,
@@ -366,4 +434,6 @@ module.exports = {
     getAdminEventsController,
     updateEventStatusController,
     deleteEventController,
+    getMyEventsController,
+    deleteMyEventController,
 };
