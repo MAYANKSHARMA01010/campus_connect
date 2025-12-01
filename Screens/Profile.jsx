@@ -1,6 +1,12 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Surface, Text, Button, Avatar, Divider } from "react-native-paper";
+import { View, StyleSheet, ScrollView } from "react-native";
+import {
+  Appbar,
+  Text,
+  Button,
+  Avatar,
+  Divider,
+} from "react-native-paper";
 
 import { useAuth } from "../context/UserContext";
 import { useAppTheme } from "../theme/useAppTheme";
@@ -16,64 +22,54 @@ export default function ProfileScreen({ navigation }) {
     : "Not available";
 
   return (
-    <Surface style={[styles.container, { backgroundColor: colors.background }]}>
-      <Surface
-        style={[
-          styles.card,
-          {
-            backgroundColor: colors.surface,
-            borderRadius: Radius.xl,
-          },
-        ]}
+    <>
+      {/* ✅ HEADER WITH BACK */}
+      <Appbar.Header
+        style={{ backgroundColor: colors.surface }}
+        elevated
       >
-        <Avatar.Text
-          size={scale(90)}
-          label={user?.name?.charAt(0) || "U"}
-          style={[styles.avatar, { backgroundColor: colors.primary }]}
-          color="#fff"
-        />
+        <Appbar.BackAction onPress={() => navigation.goBack()} />
+        <Appbar.Content title="Profile" />
+      </Appbar.Header>
 
-        <Text
-          variant="headlineMedium"
-          style={[styles.title, { color: colors.textPrimary }]}
-        >
-          {user?.name}
-        </Text>
+      <ScrollView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ✅ HERO PROFILE */}
+        <View style={styles.hero}>
+          <Avatar.Text
+            size={scale(110)}
+            label={user?.name?.charAt(0) || "U"}
+            style={[styles.avatar, { backgroundColor: colors.primary }]}
+            color="#fff"
+          />
 
-        <Text
-          variant="bodyMedium"
-          style={[styles.username, { color: colors.textSecondary }]}
-        >
-          @{user?.username}
-        </Text>
+          <Text
+            variant="headlineSmall"
+            style={[styles.title, { color: colors.textPrimary }]}
+          >
+            {user?.name}
+          </Text>
 
-        <Divider style={styles.divider} />
-
-        <View style={styles.grid}>
-          <View style={[styles.gridItem, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.label, { color: colors.muted }]}>Email</Text>
-            <Text style={[styles.value, { color: colors.textPrimary }]}>
-              {user?.email}
-            </Text>
-          </View>
-
-          <View style={[styles.gridItem, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.label, { color: colors.muted }]}>Gender</Text>
-            <Text style={[styles.value, { color: colors.textPrimary }]}>
-              {user?.gender || "Not set"}
-            </Text>
-          </View>
-
-          <View style={[styles.gridItem, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.label, { color: colors.muted }]}>
-              Joined CampusConnect
-            </Text>
-            <Text style={[styles.value, { color: colors.textPrimary }]}>
-              {joinedDate}
-            </Text>
-          </View>
+          <Text
+            style={[styles.username, { color: colors.textSecondary }]}
+          >
+            @{user?.username}
+          </Text>
         </View>
 
+        <Divider style={{ marginVertical: Spacing.lg }} />
+
+        {/* ✅ INFO GRID */}
+        <View style={styles.grid}>
+          <InfoItem label="Email" value={user?.email} colors={colors} />
+          <InfoItem label="Gender" value={user?.gender || "Not set"} colors={colors} />
+          <InfoItem label="Joined" value={joinedDate} colors={colors} />
+        </View>
+
+        {/* ✅ ACTIONS */}
         <Button
           mode="contained"
           onPress={() => navigation.navigate("EditProfile")}
@@ -85,33 +81,59 @@ export default function ProfileScreen({ navigation }) {
 
         <Button
           mode="outlined"
-          onPress={async () => {
-            await logout();
-          }}
+          onPress={logout}
           style={[styles.logoutBtn, { borderColor: colors.primary }]}
           textColor={colors.primary}
         >
           Logout
         </Button>
-      </Surface>
-    </Surface>
+      </ScrollView>
+    </>
   );
 }
 
-// --------------------------------------------------
+/* -------------------------------------------------------------------------- */
+
+function InfoItem({ label, value, colors }) {
+  return (
+    <View
+      style={[
+        styles.gridItem,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+        },
+      ]}
+    >
+      <Text style={[styles.label, { color: colors.muted }]}>
+        {label}
+      </Text>
+
+      <Text
+        style={[styles.value, { color: colors.textPrimary }]}
+        numberOfLines={2}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    padding: Spacing.lg,
   },
 
-  card: {
+  content: {
+    padding: Spacing.lg,
+    paddingBottom: scale(40),
+  },
+
+  hero: {
     alignItems: "center",
-    paddingVertical: scale(40),
-    paddingHorizontal: Spacing.lg,
-    ...Shadows.card,
+    marginTop: scale(10),
   },
 
   avatar: {
@@ -120,31 +142,26 @@ const styles = StyleSheet.create({
 
   title: {
     fontWeight: Fonts.weight.semiBold,
-    marginBottom: Spacing.xs,
   },
 
   username: {
-    marginBottom: Spacing.md,
-  },
-
-  divider: {
-    width: "80%",
-    marginVertical: Spacing.lg,
+    marginTop: Spacing.xs,
   },
 
   grid: {
-    width: "100%",
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: Spacing.lg,
+    rowGap: Spacing.md,
   },
 
   gridItem: {
     width: "48%",
     borderRadius: Radius.md,
     padding: Spacing.md,
-    marginBottom: Spacing.md,
+
+    borderWidth: 1,
+
     ...Shadows.card,
   },
 
@@ -159,12 +176,11 @@ const styles = StyleSheet.create({
   },
 
   editBtn: {
-    width: "80%",
+    marginTop: Spacing.xl,
     borderRadius: Radius.md,
   },
 
   logoutBtn: {
-    width: "80%",
     marginTop: Spacing.sm,
     borderRadius: Radius.md,
     borderWidth: 1,

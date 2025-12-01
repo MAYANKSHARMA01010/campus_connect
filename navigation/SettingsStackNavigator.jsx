@@ -5,8 +5,8 @@ import { Fonts } from "../theme/theme";
 
 import SettingsScreen from "../Screens/SettingsScreen";
 import ProfileScreen from "../Screens/Profile";
-// import ChangePassword from "../Screens/ChangePassword";
 import ManageEvents from "../Screens/ManageEvents";
+import MyEvents from "../Screens/MyEvents";
 
 const Stack = createNativeStackNavigator();
 
@@ -16,7 +16,7 @@ export default function SettingsStackNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
         headerStyle: {
           backgroundColor: colors.surface,
         },
@@ -26,10 +26,30 @@ export default function SettingsStackNavigator() {
         },
       }}
     >
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} />
-      {/* <Stack.Screen name="ChangePassword" component={ChangePassword} /> */}
-      <Stack.Screen name="ManageEvents" component={ManageEvents} />
+      {/* Settings uses its own Appbar */}
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: "Profile" }}
+      />
+
+      <Stack.Screen
+        name="ManageEvents"
+        component={ManageEvents}
+        options={{ title: "Manage Events" }}
+      />
+
+      <Stack.Screen
+        name="MyEvents"
+        component={MyEvents}
+        options={{ title: "My Events" }}
+      />
     </Stack.Navigator>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Alert, ScrollView, View } from "react-native";
+import { StyleSheet, Alert, ScrollView } from "react-native";
 
 import {
     Appbar,
@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/UserContext";
 import { useAppTheme } from "../theme/useAppTheme";
-import { Fonts, Spacing, Radius } from "../theme/theme";
+import { Spacing, Radius } from "../theme/theme";
 import { scale } from "../theme/layout";
 
 export default function SettingsScreen() {
@@ -24,7 +24,7 @@ export default function SettingsScreen() {
     const insets = useSafeAreaInsets();
     const { user, logout } = useAuth();
 
-    const isHost = user?.role !== "USER";
+    const role = user?.role;
 
     const [theme, setTheme] = useState("system");
 
@@ -41,43 +41,27 @@ export default function SettingsScreen() {
             [key]: !prev[key],
         }));
 
+    const showComingSoon = (feature) => {
+        Alert.alert(
+            "Coming Soon 🚀",
+            `${feature} functionality will be added in a future update.`,
+            [{ text: "OK" }]
+        );
+    };
+
     const handleLogout = async () => {
         try {
-            await logout(); // ✅ DO NOT navigate manually
+            await logout();
         } catch {
             Alert.alert("Error", "Logout failed");
         }
-    };
-
-    const handleDeleteAccount = () => {
-        Alert.alert(
-            "Delete Account",
-            "This will permanently remove your account and all your data.",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Yes, Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await API.delete("/users/me");
-                            await logout(); // ✅ also clears local state
-                        } catch (err) {
-                            Alert.alert("Error", "Account deletion failed");
-                        }
-                    },
-                },
-            ]
-        );
     };
 
     return (
         <ScrollView
             contentContainerStyle={[
                 styles.content,
-                {
-                    paddingBottom: scale(140) + insets.bottom, // ✅ ensures buttons never hide under tab bar
-                },
+                { paddingBottom: scale(140) + insets.bottom },
             ]}
             style={{ backgroundColor: colors.background }}
         >
@@ -85,7 +69,6 @@ export default function SettingsScreen() {
                 <Appbar.Content title="Settings" />
             </Appbar.Header>
 
-            {/* ACCOUNT */}
             <List.Section>
                 <List.Subheader>Account</List.Subheader>
 
@@ -98,13 +81,21 @@ export default function SettingsScreen() {
                 <List.Item
                     title="Change Password"
                     left={(props) => <List.Icon {...props} icon="lock-reset" />}
-                    onPress={() => navigation.navigate("ChangePassword")}
+                    onPress={() => showComingSoon("Change Password")}
                 />
 
-                {isHost && (
+                {role === "USER" && (
                     <List.Item
-                        title="My Hosted Events"
+                        title="My Added Events"
                         left={(props) => <List.Icon {...props} icon="calendar" />}
+                        onPress={() => navigation.navigate("MyEvents")}
+                    />
+                )}
+
+                {role === "ADMIN" && (
+                    <List.Item
+                        title="Manage Events"
+                        left={(props) => <List.Icon {...props} icon="calendar-edit" />}
                         onPress={() => navigation.navigate("ManageEvents")}
                     />
                 )}
@@ -112,7 +103,6 @@ export default function SettingsScreen() {
 
             <Divider />
 
-            {/* NOTIFICATIONS */}
             <List.Section>
                 <List.Subheader>Notifications</List.Subheader>
 
@@ -137,26 +127,18 @@ export default function SettingsScreen() {
 
             <Divider />
 
-            {/* APPEARANCE */}
             <List.Section>
                 <List.Subheader>Appearance</List.Subheader>
 
                 <RadioButton.Group onValueChange={setTheme} value={theme}>
-                    <List.Item
-                        title="Light"
-                        right={() => <RadioButton value="light" />}
-                    />
+                    <List.Item title="Light" right={() => <RadioButton value="light" />} />
                     <List.Item title="Dark" right={() => <RadioButton value="dark" />} />
-                    <List.Item
-                        title="System"
-                        right={() => <RadioButton value="system" />}
-                    />
+                    <List.Item title="System" right={() => <RadioButton value="system" />} />
                 </RadioButton.Group>
             </List.Section>
 
             <Divider />
 
-            {/* ACTIONS */}
             <List.Section>
                 <List.Subheader>Account Actions</List.Subheader>
 
@@ -173,7 +155,7 @@ export default function SettingsScreen() {
                     mode="contained"
                     style={[styles.btn, styles.delete]}
                     buttonColor={colors.danger}
-                    onPress={handleDeleteAccount}
+                    onPress={() => showComingSoon("Delete Account")}
                 >
                     Delete Account
                 </Button>
