@@ -23,15 +23,6 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <>
-      
-      <Appbar.Header
-        style={{ backgroundColor: colors.surface }}
-        elevated
-      >
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="Profile" />
-      </Appbar.Header>
-
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}

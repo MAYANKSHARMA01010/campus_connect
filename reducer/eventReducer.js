@@ -1,4 +1,4 @@
-import API from "../api/api";
+import { eventAPI } from "../api/api";
 
 export const initialState = {
     events: [],
@@ -73,26 +73,20 @@ export const fetchAdminEvents = async ({
             reset,
         });
 
-        const res = await API.get("/events/admin", {
-            params: {
-                search: search || undefined,
-
-                status:
-                    statusFilter && statusFilter !== "all" ? statusFilter : undefined,
-
-                sortBy: sort || "recent",
-
-                pageNumber: page,
-                pageSize: limit,
-            },
+        const res = await eventAPI.getAdminEvents({
+            search: search || undefined,
+            status: statusFilter && statusFilter !== "all" ? statusFilter : undefined,
+            sortBy: sort || "recent",
+            pageNumber: page,
+            pageSize: limit,
         });
 
         dispatch({
             type: "FETCH_SUCCESS",
             reset,
             payload: {
-                events: res?.data?.events ?? [],
-                total: res?.data?.total ?? 0,
+                events: res?.events ?? [],
+                total: res?.total ?? 0,
             },
         });
     } catch (err) {
@@ -108,9 +102,7 @@ export const updateEventStatus = async (dispatch, id, status, reload) => {
             payload: id,
         });
 
-        await API.patch(`/events/admin/${id}/status`, {
-            status,
-        });
+        await eventAPI.updateStatus(id, status);
 
         await reload();
     } catch (err) {
@@ -127,7 +119,7 @@ export const deleteEvent = async (dispatch, id, reload) => {
             payload: id,
         });
 
-        await API.delete(`/events/admin/${id}`);
+        await eventAPI.deleteAdmin(id);
 
         await reload();
     } catch (err) {

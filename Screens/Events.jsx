@@ -17,9 +17,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
-import API from "../api/api";
+import { useEvents } from "../hooks/useEvents";
 import EventCard from "../components/EventCard";
-
 import { useAppTheme } from "../theme/useAppTheme";
 import { Spacing, Fonts, Radius } from "../theme/theme";
 import { scale } from "../theme/layout";
@@ -29,77 +28,57 @@ const LIMIT = 8;
 export default function EventScreen({ navigation }) {
   const colors = useAppTheme();
 
-  const [events, setEvents] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState("all");
-
-  const [page, setPage] = useState(1);
-  const [totalEvents, setTotalEvents] = useState(0);
-
   const [sortType, setSortType] = useState("recent");
   const [sortVisible, setSortVisible] = useState(false);
-
   const [showPast, setShowPast] = useState(false);
+  const [page, setPage] = useState(1);
 
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-
-  const fetchEvents = useCallback(
-    async (reset = false) => {
-      try {
-        if (reset) {
-          setLoading(true);
-          setPage(1);
-        }
-
-        const res = await API.get("/events", {
-          params: {
-            page: reset ? 1 : page,
-            limit: LIMIT,
-            category: activeCategory,
-            sort: sortType,
-            past: showPast,
-          },
-        });
-
-        const eventData = res?.data?.events || [];
-        const categoryData = res?.data?.categories || [];
-
-        if (reset) {
-          setEvents(eventData);
-          setPage(2);
-        } else {
-          setEvents((prev) => [...prev, ...eventData]);
-          setPage((p) => p + 1);
-        }
-
-        setCategories(["all", ...categoryData]);
-        setTotalEvents(res?.data?.total || 0);
-      } catch (e) {
-        console.log("Fetch Error:", e.response?.data || e.message);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-        setLoadingMore(false);
-      }
-    },
-    [page, activeCategory, sortType, showPast]
-  );
+  const {
+    events,
+    categories,
+    totalEvents,
+    loading,
+    refreshing,
+    loadingMore,
+    fetchEvents,
+    setRefreshing,
+    setLoadingMore,
+  } = useEvents(LIMIT);
 
   useEffect(() => {
-    fetchEvents(true);
-  }, [activeCategory, sortType, showPast]);
+    fetchEvents({
+      page: 1,
+      category: activeCategory,
+      sort: sortType,
+      past: showPast,
+      reset: true,
+    });
+    setPage(2);
+  }, [activeCategory, sortType, showPast, fetchEvents]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchEvents(true);
+    fetchEvents({
+      page: 1,
+      category: activeCategory,
+      sort: sortType,
+      past: showPast,
+      reset: true,
+    });
+    setPage(2);
   };
 
   const loadMore = () => {
     if (loadingMore || events.length >= totalEvents) return;
     setLoadingMore(true);
-    fetchEvents(false);
+    fetchEvents({
+      page: page,
+      category: activeCategory,
+      sort: sortType,
+      past: showPast,
+    });
+    setPage((p) => p + 1);
   };
 
   const onSortSelect = (type) => {
@@ -188,7 +167,6 @@ export default function EventScreen({ navigation }) {
         )}
       />
 
-      
       <View style={styles.pastToggleRow}>
         <Text style={styles.pastLabel}>Show past events</Text>
         <View style={styles.chipWrapper}>
@@ -207,7 +185,6 @@ export default function EventScreen({ navigation }) {
         </View>
       </View>
 
-      
       <Suspense fallback={<ShimmerCard />}>
         {loading ? (
           <>

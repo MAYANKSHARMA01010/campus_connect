@@ -7,6 +7,7 @@ import SettingsScreen from "../Screens/SettingsScreen";
 import ProfileScreen from "../Screens/Profile";
 import ManageEvents from "../Screens/ManageEvents";
 import MyEvents from "../Screens/MyEvents";
+import EditProfileScreen from "../Screens/EditProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -26,7 +27,6 @@ export default function SettingsStackNavigator() {
         },
       }}
     >
-      
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
@@ -42,13 +42,19 @@ export default function SettingsStackNavigator() {
       <Stack.Screen
         name="ManageEvents"
         component={ManageEvents}
-        options={{ title: "Manage Events",headerShown: false }}
+        options={{ title: "Manage Events", headerShown: false }}
       />
 
       <Stack.Screen
         name="MyEvents"
         component={MyEvents}
         options={{ title: "My Events" }}
+      />
+
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{ title: "Edit Profile" }}
       />
     </Stack.Navigator>
   );

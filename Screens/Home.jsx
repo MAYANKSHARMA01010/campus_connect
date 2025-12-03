@@ -9,7 +9,7 @@ import {
 import { Appbar, Searchbar, Text, Button, Surface } from "react-native-paper";
 
 import EventSection from "../components/EventSection";
-import { getAllEvents } from "../api/events";
+import { eventAPI } from "../api/api";
 
 import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
@@ -34,7 +34,7 @@ export default function HomeScreen({ navigation }) {
 
   const loadEvents = React.useCallback(async () => {
     try {
-      const data = await getAllEvents();
+      const data = await eventAPI.getAll();
       const today = new Date();
 
       const valid = data.filter((e) => e?.date);
@@ -82,7 +82,6 @@ export default function HomeScreen({ navigation }) {
         { backgroundColor: colors.background },
       ]}
     >
-      
       <Appbar.Header
         elevated
         style={[styles.appbar, { backgroundColor: colors.surface }]}
@@ -97,18 +96,18 @@ export default function HomeScreen({ navigation }) {
         <Appbar.Action icon="bell-outline" color={colors.textPrimary} />
       </Appbar.Header>
 
-      
       <View style={styles.searchCointainer}>
         <Searchbar
           placeholder="Search events, workshops, fests..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          onPress={() => { navigation.navigate('Search')}}
+          onPress={() => {
+            navigation.navigate("Search");
+          }}
           style={[styles.searchbar, { backgroundColor: colors.surface }]}
         />
       </View>
 
-      
       <ImageBackground
         source={{ uri: "https://picsum.photos/seed/campus-banner/800/500" }}
         style={styles.heroBanner}
@@ -123,7 +122,6 @@ export default function HomeScreen({ navigation }) {
         </View>
       </ImageBackground>
 
-      
       <View style={{ marginTop: Spacing.lg }}>
         <Section
           title="🎉 Coming Up!"
@@ -152,7 +150,6 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
-      
       <Surface
         style={[
           styles.hostCard,
@@ -180,7 +177,6 @@ export default function HomeScreen({ navigation }) {
         </Button>
       </Surface>
 
-      
       <View style={styles.statsRow}>
         {[
           { num: "50+", label: "Colleges" },
@@ -208,7 +204,6 @@ export default function HomeScreen({ navigation }) {
         ))}
       </View>
 
-      
       <Surface
         style={[
           styles.aboutCard,

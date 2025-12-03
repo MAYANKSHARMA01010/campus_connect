@@ -9,6 +9,9 @@ import {
 } from "react-native-paper";
 
 import { useAuth } from "../context/UserContext";
+import { CLOUD_NAME, UPLOAD_PRESET } from "@env";
+import { eventAPI } from "../api/api";
+import { Platform } from "react-native";
 import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
 import { scale } from "../theme/layout";
@@ -20,30 +23,83 @@ export default function EventPreviewScreen({ route, navigation }) {
 
   const [loading, setLoading] = useState(false);
 
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [totalToUpload, setTotalToUpload] = useState(0);
+
+  async function uploadLocalImage(uri) {
+    if (!CLOUD_NAME || !UPLOAD_PRESET)
+      throw new Error("Cloudinary config missing");
+
+    const name = uri.split("/").pop();
+    const ext = name.split(".").pop() || "jpg";
+
+    const data = new FormData();
+    data.append("file", {
+      uri: Platform.OS === "android" ? uri : uri.replace("file://", ""),
+      name,
+      type: `image/${ext === "jpg" ? "jpeg" : ext}`,
+    });
+
+    data.append("upload_preset", UPLOAD_PRESET);
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      { method: "POST", body: data }
+    );
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error?.message || "Image upload failed");
+
+    return json.secure_url;
+  }
+
   const publishEvent = async () => {
-    if (!onPublish || typeof onPublish !== "function") {
-      Alert.alert("Error", "Publish function not available.");
-      return;
-    }
+    if (!user) return;
+
+    setLoading(true);
 
     try {
-      setLoading(true);
-      const result = await onPublish();
-      setLoading(false);
+      const localImages = form.images.filter((u) => !/^https?:\/\//.test(u));
 
-      if (result && result.success) {
-        try {
-          navigation.pop(2);
-        } catch (e) {
-          navigation.navigate("MainTabs");
-        }
-      } else {
-        Alert.alert("Error", "Publish failed");
+      setUploadingCount(0);
+      setTotalToUpload(localImages.length);
+
+      const uploaded = [];
+
+      for (let img of localImages) {
+        const url = await uploadLocalImage(img);
+        uploaded.push(url);
+        setUploadingCount((c) => c + 1);
       }
+
+      const payload = {
+        ...form,
+        date: new Date(form.date).toISOString(),
+        imageUrls: uploaded,
+        createdBy: user?.id ?? null,
+      };
+
+      await eventAPI.submitRequest(payload);
+
+      Alert.alert("Success", "Event submitted successfully!", [
+        {
+          text: "OK",
+          onPress: () => {
+            try {
+              navigation.pop(2);
+            } catch (e) {
+              navigation.navigate("MainTabs");
+            }
+          },
+        },
+      ]);
     } catch (err) {
-      setLoading(false);
       console.log("publish error", err);
       Alert.alert("Publish failed", err.message || "Unknown error");
+    } finally {
+      setLoading(false);
+      setUploadingCount(0);
+      setTotalToUpload(0);
     }
   };
 
@@ -51,7 +107,6 @@ export default function EventPreviewScreen({ route, navigation }) {
 
   return (
     <>
-      
       <Appbar.Header elevated style={{ backgroundColor: colors.surface }}>
         <Appbar.BackAction
           onPress={() => navigation.goBack()}

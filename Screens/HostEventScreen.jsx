@@ -27,7 +27,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { useAuth } from "../context/UserContext";
 import { CLOUD_NAME, UPLOAD_PRESET } from "@env";
-import API from "../api/api";
+import { eventAPI } from "../api/api";
 
 import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
@@ -158,76 +158,6 @@ export default function HostEventScreen({ navigation }) {
       images: p.images.filter((i) => i !== uri),
     }));
 
-  async function uploadLocalImage(uri) {
-    if (!CLOUD_NAME || !UPLOAD_PRESET)
-      throw new Error("Cloudinary config missing");
-
-    const name = uri.split("/").pop();
-    const ext = name.split(".").pop() || "jpg";
-
-    const data = new FormData();
-    data.append("file", {
-      uri: Platform.OS === "android" ? uri : uri.replace("file://", ""),
-      name,
-      type: `image/${ext === "jpg" ? "jpeg" : ext}`,
-    });
-
-    data.append("upload_preset", UPLOAD_PRESET);
-
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-      { method: "POST", body: data }
-    );
-
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error?.message || "Image upload failed");
-
-    return json.secure_url;
-  }
-
-  async function sendEventToServer(imageUrls) {
-    const payload = {
-      ...form,
-      date: new Date(form.date).toISOString(),
-      imageUrls,
-      createdBy: user?.id ?? null,
-    };
-
-    await API.post("/events/request", payload);
-  }
-
-  const submit = async () => {
-    if (!user || Object.keys(errors).length) return;
-
-    setLoading(true);
-
-    try {
-      const localImages = form.images.filter((u) => !/^https?:\/\//.test(u));
-
-      setUploadingCount(0);
-      setTotalToUpload(localImages.length);
-
-      const uploaded = [];
-
-      for (let img of localImages) {
-        const url = await uploadLocalImage(img);
-        uploaded.push(url);
-        setUploadingCount((c) => c + 1);
-      }
-
-      await sendEventToServer(uploaded);
-
-      setSnack({
-        visible: true,
-        message: "Event submitted successfully!",
-      });
-    } finally {
-      setLoading(false);
-      setUploadingCount(0);
-      setTotalToUpload(0);
-    }
-  };
-
   const goToPreview = () => {
     if (Object.keys(errors).length) {
       setSnack({ visible: true, message: "Fix errors first" });
@@ -236,7 +166,6 @@ export default function HostEventScreen({ navigation }) {
 
     navigation.navigate("EventPreview", {
       form,
-      onPublish: submit,
     });
   };
 
@@ -278,8 +207,6 @@ export default function HostEventScreen({ navigation }) {
             Fill details to host a campus event 🎉
           </Text>
 
-          
-
           <TextInput
             label="Event Title *"
             mode="outlined"
@@ -302,8 +229,6 @@ export default function HostEventScreen({ navigation }) {
           <HelperText visible={!!errors.description} type="error">
             {errors.description}
           </HelperText>
-
-          
 
           <Menu
             visible={categoryMenuVisible}
@@ -371,8 +296,6 @@ export default function HostEventScreen({ navigation }) {
             </>
           )}
 
-          
-
           <TouchableOpacity
             onPress={() => setDatePickerVisible(true)}
             style={[styles.dropdown, { borderColor: colors.border }]}
@@ -402,8 +325,6 @@ export default function HostEventScreen({ navigation }) {
           <HelperText visible={!!errors.date} type="error">
             {errors.date}
           </HelperText>
-
-          
 
           <TouchableOpacity
             onPress={() => setTimePickerVisible(true)}
@@ -481,8 +402,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.email}
           </HelperText>
 
-          
-
           <Text style={styles.sectionTitle}>Upload Images *</Text>
 
           <Text style={styles.sectionSubtitle}>Minimum 4 required</Text>
@@ -535,8 +454,6 @@ export default function HostEventScreen({ navigation }) {
             {errors.images}
           </HelperText>
 
-          
-
           {uploadingCount > 0 && (
             <View style={styles.uploadRow}>
               <ActivityIndicator size={20} />
@@ -545,8 +462,6 @@ export default function HostEventScreen({ navigation }) {
               </Text>
             </View>
           )}
-
-          
 
           <Button
             mode="contained"

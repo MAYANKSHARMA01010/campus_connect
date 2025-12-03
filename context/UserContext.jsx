@@ -9,9 +9,7 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-import API from "../api/api";
-import { loginUser, registerUser, logoutUser } from "../api/auth";
-import { getMyProfile, updateMyProfile } from "../api/user";
+import API, { authAPI, userAPI } from "../api/api";
 
 const UserContext = createContext({});
 
@@ -55,7 +53,7 @@ export const UserProvider = ({ children }) => {
       try {
         if (!t) return;
 
-        const res = await getMyProfile(t);
+        const res = await userAPI.getProfile(t);
         const u = res?.user ?? res;
 
         setUser(u);
@@ -73,7 +71,7 @@ export const UserProvider = ({ children }) => {
 
   const register = async (data) => {
     try {
-      await registerUser(data);
+      await authAPI.register(data);
       Alert.alert("Success", "Account created successfully!");
       return true;
     } catch (err) {
@@ -87,7 +85,7 @@ export const UserProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const res = await loginUser(credentials);
+      const res = await authAPI.login(credentials);
 
       const t = res?.token;
       const u = res?.user;
@@ -117,7 +115,7 @@ export const UserProvider = ({ children }) => {
 
   const updateProfile = async (payload) => {
     try {
-      const res = await updateMyProfile(payload);
+      const res = await userAPI.updateProfile(payload);
       const updated = res?.user ?? res;
 
       setUser((prev) => ({ ...(prev || {}), ...updated }));
@@ -138,12 +136,12 @@ export const UserProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await logoutUser();
-    } catch (_) { }
+      await authAPI.logout();
+    } catch (_) {}
 
     try {
       await AsyncStorage.multiRemove(["token", "role"]);
-    } catch (_) { }
+    } catch (_) {}
 
     delete API.defaults.headers.common.Authorization;
 

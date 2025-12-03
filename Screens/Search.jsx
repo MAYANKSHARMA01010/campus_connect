@@ -19,7 +19,7 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { searchEvents } from "../api/events";
+import { eventAPI } from "../api/api";
 import EventCard from "../components/EventCard";
 
 import { useAppTheme } from "../theme/useAppTheme";
@@ -51,7 +51,7 @@ export default function SearchScreen() {
       setLoading(true);
       setError(null);
 
-      const data = await searchEvents(searchText.trim());
+      const data = await eventAPI.search(searchText.trim());
 
       if (activeRequest.current !== currentReq) return;
 
@@ -102,7 +102,6 @@ export default function SearchScreen() {
         <Surface
           style={[styles.container, { backgroundColor: colors.surface }]}
         >
-          
           <View style={styles.header}>
             <Searchbar
               placeholder="Search by event, host or location…"
@@ -125,7 +124,6 @@ export default function SearchScreen() {
 
           <Divider />
 
-          
           <View style={styles.content}>
             {loading && (
               <View style={styles.center}>
