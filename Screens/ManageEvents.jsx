@@ -46,116 +46,134 @@ const SORT_OPTIONS = [
     { label: "A - Z", value: "az" },
 ];
 
+import EventStatusChip from "../components/EventStatusChip";
+
 const EventRow = memo(
     ({ item, onDelete, onToggleStatus, onOpen, actionLoading }) => {
         const colors = useAppTheme();
-
-        const statusColor =
-            item.status === "APPROVED"
-                ? colors.secondary
-                : item.status === "PENDING"
-                    ? colors.accent
-                    : colors.danger;
-
         const isBusy = actionLoading === item.id;
 
         return (
             <TouchableOpacity activeOpacity={0.9} onPress={() => onOpen(item)}>
                 <Surface
                     style={[styles.cardContainer, { backgroundColor: colors.surface }]}
+                    elevation={2}
                 >
-                    <View style={styles.card}>
-                        {!!item?.images?.[0]?.url && (
+                    <View style={styles.imageContainer}>
+                        {!!item?.images?.[0]?.url ? (
                             <Image
                                 source={item.images[0].url}
-                                style={styles.thumb}
+                                style={styles.coverImage}
                                 contentFit="cover"
                                 transition={200}
                             />
+                        ) : (
+                            <View style={[styles.coverImage, styles.placeholderImage]} />
                         )}
+                        <View style={styles.statusChipContainer}>
+                            <EventStatusChip status={item.status} style={styles.statusChip} />
+                        </View>
+                    </View>
 
-                        <View style={styles.cardBody}>
+                    <View style={styles.cardContent}>
+                        <View style={styles.headerRow}>
                             <Text numberOfLines={1} style={styles.title}>
                                 {item.title}
                             </Text>
-
-                            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                                {item.location || "No location"}
+                            <Text style={[styles.date, { color: colors.primary }]}>
+                                {item.date ? new Date(item.date).toLocaleDateString() : "No date"}
                             </Text>
+                        </View>
 
-                            <Text style={[styles.badge, { backgroundColor: statusColor }]}>
-                                {item.status}
-                            </Text>
+                        <Text
+                            numberOfLines={1}
+                            style={[styles.subtitle, { color: colors.textSecondary }]}
+                        >
+                            {item.location || "No location provided"}
+                        </Text>
 
-                            <View style={styles.actions}>
-                                {item.status === "PENDING" && (
-                                    <>
-                                        <Button
-                                            compact
-                                            mode="contained"
-                                            loading={isBusy}
-                                            buttonColor={colors.secondary}
-                                            onPress={() => onToggleStatus(item.id, "APPROVED")}
-                                        >
-                                            Approve
-                                        </Button>
+                        <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-                                        <Button
-                                            compact
-                                            loading={isBusy}
-                                            textColor={colors.danger}
-                                            onPress={() => onToggleStatus(item.id, "REJECTED")}
-                                        >
-                                            Reject
-                                        </Button>
-                                    </>
-                                )}
+                        <View style={styles.actions}>
+                            {item.status === "PENDING" && (
+                                <>
+                                    <Button
+                                        mode="contained"
+                                        compact
+                                        icon="check"
+                                        loading={isBusy}
+                                        buttonColor={colors.secondary}
+                                        onPress={() => onToggleStatus(item.id, "APPROVED")}
+                                        style={styles.actionBtn}
+                                        labelStyle={styles.btnLabel}
+                                    >
+                                        Approve
+                                    </Button>
 
-                                {item.status === "APPROVED" && (
-                                    <>
-                                        <Button
-                                            compact
-                                            loading={isBusy}
-                                            textColor={colors.danger}
-                                            onPress={() => onToggleStatus(item.id, "REJECTED")}
-                                        >
-                                            Reject
-                                        </Button>
+                                    <Button
+                                        mode="outlined"
+                                        compact
+                                        icon="close"
+                                        loading={isBusy}
+                                        textColor={colors.danger}
+                                        style={[styles.actionBtn, { borderColor: colors.danger }]}
+                                        onPress={() => onToggleStatus(item.id, "REJECTED")}
+                                        labelStyle={styles.btnLabel}
+                                    >
+                                        Reject
+                                    </Button>
+                                </>
+                            )}
 
-                                        <Button
-                                            compact
-                                            loading={isBusy}
-                                            textColor={colors.danger}
-                                            onPress={() => onDelete(item.id)}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </>
-                                )}
+                            {item.status === "APPROVED" && (
+                                <>
+                                    <Button
+                                        mode="outlined"
+                                        compact
+                                        icon="close"
+                                        loading={isBusy}
+                                        textColor={colors.danger}
+                                        style={[styles.actionBtn, { borderColor: colors.danger }]}
+                                        onPress={() => onToggleStatus(item.id, "REJECTED")}
+                                        labelStyle={styles.btnLabel}
+                                    >
+                                        Reject
+                                    </Button>
 
-                                {item.status === "REJECTED" && (
-                                    <>
-                                        <Button
-                                            compact
-                                            mode="contained"
-                                            loading={isBusy}
-                                            buttonColor={colors.secondary}
-                                            onPress={() => onToggleStatus(item.id, "APPROVED")}
-                                        >
-                                            Approve
-                                        </Button>
+                                    <IconButton
+                                        icon="delete-outline"
+                                        iconColor={colors.error}
+                                        size={22}
+                                        onPress={() => onDelete(item.id)}
+                                        style={styles.iconBtn}
+                                    />
+                                </>
+                            )}
 
-                                        <Button
-                                            compact
-                                            loading={isBusy}
-                                            textColor={colors.danger}
-                                            onPress={() => onDelete(item.id)}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </>
-                                )}
-                            </View>
+                            {item.status === "REJECTED" && (
+                                <>
+                                    <Button
+                                        mode="contained"
+                                        compact
+                                        icon="check"
+                                        loading={isBusy}
+                                        buttonColor={colors.secondary}
+                                        onPress={() => onToggleStatus(item.id, "APPROVED")}
+                                        style={styles.actionBtn}
+                                        labelStyle={styles.btnLabel}
+                                    >
+                                        Approve
+                                    </Button>
+
+                                    <IconButton
+                                        icon="delete-outline"
+                                        iconColor={colors.error}
+                                        size={22}
+                                        onPress={() => onDelete(item.id)}
+                                        style={styles.iconBtn}
+                                    />
+                                </>
+                            )}
                         </View>
                     </View>
                 </Surface>
@@ -236,7 +254,7 @@ export default function ManageEventsScreen({ navigation }) {
 
     return (
         <View style={[styles.root, { backgroundColor: colors.background }]}>
-            <Appbar.Header>
+            <Appbar.Header elevated style={{ backgroundColor: colors.surface }}>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="Manage Events" />
 
@@ -244,20 +262,18 @@ export default function ManageEventsScreen({ navigation }) {
                     visible={menuVisible}
                     onDismiss={() => setMenuVisible(false)}
                     anchor={
-                        <IconButton
-                            icon="dots-vertical"
-                            onPress={() => setMenuVisible(true)}
-                        />
+                        <IconButton icon="sort" onPress={() => setMenuVisible(true)} />
                     }
                 >
                     {SORT_OPTIONS.map((opt) => (
                         <Menu.Item
                             key={opt.value}
-                            title={`Sort • ${opt.label}`}
+                            title={opt.label}
                             onPress={() => {
                                 setSort(opt.value);
                                 setMenuVisible(false);
                             }}
+                            trailingIcon={sort === opt.value ? "check" : undefined}
                         />
                     ))}
                     <Menu.Item title="Refresh" onPress={onRefresh} />
@@ -270,6 +286,7 @@ export default function ManageEventsScreen({ navigation }) {
                     value={search}
                     onChangeText={setSearch}
                     style={[styles.search, { backgroundColor: colors.surface }]}
+                    inputStyle={{ minHeight: 0 }}
                 />
 
                 <View style={styles.filterRow}>
@@ -280,8 +297,12 @@ export default function ManageEventsScreen({ navigation }) {
                         return (
                             <Chip
                                 key={s}
+                                mode={isActive ? "flat" : "outlined"}
                                 selected={isActive}
                                 onPress={() => setStatusFilter(val)}
+                                style={styles.chip}
+                                showSelectedOverlay
+                                textStyle={{ fontSize: 12 }}
                             >
                                 {s}
                             </Chip>
@@ -292,7 +313,7 @@ export default function ManageEventsScreen({ navigation }) {
 
             {loading ? (
                 <View style={styles.center}>
-                    <ActivityIndicator size="large" />
+                    <ActivityIndicator size="large" color={colors.primary} />
                 </View>
             ) : (
                 <FlatList
@@ -310,6 +331,15 @@ export default function ManageEventsScreen({ navigation }) {
                         )
                     }
                     contentContainerStyle={styles.listContent}
+                    ListEmptyComponent={
+                        !loading && (
+                            <View style={styles.center}>
+                                <Text style={{ color: colors.textSecondary }}>
+                                    No events found
+                                </Text>
+                            </View>
+                        )
+                    }
                 />
             )}
         </View>
@@ -323,75 +353,124 @@ const styles = StyleSheet.create({
 
     header: {
         padding: Spacing.md,
+        paddingBottom: Spacing.sm,
     },
 
     search: {
-        borderRadius: Radius.md,
-        ...Shadows.card,
+        borderRadius: Radius.full,
+        height: scale(45),
+        elevation: 2,
     },
 
     filterRow: {
         flexDirection: "row",
-        marginTop: Spacing.sm,
+        marginTop: Spacing.md,
+        marginBottom: Spacing.xs,
         flexWrap: "wrap",
         gap: Spacing.sm,
     },
 
+    chip: {
+        borderRadius: Radius.full,
+        height: 32,
+    },
+
     cardContainer: {
-        margin: Spacing.sm,
-        borderRadius: Radius.lg,
-        ...Shadows.card,
-    },
-
-    card: {
-        flexDirection: "row",
+        marginHorizontal: Spacing.md,
+        marginBottom: Spacing.lg,
+        borderRadius: Radius.xl,
         overflow: "hidden",
-        borderRadius: Radius.lg,
+        backgroundColor: "white",
     },
 
-    thumb: {
-        width: scale(90),
+    imageContainer: {
+        height: scale(160),
+        width: "100%",
+        position: "relative",
+    },
+
+    coverImage: {
+        width: "100%",
         height: "100%",
     },
 
-    cardBody: {
-        flex: 1,
-        padding: Spacing.sm,
+    placeholderImage: {
+        backgroundColor: "#eee",
+    },
+
+    statusChipContainer: {
+        position: "absolute",
+        top: Spacing.sm,
+        right: Spacing.sm,
+    },
+
+    statusChip: {
+        height: 28,
+    },
+
+    cardContent: {
+        padding: Spacing.md,
+    },
+
+    headerRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 4,
     },
 
     title: {
-        fontWeight: Fonts.weight.semiBold,
-        fontSize: Fonts.size.md,
+        fontWeight: Fonts.weight.bold,
+        fontSize: Fonts.size.lg,
+        flex: 1,
+        marginRight: Spacing.sm,
+    },
+
+    date: {
+        fontSize: Fonts.size.xs,
+        fontWeight: "600",
     },
 
     subtitle: {
         fontSize: Fonts.size.sm,
+        marginBottom: Spacing.xs,
     },
 
-    badge: {
-        marginTop: Spacing.xs,
-        paddingVertical: 2,
-        paddingHorizontal: Spacing.sm,
-        fontSize: Fonts.size.xs,
-        color: "#fff",
-        fontWeight: Fonts.weight.bold,
-        borderRadius: Radius.sm,
-        alignSelf: "flex-start",
+    divider: {
+        height: 1,
+        marginVertical: Spacing.md,
+        opacity: 0.5,
     },
 
     actions: {
-        marginTop: Spacing.sm,
         flexDirection: "row",
-        gap: Spacing.sm,
         justifyContent: "flex-end",
+        alignItems: "center",
+        gap: Spacing.sm,
+    },
+
+    actionBtn: {
+        borderRadius: Radius.full,
+        paddingHorizontal: Spacing.xs,
+    },
+
+    btnLabel: {
+        fontSize: 12,
+        marginVertical: 6,
+    },
+
+    iconBtn: {
+        margin: 0,
     },
 
     center: {
         flex: 1,
         justifyContent: "center",
+        alignItems: "center",
+        padding: Spacing.xl,
     },
 
     listContent: {
-        paddingBottom: scale(70),
+        paddingBottom: scale(80),
     },
 });

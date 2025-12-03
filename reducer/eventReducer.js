@@ -2,6 +2,8 @@ import { eventAPI } from "../api/api";
 
 export const initialState = {
     events: [],
+    filteredEvents: [],
+    filter: "ALL",
     total: 0,
 
     loading: false,
@@ -27,18 +29,28 @@ export const eventReducer = (state, action) => {
                 loadingMore: true,
             };
 
-        case "FETCH_SUCCESS":
+        case "FETCH_SUCCESS": {
+            const allEvents = action.reset
+                ? action.payload.events
+                : [...state.events, ...action.payload.events];
+
             return {
                 ...state,
                 loading: false,
                 refreshing: false,
                 loadingMore: false,
 
-                events: action.reset
-                    ? action.payload.events
-                    : [...state.events, ...action.payload.events],
-
+                events: allEvents,
+                filteredEvents: applyFilter(allEvents, state.filter),
                 total: action.payload.total,
+            };
+        }
+
+        case "SET_FILTER":
+            return {
+                ...state,
+                filter: action.payload,
+                filteredEvents: applyFilter(state.events, action.payload),
             };
 
         case "ACTION_START":
@@ -56,6 +68,11 @@ export const eventReducer = (state, action) => {
         default:
             return state;
     }
+};
+
+const applyFilter = (events, filter) => {
+    if (!filter || filter === "ALL" || filter === "all") return events;
+    return events.filter((e) => e.status === filter);
 };
 
 export const fetchAdminEvents = async ({

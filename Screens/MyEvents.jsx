@@ -10,43 +10,15 @@ import {
 import { useMyEvents } from "../hooks/useMyEvents";
 import { useAppTheme } from "../theme/useAppTheme";
 import { Spacing, Radius } from "../theme/theme";
+import EventStatusChip from "../components/EventStatusChip";
 
 export default function MyEvents() {
   const colors = useAppTheme();
 
-  const { events, loading, deleteEvent } = useMyEvents();
-  const [statusFilter, setStatusFilter] = useState("ALL");
-
-  const filteredEvents = useMemo(() => {
-    if (statusFilter === "ALL") return events;
-    return events.filter((e) => e.status === statusFilter);
-  }, [events, statusFilter]);
-
+  const { events, loading, deleteEvent, setFilter, filter } = useMyEvents();
+  const filteredEvents = events;
   const handleDelete = (id) => {
     deleteEvent(id);
-  };
-
-  const renderStatus = (status) => {
-    switch (status) {
-      case "APPROVED":
-        return (
-          <Chip textStyle={{ color: "green" }} style={styles.approved}>
-            APPROVED
-          </Chip>
-        );
-      case "REJECTED":
-        return (
-          <Chip textStyle={{ color: "red" }} style={styles.rejected}>
-            REJECTED
-          </Chip>
-        );
-      default:
-        return (
-          <Chip textStyle={{ color: "orange" }} style={styles.pending}>
-            PENDING
-          </Chip>
-        );
-    }
   };
 
   if (loading) {
@@ -81,7 +53,9 @@ export default function MyEvents() {
             {item.date ? new Date(item.date).toDateString() : "No date"}
           </Text>
 
-          <View style={styles.statusRow}>{renderStatus(item.status)}</View>
+          <View style={styles.statusRow}>
+            <EventStatusChip status={item.status} />
+          </View>
 
           <Button
             mode="outlined"
@@ -102,12 +76,9 @@ export default function MyEvents() {
         {["ALL", "PENDING", "APPROVED", "REJECTED"].map((s) => (
           <Chip
             key={s}
-            selected={statusFilter === s}
-            onPress={() => setStatusFilter(s)}
-            style={[
-              styles.filterChip,
-              statusFilter === s && styles.selectedChip,
-            ]}
+            selected={filter === s}
+            onPress={() => setFilter(s)}
+            style={[styles.filterChip, filter === s && styles.selectedChip]}
           >
             {s}
           </Chip>
@@ -169,17 +140,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: Spacing.xl,
-  },
-
-  approved: {
-    backgroundColor: "rgba(0, 200, 0, 0.15)",
-  },
-
-  pending: {
-    backgroundColor: "rgba(255, 165, 0, 0.15)",
-  },
-
-  rejected: {
-    backgroundColor: "rgba(255, 0, 0, 0.15)",
   },
 });

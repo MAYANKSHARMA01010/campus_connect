@@ -25,12 +25,55 @@ import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
 import { scale } from "../theme/layout";
 
+import { useAuth } from "../context/UserContext";
+import { eventAPI } from "../api/api";
+import { Alert } from "react-native";
+
 export default function EventDetailsScreen({ route, navigation }) {
   const { id } = route.params;
   const colors = useAppTheme();
+  const { role } = useAuth();
 
   const { event, loading, refreshing, onRefresh } = useEventDetails(id);
   const [timeLeft, setTimeLeft] = useState("");
+
+  const handleApprove = async () => {
+    try {
+      await eventAPI.updateStatus(id, "APPROVED");
+      Alert.alert("Success", "Event approved");
+      onRefresh();
+    } catch (err) {
+      Alert.alert("Error", "Failed to approve event");
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      await eventAPI.updateStatus(id, "REJECTED");
+      Alert.alert("Success", "Event rejected");
+      onRefresh();
+    } catch (err) {
+      Alert.alert("Error", "Failed to reject event");
+    }
+  };
+
+  const handleDelete = async () => {
+    Alert.alert("Delete Event", "Are you sure?", [
+      { text: "Cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await eventAPI.deleteAdmin(id);
+            navigation.goBack();
+          } catch (err) {
+            Alert.alert("Error", "Failed to delete event");
+          }
+        },
+      },
+    ]);
+  };
 
   const formatDate = useCallback((d) => {
     if (!d) return "-";
@@ -245,6 +288,74 @@ ${event?.description || ""}`,
           >
             RSVP / Register
           </Button>
+
+          {(role === "USER" || role === "ADMIN") && (
+            <Surface
+              style={[styles.adminPanel, { backgroundColor: colors.surface }]}
+            >
+              <Text style={[styles.heading, { fontSize: Fonts.size.md }]}>
+                Admin Actions
+              </Text>
+              <View style={styles.adminActions}>
+                {event.status === "PENDING" && (
+                  <>
+                    <Button
+                      mode="contained"
+                      compact
+                      buttonColor={colors.secondary}
+                      onPress={handleApprove}
+                      style={styles.adminBtn}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      mode="outlined"
+                      compact
+                      textColor={colors.danger}
+                      style={[styles.adminBtn, { borderColor: colors.danger }]}
+                      onPress={handleReject}
+                    >
+                      Reject
+                    </Button>
+                  </>
+                )}
+
+                {event.status === "APPROVED" && (
+                  <Button
+                    mode="outlined"
+                    compact
+                    textColor={colors.danger}
+                    style={[styles.adminBtn, { borderColor: colors.danger }]}
+                    onPress={handleReject}
+                  >
+                    Reject
+                  </Button>
+                )}
+
+                {event.status === "REJECTED" && (
+                  <Button
+                    mode="contained"
+                    compact
+                    buttonColor={colors.secondary}
+                    onPress={handleApprove}
+                    style={styles.adminBtn}
+                  >
+                    Approve
+                  </Button>
+                )}
+
+                <Button
+                  mode="contained"
+                  compact
+                  buttonColor={colors.error}
+                  onPress={handleDelete}
+                  style={styles.adminBtn}
+                >
+                  Delete
+                </Button>
+              </View>
+            </Surface>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -387,5 +498,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  adminPanel: {
+    marginTop: Spacing.xl,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    ...Shadows.card,
+  },
+
+  adminActions: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+
+  adminBtn: {
+    flex: 1,
+    borderRadius: Radius.md,
   },
 });
