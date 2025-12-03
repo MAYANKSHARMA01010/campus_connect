@@ -18,8 +18,7 @@ export const useEvents = (limit = 10) => {
                     setLoading(true);
                     setError(null);
                 }
-
-                // If we are fetching page 1, it's a reset or initial load
+                
                 const isFirstPage = page === 1;
 
                 const res = await eventAPI.getList({
@@ -29,12 +28,6 @@ export const useEvents = (limit = 10) => {
                     sort,
                     past,
                 });
-
-                // Wait, I need to make sure I'm calling the right endpoint.
-                // The previous code in Events.jsx was: `const res = await API.get("/events", ...)`
-                // My new api.js has `getAll` -> `/events/home`.
-                // I need to add `getList` -> `/events` to api.js.
-                // I will do that in a fix step. For now I will write the hook assuming `eventAPI.getList` exists.
 
                 const eventData = res?.events || [];
                 const categoryData = res?.categories || [];

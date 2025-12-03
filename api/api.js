@@ -40,8 +40,6 @@ API.interceptors.response.use(
 
 export default API;
 
-// --- Auth API ---
-
 export const authAPI = {
   register: async (payload) => {
     const res = await API.post("/user/register", payload);
@@ -57,8 +55,6 @@ export const authAPI = {
   },
 };
 
-// --- User API ---
-
 export const userAPI = {
   getProfile: async (token) => {
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
@@ -71,13 +67,12 @@ export const userAPI = {
   },
 };
 
-// --- Events API ---
-
 export const eventAPI = {
   submitRequest: async (payload) => {
     const res = await API.post("/events/request", payload);
     return res.data;
   },
+
   create: async (payload, images) => {
     const form = new FormData();
 
@@ -104,6 +99,7 @@ export const eventAPI = {
 
     return res.data;
   },
+
   getAll: async () => {
     try {
       const res = await API.get("/events/home");
@@ -113,10 +109,12 @@ export const eventAPI = {
       return [];
     }
   },
+
   getList: async (params) => {
     const res = await API.get("/events", { params });
     return res.data;
   },
+
   getById: async (id) => {
     try {
       const res = await API.get(`/events/${id}`);
@@ -126,6 +124,7 @@ export const eventAPI = {
       return null;
     }
   },
+
   search: async (query) => {
     try {
       const res = await API.get(`/events/search?q=${encodeURIComponent(query)}`);
@@ -144,6 +143,7 @@ export const eventAPI = {
       return [];
     }
   },
+
   deleteMy: async (id) => {
     try {
       const safeId = Number(id);
@@ -158,14 +158,16 @@ export const eventAPI = {
       throw err;
     }
   },
-  // Admin methods (moved from eventReducer logic if needed, or kept generic)
+
   getAdminEvents: async (params) => {
     const res = await API.get("/events/admin", { params });
     return res.data;
   },
+
   updateStatus: async (id, status) => {
     await API.patch(`/events/admin/${id}/status`, { status });
   },
+  
   deleteAdmin: async (id) => {
     await API.delete(`/events/admin/${id}`);
   }
