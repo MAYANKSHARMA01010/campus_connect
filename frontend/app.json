@@ -31,6 +31,12 @@
         "projectId": "6e0e6029-1537-48d2-9153-984ce9bf7598"
       }
     },
-    "owner": "manku_dada"
+    "owner": "manku_dada",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6e0e6029-1537-48d2-9153-984ce9bf7598"
+    }
   }
 }
