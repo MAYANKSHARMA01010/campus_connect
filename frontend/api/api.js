@@ -1,12 +1,13 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { API_URL_DEV, API_URL_PROD } from "@env";
+import { API_URL_DEV, API_URL_PROD, API_URL_LOCAL } from "@env";
 
 const LOCAL_URL = API_URL_DEV;
+const LOCAL_URL2 = API_URL_LOCAL;
 const SERVER_URL = API_URL_PROD;
 
-export const BASE_URL = __DEV__ ? LOCAL_URL : SERVER_URL;
+export const BASE_URL = __DEV__ ? LOCAL_URL : LOCAL_URL2 ? LOCAL_URL2 : SERVER_URL;
 
 const API = axios.create({
   baseURL: `${BASE_URL}/api`,
@@ -174,4 +175,3 @@ export const eventAPI = {
     await API.delete(`/events/admin/${id}`);
   }
 };
-
