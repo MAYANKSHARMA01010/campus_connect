@@ -15,7 +15,6 @@ A comprehensive mobile application built with React Native (Expo) and Node.js th
 - [Database Schema](#-database-schema)
 - [Screenshots](#-screenshots)
 - [Contributing](#-contributing)
-- [License](#-license)
 
 ## ✨ Features
 
@@ -386,15 +385,11 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
-
-This project is licensed under the ISC License.
-
 ## 👨‍💻 Author
 
 **Mayank Sharma**
 
-- GitHub: [@your-github-MAYANKSHARMA01010](https://github.com/MAYANKSHARMA01010)
+- GitHub: [@MAYANKSHARMA01010](https://github.com/MAYANKSHARMA01010)
 
 ## 🙏 Acknowledgments
 
