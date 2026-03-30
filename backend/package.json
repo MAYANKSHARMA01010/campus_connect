@@ -10,6 +10,7 @@
     "build": "pnpm prisma generate",
     "predev": "pnpm build",
     "start": "node src/server.js",
+    "monitor:health": "node src/monitor/healthMonitor.js",
     "dev": "nodemon src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

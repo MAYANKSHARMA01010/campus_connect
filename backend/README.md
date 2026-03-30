@@ -41,6 +41,11 @@ JWT_SECRET="your_super_secret_jwt_key"
 
 # Optional alerting webhook for startup/monitor failures
 ALERT_WEBHOOK_URL="https://hooks.example.com/services/..."
+
+# Deployment health monitor target + interval
+MONITOR_TARGET_URL="https://your-production-url.com"
+HEALTH_CHECK_INTERVAL_MS=30000
+HEALTH_CHECK_TIMEOUT_MS=5000
 ```
 
 ## Database Setup
@@ -67,6 +72,11 @@ ALERT_WEBHOOK_URL="https://hooks.example.com/services/..."
 - **Production Mode**:
   ```bash
   npm start
+  ```
+
+- **Deployment Health Monitor** (run as sidecar/worker):
+  ```bash
+  npm run monitor:health
   ```
 
 ## API Routes
