@@ -117,6 +117,7 @@ const setPersistentCachedData = async (cacheKey, data, ttlMs) => {
 };
 
 const isRetryableError = (err) => {
+  if (err?.code === "ERR_CANCELED") return false;
   if (!err?.response) return true;
   return RETRYABLE_STATUS.has(err.response.status);
 };
@@ -139,6 +140,7 @@ const requestWithRetry = async ({
   const lowerMethod = method.toLowerCase();
   const isGet = lowerMethod === "get";
   const cacheKey = isGet ? createCacheKey(url, params) : null;
+  const shouldDedupe = isGet && dedupe && !signal && Boolean(cacheKey);
 
   if (isGet && useCache && cacheKey) {
     const cachedData = getCachedData(cacheKey);
@@ -147,7 +149,7 @@ const requestWithRetry = async ({
     }
   }
 
-  if (isGet && dedupe && cacheKey && inflightGetRequests.has(cacheKey)) {
+  if (shouldDedupe && inflightGetRequests.has(cacheKey)) {
     return inflightGetRequests.get(cacheKey);
   }
 
@@ -197,7 +199,7 @@ const requestWithRetry = async ({
     throw new Error("Request failed after retries");
   };
 
-  if (!isGet || !dedupe || !cacheKey) {
+  if (!shouldDedupe) {
     return execute();
   }
 
@@ -372,11 +374,12 @@ export const eventAPI = {
     }
   },
 
-  getList: async (params) => {
+  getList: async (params, options = {}) => {
     return requestWithRetry({
       method: "get",
       url: "/events",
       params,
+      signal: options.signal,
       retries: 2,
       dedupe: true,
       useCache: true,
