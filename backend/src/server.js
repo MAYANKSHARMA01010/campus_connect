@@ -82,7 +82,14 @@ app.get("/", (req, res) => {
 
 
 app.listen(PORT, () => {
+  const dbMode = process.env.DIRECT_URL
+    ? "DIRECT_URL"
+    : process.env.DATABASE_URL?.startsWith("prisma+postgres://")
+      ? "ACCELERATE"
+      : "DATABASE_URL";
+
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🗄️ Prisma datasource mode: ${dbMode}`);
   console.log(`✅ Local Backend URL: ${process.env.BACKEND_LOCAL_URL}`);
   console.log(`✅ Deployed Backend URL: ${process.env.BACKEND_SERVER_URL}`);
 });

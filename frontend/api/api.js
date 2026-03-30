@@ -3,11 +3,38 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { API_URL_DEV, API_URL_PROD, API_URL_LOCAL } from "@env";
 
-const LOCAL_URL = API_URL_DEV;
-const LOCAL_URL2 = API_URL_LOCAL;
-const SERVER_URL = API_URL_PROD;
+const normalizeBaseUrl = (url) => {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  return trimmed.replace(/\/+$/, "");
+};
 
-export const BASE_URL = __DEV__ ? LOCAL_URL : LOCAL_URL2 ? LOCAL_URL2 : SERVER_URL;
+const unique = (arr) => [...new Set(arr.filter(Boolean))];
+
+const DEV_URL = normalizeBaseUrl(API_URL_DEV);
+const PROD_URL = normalizeBaseUrl(API_URL_PROD);
+const LOCAL_URL = normalizeBaseUrl(API_URL_LOCAL);
+
+const CANDIDATE_BASE_URLS = __DEV__
+  ? unique([DEV_URL, LOCAL_URL, PROD_URL])
+  : unique([PROD_URL, DEV_URL, LOCAL_URL]);
+
+let activeBaseUrlIndex = 0;
+export let BASE_URL = CANDIDATE_BASE_URLS[activeBaseUrlIndex] || "http://localhost:5001";
+
+const setActiveBaseUrl = (index) => {
+  activeBaseUrlIndex = index;
+  BASE_URL = CANDIDATE_BASE_URLS[index];
+  API.defaults.baseURL = `${BASE_URL}/api`;
+};
+
+const getNextBaseUrlIndex = (triedIndexes = []) => {
+  for (let i = 0; i < CANDIDATE_BASE_URLS.length; i += 1) {
+    if (!triedIndexes.includes(i)) return i;
+  }
+  return -1;
+};
 
 const API = axios.create({
   baseURL: `${BASE_URL}/api`,
@@ -32,6 +59,34 @@ API.interceptors.request.use(
 API.interceptors.response.use(
   (res) => res,
   async (err) => {
+    const originalConfig = err?.config || {};
+
+    const shouldRetryWithFallback =
+      !originalConfig.__baseUrlFallbackAttempt &&
+      (err?.code === "ECONNABORTED" || !err?.response || err?.response?.status >= 500);
+
+    if (shouldRetryWithFallback && CANDIDATE_BASE_URLS.length > 1) {
+      const tried = originalConfig.__triedBaseUrlIndexes || [activeBaseUrlIndex];
+      const nextBaseUrlIndex = getNextBaseUrlIndex(tried);
+
+      if (nextBaseUrlIndex !== -1) {
+        const retryConfig = {
+          ...originalConfig,
+          baseURL: `${CANDIDATE_BASE_URLS[nextBaseUrlIndex]}/api`,
+          __baseUrlFallbackAttempt: true,
+          __triedBaseUrlIndexes: [...tried, nextBaseUrlIndex],
+        };
+
+        try {
+          const retryResponse = await API.request(retryConfig);
+          setActiveBaseUrl(nextBaseUrlIndex);
+          return retryResponse;
+        } catch (retryErr) {
+          err = retryErr;
+        }
+      }
+    }
+
     if (err?.response?.status === 401) {
       try {
         await AsyncStorage.removeItem("token");
