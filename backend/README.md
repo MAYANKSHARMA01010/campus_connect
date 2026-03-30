@@ -49,6 +49,10 @@ HEALTH_CHECK_TIMEOUT_MS=5000
 
 # Slow query logging threshold (ms)
 SLOW_QUERY_THRESHOLD_MS=250
+
+# Precomputed home sections refresh (1-5 minutes recommended)
+HOME_SECTION_REFRESH_MS=60000
+HOME_SECTION_LIMIT=120
 ```
 
 ## Database Setup

@@ -6,6 +6,7 @@ const eventRouter = require("./routes/eventRoute.js");
 const { prisma } = require("./config/database");
 const { sendAlert, maskDbUrl } = require("./utils/alerts");
 const { runWithRequestContext } = require("./utils/requestContext");
+const { startHomeSectionsScheduler } = require("./services/homeSectionsCache");
 require("dotenv").config();
 
 const app = express();
@@ -164,6 +165,7 @@ app.get("/", (req, res) => {
 async function startServer() {
   try {
     await validateStartupOrExit();
+    await startHomeSectionsScheduler(prisma);
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

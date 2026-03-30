@@ -1,4 +1,5 @@
 const { prisma } = require("../config/database");
+const { getHomeSectionsSnapshot, refreshHomeSections } = require("../services/homeSectionsCache");
 
 const EVENT_IMAGE_PREVIEW_SELECT = {
     take: 1,
@@ -160,37 +161,24 @@ async function getAllEventsController(req, res) {
 async function getAllEventsForHomeSecreenController(req, res) {
     try {
         setPublicCache(res, 45);
-
         const limit = clamp(toPositiveNumber(req.query.limit, 60), 1, 120);
+        let cached = getHomeSectionsSnapshot();
 
-        const events = await prisma.eventRequest.findMany({
-            where: {
-                status: "APPROVED",
+        if (!cached.updatedAt) {
+            await refreshHomeSections(prisma, limit);
+            cached = getHomeSectionsSnapshot();
+        }
+
+        return res.status(200).json({
+            events: cached.events.slice(0, limit),
+            sections: {
+                upcoming: cached.upcoming.slice(0, limit),
+                past: cached.past.slice(0, limit),
+                sportsCulture: cached.sportsCulture.slice(0, limit),
+                educationTech: cached.educationTech.slice(0, limit),
             },
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                date: true,
-                category: true,
-                email: true,
-                location: true,
-                images: {
-                    take: 1,
-                    orderBy: { id: "asc" },
-                    select: {
-                        id: true,
-                        url: true,
-                    },
-                },
-            },
-            orderBy: {
-                date: "asc",
-            },
-            take: limit,
+            generatedAt: cached.updatedAt,
         });
-
-        return res.status(200).json({ events });
     } catch (err) {
         console.error("getAllEventsForHomeSecreenController ERROR:", err);
         return res.status(500).json({ ERROR: "Failed to fetch events" });
