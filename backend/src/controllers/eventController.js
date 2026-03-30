@@ -11,10 +11,9 @@ const EVENT_IMAGE_PREVIEW_SELECT = {
     },
 };
 
-const EVENT_LIST_SELECT = {
+const EVENT_SUMMARY_SELECT = {
     id: true,
     title: true,
-    description: true,
     category: true,
     subCategory: true,
     date: true,
@@ -150,7 +149,7 @@ async function getAllEventsController(req, res) {
             where,
             take: useCursor ? limit + 1 : limit,
             orderBy,
-            select: EVENT_LIST_SELECT,
+            select: EVENT_SUMMARY_SELECT,
         };
 
         if (useCursor) {
@@ -300,7 +299,7 @@ const searchEventsController = async (req, res) => {
                 take: useCursor ? limit + 1 : limit,
                 orderBy: [{ createdAt: "desc" }, { id: "desc" }],
                 select: {
-                    ...EVENT_LIST_SELECT,
+                    ...EVENT_SUMMARY_SELECT,
                     createdBy: {
                         select: {
                             id: true,
@@ -375,7 +374,7 @@ async function getAdminEventsController(req, res) {
                 ...(useCursor ? { cursor: { id: cursor }, skip: 1 } : { skip: (page - 1) * limit }),
                 take: useCursor ? limit + 1 : limit,
                 orderBy,
-                select: EVENT_LIST_SELECT,
+                select: EVENT_SUMMARY_SELECT,
             })),
 
             executeDbCall("admin.events.count", () => prisma.eventRequest.count({ where })),
@@ -454,7 +453,7 @@ async function getMyEventsController(req, res) {
             where: {
                 createdById: userId,
             },
-            select: EVENT_LIST_SELECT,
+            select: EVENT_SUMMARY_SELECT,
             orderBy: {
                 createdAt: "desc",
             },

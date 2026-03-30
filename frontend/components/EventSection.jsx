@@ -57,7 +57,7 @@ const Card = memo(({ item, navigation }) => {
             style={[styles.overlaySummary, { color: colors.surface }]}
             numberOfLines={2}
           >
-            {item.description}
+            {item.description || `${item.category || "Event"}${item.location ? ` • ${item.location}` : ""}`}
           </Text>
         </View>
       </ImageBackground>

@@ -5,7 +5,6 @@ const MAX_REFRESH_MS = 5 * 60 * 1000;
 const EVENT_HOME_SELECT = {
   id: true,
   title: true,
-  description: true,
   category: true,
   subCategory: true,
   date: true,
