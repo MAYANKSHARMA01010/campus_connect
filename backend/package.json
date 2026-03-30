@@ -7,7 +7,8 @@
     "seed": "node prisma/seed.js"
   },
   "scripts": {
-    "build": "npx prisma generate",
+    "build": "pnpm prisma generate",
+    "predev": "pnpm build",
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,7 +18,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@prisma/client": "^6.18.0",
+    "@prisma/client": "6.1.0",
     "@prisma/extension-accelerate": "^3.0.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
@@ -29,6 +30,6 @@
     "express-rate-limit": "^8.3.1"
   },
   "devDependencies": {
-    "prisma": "^7.6.0"
+    "prisma": "6.1.0"
   }
 }
