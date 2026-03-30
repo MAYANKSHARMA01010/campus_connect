@@ -36,6 +36,13 @@ function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 
+function toOptionalPositiveNumber(value) {
+    if (value === undefined || value === null || value === "") return null;
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed <= 0) return null;
+    return Math.floor(parsed);
+}
+
 function setPublicCache(res, maxAgeSeconds = 30) {
     res.set("Cache-Control", `public, max-age=${maxAgeSeconds}, stale-while-revalidate=60`);
 }
@@ -114,6 +121,7 @@ async function getAllEventsController(req, res) {
         const { category, sort, past = "false" } = req.query;
         const page = toPositiveNumber(req.query.page, 1);
         const limit = clamp(toPositiveNumber(req.query.limit, 8), 1, 20);
+        const cursor = toOptionalPositiveNumber(req.query.cursor);
 
         const now = new Date();
         const showPast = past === "true";
@@ -132,19 +140,28 @@ async function getAllEventsController(req, res) {
             where.category = category;
         }
 
-        let orderBy = { createdAt: "desc" };
-        if (sort === "recent") orderBy = { createdAt: "desc" };
+        let orderBy = [{ createdAt: "desc" }, { id: "desc" }];
+        if (sort === "recent") orderBy = [{ createdAt: "desc" }, { id: "desc" }];
         if (sort === "location") orderBy = { location: "asc" };
         if (sort === "date") orderBy = { date: "asc" };
 
-        const [events, categories, total] = await Promise.all([
-            executeDbCall("event.list", () => prisma.eventRequest.findMany({
-                where,
-                skip: (page - 1) * limit,
-                take: limit,
-                orderBy,
-                select: EVENT_LIST_SELECT,
-            })),
+        const useCursor = Boolean(cursor) && (sort === "recent" || !sort);
+        const listArgs = {
+            where,
+            take: useCursor ? limit + 1 : limit,
+            orderBy,
+            select: EVENT_LIST_SELECT,
+        };
+
+        if (useCursor) {
+            listArgs.cursor = { id: cursor };
+            listArgs.skip = 1;
+        } else {
+            listArgs.skip = (page - 1) * limit;
+        }
+
+        const [eventsRaw, categories, total] = await Promise.all([
+            executeDbCall("event.list", () => prisma.eventRequest.findMany(listArgs)),
             executeDbCall("event.categories", () => prisma.eventRequest.findMany({
                 where: { status: "APPROVED" },
                 select: { category: true },
@@ -153,12 +170,19 @@ async function getAllEventsController(req, res) {
             executeDbCall("event.count", () => prisma.eventRequest.count({ where })),
         ]);
 
+        const hasMore = useCursor ? eventsRaw.length > limit : page * limit < total;
+        const events = useCursor ? eventsRaw.slice(0, limit) : eventsRaw;
+        const nextCursor = hasMore && events.length > 0 ? events[events.length - 1].id : null;
+
         return res.json({
             events,
             categories: categories.map((c) => c.category),
             total,
             page,
             limit,
+            hasMore,
+            nextCursor,
+            paginationMode: useCursor ? "cursor" : "offset",
         });
     } catch (error) {
         if (tryHandleDbGuardError(res, error, "Database unavailable")) return;
@@ -246,8 +270,9 @@ const searchEventsController = async (req, res) => {
 
         const page = toPositiveNumber(req.query.page, 1);
         const limit = clamp(toPositiveNumber(req.query.limit, 10), 1, 20);
+        const cursor = toOptionalPositiveNumber(req.query.cursor);
 
-        const skip = (page - 1) * limit;
+        const useCursor = Boolean(cursor);
 
         const whereCondition = {
             AND: [
@@ -268,14 +293,12 @@ const searchEventsController = async (req, res) => {
             ],
         };
 
-        const [events, total] = await Promise.all([
+        const [eventsRaw, total] = await Promise.all([
             executeDbCall("event.search", () => prisma.eventRequest.findMany({
                 where: whereCondition,
-                skip,
-                take: limit,
-                orderBy: {
-                    createdAt: "desc",
-                },
+                ...(useCursor ? { cursor: { id: cursor }, skip: 1 } : { skip: (page - 1) * limit }),
+                take: useCursor ? limit + 1 : limit,
+                orderBy: [{ createdAt: "desc" }, { id: "desc" }],
                 select: {
                     ...EVENT_LIST_SELECT,
                     createdBy: {
@@ -290,12 +313,19 @@ const searchEventsController = async (req, res) => {
             executeDbCall("event.search.count", () => prisma.eventRequest.count({ where: whereCondition })),
         ]);
 
+        const hasMore = useCursor ? eventsRaw.length > limit : page * limit < total;
+        const events = useCursor ? eventsRaw.slice(0, limit) : eventsRaw;
+        const nextCursor = hasMore && events.length > 0 ? events[events.length - 1].id : null;
+
         return res.status(200).json({
             success: true,
             page,
             limit,
             total,
             results: events,
+            hasMore,
+            nextCursor,
+            paginationMode: useCursor ? "cursor" : "offset",
         });
     } catch (error) {
         if (tryHandleDbGuardError(res, error, "Database unavailable")) return;
@@ -318,7 +348,8 @@ async function getAdminEventsController(req, res) {
 
         const page = toPositiveNumber(req.query.pageNumber, 1);
         const limit = clamp(toPositiveNumber(req.query.pageSize, 10), 1, 30);
-        const skip = (page - 1) * limit;
+        const cursor = toOptionalPositiveNumber(req.query.cursor);
+        const useCursor = Boolean(cursor);
 
         const where = {};
 
@@ -332,17 +363,17 @@ async function getAdminEventsController(req, res) {
 
         if (status) where.status = status;
 
-        let orderBy = { createdAt: "desc" };
-        if (sortBy === "oldest") orderBy = { createdAt: "asc" };
+        let orderBy = [{ createdAt: "desc" }, { id: "desc" }];
+        if (sortBy === "oldest") orderBy = [{ createdAt: "asc" }, { id: "asc" }];
         if (sortBy === "az") orderBy = { title: "asc" };
         if (sortBy === "upcoming") orderBy = { date: "asc" };
         if (sortBy === "past") orderBy = { date: "desc" };
 
-        const [events, total] = await Promise.all([
+        const [eventsRaw, total] = await Promise.all([
             executeDbCall("admin.events.list", () => prisma.eventRequest.findMany({
                 where,
-                skip,
-                take: limit,
+                ...(useCursor ? { cursor: { id: cursor }, skip: 1 } : { skip: (page - 1) * limit }),
+                take: useCursor ? limit + 1 : limit,
                 orderBy,
                 select: EVENT_LIST_SELECT,
             })),
@@ -350,11 +381,18 @@ async function getAdminEventsController(req, res) {
             executeDbCall("admin.events.count", () => prisma.eventRequest.count({ where })),
         ]);
 
+        const hasMore = useCursor ? eventsRaw.length > limit : page * limit < total;
+        const events = useCursor ? eventsRaw.slice(0, limit) : eventsRaw;
+        const nextCursor = hasMore && events.length > 0 ? events[events.length - 1].id : null;
+
         return res.json({
             events,
             total,
             page,
             totalPages: Math.ceil(total / limit),
+            hasMore,
+            nextCursor,
+            paginationMode: useCursor ? "cursor" : "offset",
         });
     } catch (err) {
         if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
