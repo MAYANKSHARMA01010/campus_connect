@@ -5,6 +5,7 @@ const userRouter = require("./routes/userRoute");
 const eventRouter = require("./routes/eventRoute.js");
 const { prisma } = require("./config/database");
 const { sendAlert, maskDbUrl } = require("./utils/alerts");
+const { runWithRequestContext } = require("./utils/requestContext");
 require("dotenv").config();
 
 const app = express();
@@ -45,6 +46,19 @@ async function validateStartupOrExit() {
 app.use(corsMiddleware);
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
+
+app.use((req, res, next) => {
+  const requestSummary = {
+    endpoint: `${req.method} ${req.originalUrl}`,
+    params: {
+      query: req.query || {},
+      body: req.body || {},
+      params: req.params || {},
+    },
+  };
+
+  runWithRequestContext(requestSummary, () => next());
+});
 
 app.use((req, res, next) => {
   if (req.method === "GET" && req.path.startsWith("/api/events")) {

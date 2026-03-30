@@ -46,6 +46,9 @@ ALERT_WEBHOOK_URL="https://hooks.example.com/services/..."
 MONITOR_TARGET_URL="https://your-production-url.com"
 HEALTH_CHECK_INTERVAL_MS=30000
 HEALTH_CHECK_TIMEOUT_MS=5000
+
+# Slow query logging threshold (ms)
+SLOW_QUERY_THRESHOLD_MS=250
 ```
 
 ## Database Setup
