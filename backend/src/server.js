@@ -4,10 +4,43 @@ const corsMiddleware = require("./config/cors.js");
 const userRouter = require("./routes/userRoute");
 const eventRouter = require("./routes/eventRoute.js");
 const { prisma } = require("./config/database");
+const { sendAlert, maskDbUrl } = require("./utils/alerts");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.SERVER_PORT;
+
+function getDbMode() {
+  if (process.env.DIRECT_URL) return "DIRECT_URL";
+  if (process.env.DATABASE_URL?.startsWith("prisma+postgres://")) return "ACCELERATE";
+  return "DATABASE_URL";
+}
+
+async function validateStartupOrExit() {
+  const missingEnv = ["SERVER_PORT", "JWT_SECRET"].filter((key) => !process.env[key]);
+  if (missingEnv.length > 0) {
+    await sendAlert("Startup blocked: missing env", { missingEnv });
+    throw new Error(`Missing required env vars: ${missingEnv.join(", ")}`);
+  }
+
+  const dbUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  if (!dbUrl) {
+    await sendAlert("Startup blocked: missing DB URL", { dbMode: getDbMode() });
+    throw new Error("Missing database credentials: set DIRECT_URL or DATABASE_URL");
+  }
+
+  try {
+    await prisma.$connect();
+    await prisma.$queryRaw`SELECT 1`;
+  } catch (err) {
+    await sendAlert("Startup blocked: DB auth/connect failure", {
+      dbMode: getDbMode(),
+      dbUrl: maskDbUrl(dbUrl),
+      reason: err?.message || "Database startup check failed",
+    });
+    throw err;
+  }
+}
 
 app.use(corsMiddleware);
 app.use(compression());
@@ -114,15 +147,20 @@ app.get("/", (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-  const dbMode = process.env.DIRECT_URL
-    ? "DIRECT_URL"
-    : process.env.DATABASE_URL?.startsWith("prisma+postgres://")
-      ? "ACCELERATE"
-      : "DATABASE_URL";
+async function startServer() {
+  try {
+    await validateStartupOrExit();
 
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🗄️ Prisma datasource mode: ${dbMode}`);
-  console.log(`✅ Local Backend URL: ${process.env.BACKEND_LOCAL_URL}`);
-  console.log(`✅ Deployed Backend URL: ${process.env.BACKEND_SERVER_URL}`);
-});
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🗄️ Prisma datasource mode: ${getDbMode()}`);
+      console.log(`✅ Local Backend URL: ${process.env.BACKEND_LOCAL_URL}`);
+      console.log(`✅ Deployed Backend URL: ${process.env.BACKEND_SERVER_URL}`);
+    });
+  } catch (err) {
+    console.error("❌ Startup validation failed:", err?.message || err);
+    process.exit(1);
+  }
+}
+
+startServer();

@@ -38,6 +38,9 @@ BACKEND_SERVER_URL="https://your-production-url.com"
 
 # Security
 JWT_SECRET="your_super_secret_jwt_key"
+
+# Optional alerting webhook for startup/monitor failures
+ALERT_WEBHOOK_URL="https://hooks.example.com/services/..."
 ```
 
 ## Database Setup
