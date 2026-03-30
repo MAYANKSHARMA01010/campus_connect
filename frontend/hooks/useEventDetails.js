@@ -10,7 +10,9 @@ export const useEventDetails = (id) => {
     const loadEvent = useCallback(async () => {
         if (!id) return;
         try {
-            setLoading(true);
+            if (!event) {
+                setLoading(true);
+            }
             setError(null);
             const data = await eventAPI.getById(id);
             setEvent(data?.event ?? data?.events?.[0] ?? data);
@@ -21,7 +23,7 @@ export const useEventDetails = (id) => {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [id]);
+    }, [id, event]);
 
     useEffect(() => {
         loadEvent();

@@ -15,7 +15,9 @@ export const useEvents = (limit = 10) => {
         async ({ page = 1, category = "all", sort = "recent", past = false, reset = false } = {}) => {
             try {
                 if (reset) {
-                    setLoading(true);
+                    if (events.length === 0) {
+                        setLoading(true);
+                    }
                     setError(null);
                 }
                 
@@ -52,7 +54,7 @@ export const useEvents = (limit = 10) => {
                 setLoadingMore(false);
             }
         },
-        [limit]
+        [limit, events.length]
     );
 
     return {
