@@ -1,5 +1,6 @@
 const { prisma } = require("../config/database");
 const { getHomeSectionsSnapshot, refreshHomeSections } = require("../services/homeSectionsCache");
+const { getOrSetSWR, buildCacheKey } = require("../services/readCache");
 const { executeDbCall, isDbGuardError } = require("../utils/dbGuard");
 
 const EVENT_IMAGE_PREVIEW_SELECT = {
@@ -53,6 +54,18 @@ function tryHandleDbGuardError(res, err, fallbackMessage) {
         reason: err.message,
     });
 }
+
+const CACHE_TTL_MS = {
+    home: Math.max(Number(process.env.CACHE_TTL_HOME_MS) || 60000, 30000),
+    events: Math.max(Number(process.env.CACHE_TTL_EVENTS_MS) || 45000, 30000),
+    search: Math.max(Number(process.env.CACHE_TTL_SEARCH_MS) || 30000, 30000),
+};
+
+const CACHE_STALE_MS = {
+    home: Math.max(Number(process.env.CACHE_STALE_HOME_MS) || 120000, CACHE_TTL_MS.home),
+    events: Math.max(Number(process.env.CACHE_STALE_EVENTS_MS) || 90000, CACHE_TTL_MS.events),
+    search: Math.max(Number(process.env.CACHE_STALE_SEARCH_MS) || 60000, CACHE_TTL_MS.search),
+};
 
 async function createEventController(req, res) {
     try {
@@ -159,15 +172,35 @@ async function getAllEventsController(req, res) {
             listArgs.skip = (page - 1) * limit;
         }
 
-        const [eventsRaw, categories, total] = await Promise.all([
-            executeDbCall("event.list", () => prisma.eventRequest.findMany(listArgs)),
-            executeDbCall("event.categories", () => prisma.eventRequest.findMany({
-                where: { status: "APPROVED" },
-                select: { category: true },
-                distinct: ["category"],
-            })),
-            executeDbCall("event.count", () => prisma.eventRequest.count({ where })),
-        ]);
+        const cacheKey = buildCacheKey("events.list", {
+            category: category || "all",
+            sort: sort || "recent",
+            past,
+            page,
+            limit,
+            cursor: cursor || 0,
+        });
+
+        const cached = await getOrSetSWR({
+            key: cacheKey,
+            ttlMs: CACHE_TTL_MS.events,
+            staleMs: CACHE_STALE_MS.events,
+            producer: async () => {
+                const [eventsRaw, categories, total] = await Promise.all([
+                    executeDbCall("event.list", () => prisma.eventRequest.findMany(listArgs)),
+                    executeDbCall("event.categories", () => prisma.eventRequest.findMany({
+                        where: { status: "APPROVED" },
+                        select: { category: true },
+                        distinct: ["category"],
+                    })),
+                    executeDbCall("event.count", () => prisma.eventRequest.count({ where })),
+                ]);
+
+                return { eventsRaw, categories, total };
+            },
+        });
+
+        const { eventsRaw, categories, total } = cached.data;
 
         const hasMore = useCursor ? eventsRaw.length > limit : page * limit < total;
         const events = useCursor ? eventsRaw.slice(0, limit) : eventsRaw;
@@ -182,6 +215,7 @@ async function getAllEventsController(req, res) {
             hasMore,
             nextCursor,
             paginationMode: useCursor ? "cursor" : "offset",
+            cacheStatus: cached.cacheStatus,
         });
     } catch (error) {
         if (tryHandleDbGuardError(res, error, "Database unavailable")) return;
@@ -196,22 +230,35 @@ async function getAllEventsForHomeSecreenController(req, res) {
     try {
         setPublicCache(res, 45);
         const limit = clamp(toPositiveNumber(req.query.limit, 60), 1, 120);
-        let cached = getHomeSectionsSnapshot();
+        const cacheKey = buildCacheKey("events.home", { limit });
+        const cachedResponse = await getOrSetSWR({
+            key: cacheKey,
+            ttlMs: CACHE_TTL_MS.home,
+            staleMs: CACHE_STALE_MS.home,
+            producer: async () => {
+                let cached = getHomeSectionsSnapshot();
 
-        if (!cached.updatedAt) {
-            await executeDbCall("home.sections.refresh", () => refreshHomeSections(prisma, limit));
-            cached = getHomeSectionsSnapshot();
-        }
+                if (!cached.updatedAt) {
+                    await executeDbCall("home.sections.refresh", () => refreshHomeSections(prisma, limit));
+                    cached = getHomeSectionsSnapshot();
+                }
+
+                return {
+                    events: cached.events.slice(0, limit),
+                    sections: {
+                        upcoming: cached.upcoming.slice(0, limit),
+                        past: cached.past.slice(0, limit),
+                        sportsCulture: cached.sportsCulture.slice(0, limit),
+                        educationTech: cached.educationTech.slice(0, limit),
+                    },
+                    generatedAt: cached.updatedAt,
+                };
+            },
+        });
 
         return res.status(200).json({
-            events: cached.events.slice(0, limit),
-            sections: {
-                upcoming: cached.upcoming.slice(0, limit),
-                past: cached.past.slice(0, limit),
-                sportsCulture: cached.sportsCulture.slice(0, limit),
-                educationTech: cached.educationTech.slice(0, limit),
-            },
-            generatedAt: cached.updatedAt,
+            ...cachedResponse.data,
+            cacheStatus: cachedResponse.cacheStatus,
         });
     } catch (err) {
         if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
@@ -292,25 +339,45 @@ const searchEventsController = async (req, res) => {
             ],
         };
 
-        const [eventsRaw, total] = await Promise.all([
-            executeDbCall("event.search", () => prisma.eventRequest.findMany({
-                where: whereCondition,
-                ...(useCursor ? { cursor: { id: cursor }, skip: 1 } : { skip: (page - 1) * limit }),
-                take: useCursor ? limit + 1 : limit,
-                orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-                select: {
-                    ...EVENT_SUMMARY_SELECT,
-                    createdBy: {
+        const cacheKey = buildCacheKey("events.search", {
+            q,
+            category: category || "all",
+            status,
+            page,
+            limit,
+            cursor: cursor || 0,
+        });
+
+        const cached = await getOrSetSWR({
+            key: cacheKey,
+            ttlMs: CACHE_TTL_MS.search,
+            staleMs: CACHE_STALE_MS.search,
+            producer: async () => {
+                const [eventsRaw, total] = await Promise.all([
+                    executeDbCall("event.search", () => prisma.eventRequest.findMany({
+                        where: whereCondition,
+                        ...(useCursor ? { cursor: { id: cursor }, skip: 1 } : { skip: (page - 1) * limit }),
+                        take: useCursor ? limit + 1 : limit,
+                        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
                         select: {
-                            id: true,
-                            name: true,
-                            username: true,
+                            ...EVENT_SUMMARY_SELECT,
+                            createdBy: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    username: true,
+                                },
+                            },
                         },
-                    },
-                },
-            })),
-            executeDbCall("event.search.count", () => prisma.eventRequest.count({ where: whereCondition })),
-        ]);
+                    })),
+                    executeDbCall("event.search.count", () => prisma.eventRequest.count({ where: whereCondition })),
+                ]);
+
+                return { eventsRaw, total };
+            },
+        });
+
+        const { eventsRaw, total } = cached.data;
 
         const hasMore = useCursor ? eventsRaw.length > limit : page * limit < total;
         const events = useCursor ? eventsRaw.slice(0, limit) : eventsRaw;
@@ -325,6 +392,7 @@ const searchEventsController = async (req, res) => {
             hasMore,
             nextCursor,
             paginationMode: useCursor ? "cursor" : "offset",
+            cacheStatus: cached.cacheStatus,
         });
     } catch (error) {
         if (tryHandleDbGuardError(res, error, "Database unavailable")) return;
@@ -347,9 +415,6 @@ async function getAdminEventsController(req, res) {
 
         const page = toPositiveNumber(req.query.pageNumber, 1);
         const limit = clamp(toPositiveNumber(req.query.pageSize, 10), 1, 30);
-        const cursor = toOptionalPositiveNumber(req.query.cursor);
-        const useCursor = Boolean(cursor);
-
         const where = {};
 
         const searchText = String(search).trim();
@@ -368,21 +433,18 @@ async function getAdminEventsController(req, res) {
         if (sortBy === "upcoming") orderBy = { date: "asc" };
         if (sortBy === "past") orderBy = { date: "desc" };
 
-        const [eventsRaw, total] = await Promise.all([
+        const [events, total] = await Promise.all([
             executeDbCall("admin.events.list", () => prisma.eventRequest.findMany({
                 where,
-                ...(useCursor ? { cursor: { id: cursor }, skip: 1 } : { skip: (page - 1) * limit }),
-                take: useCursor ? limit + 1 : limit,
+                skip: (page - 1) * limit,
+                take: limit,
                 orderBy,
                 select: EVENT_SUMMARY_SELECT,
             })),
 
             executeDbCall("admin.events.count", () => prisma.eventRequest.count({ where })),
         ]);
-
-        const hasMore = useCursor ? eventsRaw.length > limit : page * limit < total;
-        const events = useCursor ? eventsRaw.slice(0, limit) : eventsRaw;
-        const nextCursor = hasMore && events.length > 0 ? events[events.length - 1].id : null;
+        const hasMore = page * limit < total;
 
         return res.json({
             events,
@@ -390,8 +452,8 @@ async function getAdminEventsController(req, res) {
             page,
             totalPages: Math.ceil(total / limit),
             hasMore,
-            nextCursor,
-            paginationMode: useCursor ? "cursor" : "offset",
+            nextCursor: null,
+            paginationMode: "offset",
         });
     } catch (err) {
         if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
