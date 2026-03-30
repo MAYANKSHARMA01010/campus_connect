@@ -4,6 +4,8 @@ const cacheStore = new Map();
 const refreshLocks = new Set();
 
 let redisClient = null;
+let lastErrorLog = 0;
+const ERROR_LOG_INTERVAL = 30000; // Only log Redis errors once per 30s
 
 function createRedisClient() {
     const redisUrl = process.env.REDIS_URL;
@@ -15,7 +17,11 @@ function createRedisClient() {
     });
 
     client.on("error", (err) => {
-        console.error("[cache] redis error", err?.message || err);
+        const now = Date.now();
+        if (now - lastErrorLog > ERROR_LOG_INTERVAL) {
+            console.warn("[cache] redis unavailable, using in-memory fallback", err?.code || err?.message);
+            lastErrorLog = now;
+        }
     });
 
     client.on("connect", () => {
@@ -46,13 +52,20 @@ async function readEnvelope(key) {
     const redis = getRedisClient();
 
     if (redis) {
-        const raw = await redis.get(key);
-        if (!raw) return null;
-
         try {
-            return JSON.parse(raw);
-        } catch {
-            return null;
+            const raw = await redis.get(key);
+            if (!raw) return null;
+
+            try {
+                return JSON.parse(raw);
+            } catch {
+                return null;
+            }
+        } catch (err) {
+            // Redis unavailable, fall back to in-memory silently
+            const value = cacheStore.get(key);
+            if (!value) return null;
+            return value;
         }
     }
 
@@ -65,12 +78,18 @@ async function writeEnvelope(key, envelope) {
     const redis = getRedisClient();
 
     if (redis) {
-        const secondsLeft = Math.max(
-            Math.ceil((envelope.staleUntil - Date.now()) / 1000),
-            1,
-        );
-        await redis.set(key, JSON.stringify(envelope), "EX", secondsLeft);
-        return;
+        try {
+            const secondsLeft = Math.max(
+                Math.ceil((envelope.staleUntil - Date.now()) / 1000),
+                1,
+            );
+            await redis.set(key, JSON.stringify(envelope), "EX", secondsLeft);
+            return;
+        } catch (err) {
+            // Redis unavailable, fall back to in-memory silently
+            cacheStore.set(key, envelope);
+            return;
+        }
     }
 
     cacheStore.set(key, envelope);
