@@ -13,8 +13,41 @@ app.use(corsMiddleware);
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 
+app.use((req, res, next) => {
+  if (req.method === "GET" && req.path.startsWith("/api/events")) {
+    res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+  }
+  next();
+});
+
 app.use("/api/user", userRouter)
 app.use("/api/events", eventRouter);
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    ok: true,
+    service: "campus-connect-backend",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/health/db", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return res.status(200).json({
+      ok: true,
+      database: "reachable",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(503).json({
+      ok: false,
+      database: "unreachable",
+      reason: err?.message || "Database check failed",
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
 
 
 app.get("/test-db", async (req, res) => {

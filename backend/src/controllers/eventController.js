@@ -34,6 +34,10 @@ function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 
+function setPublicCache(res, maxAgeSeconds = 30) {
+    res.set("Cache-Control", `public, max-age=${maxAgeSeconds}, stale-while-revalidate=60`);
+}
+
 async function createEventController(req, res) {
     try {
         const {
@@ -94,6 +98,8 @@ async function createEventController(req, res) {
 
 async function getAllEventsController(req, res) {
     try {
+        setPublicCache(res, 20);
+
         const { category, sort, past = "false" } = req.query;
         const page = toPositiveNumber(req.query.page, 1);
         const limit = clamp(toPositiveNumber(req.query.limit, 8), 1, 20);
@@ -153,6 +159,8 @@ async function getAllEventsController(req, res) {
 
 async function getAllEventsForHomeSecreenController(req, res) {
     try {
+        setPublicCache(res, 45);
+
         const limit = clamp(toPositiveNumber(req.query.limit, 60), 1, 120);
 
         const events = await prisma.eventRequest.findMany({
@@ -191,6 +199,8 @@ async function getAllEventsForHomeSecreenController(req, res) {
 
 async function getEventByIdController(req, res) {
     try {
+        setPublicCache(res, 30);
+
         const idParam = req.params.id;
         const id = parseInt(idParam, 10);
 
@@ -225,6 +235,8 @@ async function getEventByIdController(req, res) {
 
 const searchEventsController = async (req, res) => {
     try {
+        setPublicCache(res, 15);
+
         const {
             q = "",
             category,

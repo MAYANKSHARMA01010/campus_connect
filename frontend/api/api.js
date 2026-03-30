@@ -38,8 +38,133 @@ const getNextBaseUrlIndex = (triedIndexes = []) => {
 
 const API = axios.create({
   baseURL: `${BASE_URL}/api`,
-  timeout: 15000,
+  timeout: 12000,
 });
+
+const responseCache = new Map();
+const inflightGetRequests = new Map();
+
+const CACHE_TTL = {
+  home: 60 * 1000,
+  events: 20 * 1000,
+  search: 15 * 1000,
+  eventDetails: 30 * 1000,
+};
+
+const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const stableStringify = (value) => {
+  if (!value || typeof value !== "object") return String(value ?? "");
+  const keys = Object.keys(value).sort();
+  const normalized = {};
+  keys.forEach((key) => {
+    normalized[key] = value[key];
+  });
+  return JSON.stringify(normalized);
+};
+
+const createCacheKey = (url, params = {}) => `${url}?${stableStringify(params)}`;
+
+const getCachedData = (cacheKey) => {
+  const cached = responseCache.get(cacheKey);
+  if (!cached) return null;
+  if (Date.now() > cached.expiresAt) {
+    responseCache.delete(cacheKey);
+    return null;
+  }
+  return cached.data;
+};
+
+const setCachedData = (cacheKey, data, ttlMs) => {
+  responseCache.set(cacheKey, {
+    data,
+    expiresAt: Date.now() + ttlMs,
+  });
+};
+
+const isRetryableError = (err) => {
+  if (!err?.response) return true;
+  return RETRYABLE_STATUS.has(err.response.status);
+};
+
+const requestWithRetry = async ({
+  method = "get",
+  url,
+  params,
+  data,
+  headers,
+  timeout,
+  retries = 1,
+  retryDelayMs = 300,
+  useCache = false,
+  cacheTtlMs = 0,
+  dedupe = false,
+}) => {
+  const lowerMethod = method.toLowerCase();
+  const isGet = lowerMethod === "get";
+  const cacheKey = isGet ? createCacheKey(url, params) : null;
+
+  if (isGet && useCache && cacheKey) {
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+  }
+
+  if (isGet && dedupe && cacheKey && inflightGetRequests.has(cacheKey)) {
+    return inflightGetRequests.get(cacheKey);
+  }
+
+  const execute = async () => {
+    let attempt = 0;
+
+    while (attempt <= retries) {
+      try {
+        const response = await API.request({
+          method: lowerMethod,
+          url,
+          params,
+          data,
+          headers,
+          timeout,
+        });
+
+        if (isGet && useCache && cacheKey && cacheTtlMs > 0) {
+          setCachedData(cacheKey, response.data, cacheTtlMs);
+        }
+
+        return response.data;
+      } catch (err) {
+        const shouldRetry = attempt < retries && isRetryableError(err);
+        if (!shouldRetry) {
+          if (isGet && useCache && cacheKey) {
+            const staleData = responseCache.get(cacheKey)?.data;
+            if (staleData) return staleData;
+          }
+          throw err;
+        }
+
+        await sleep(retryDelayMs * (attempt + 1));
+        attempt += 1;
+      }
+    }
+
+    throw new Error("Request failed after retries");
+  };
+
+  if (!isGet || !dedupe || !cacheKey) {
+    return execute();
+  }
+
+  const promise = execute().finally(() => {
+    inflightGetRequests.delete(cacheKey);
+  });
+
+  inflightGetRequests.set(cacheKey, promise);
+  return promise;
+};
 
 API.interceptors.request.use(
   async (config) => {
@@ -100,35 +225,59 @@ export default API;
 
 export const authAPI = {
   register: async (payload) => {
-    const res = await API.post("/user/register", payload);
-    return res.data;
+    return requestWithRetry({
+      method: "post",
+      url: "/user/register",
+      data: payload,
+      retries: 0,
+    });
   },
   login: async (payload) => {
-    const res = await API.post("/user/login", payload);
-    return res.data;
+    return requestWithRetry({
+      method: "post",
+      url: "/user/login",
+      data: payload,
+      retries: 0,
+    });
   },
   logout: async () => {
-    const res = await API.post("/user/logout");
-    return res.data;
+    return requestWithRetry({
+      method: "post",
+      url: "/user/logout",
+      retries: 0,
+    });
   },
 };
 
 export const userAPI = {
   getProfile: async (token) => {
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
-    const res = await API.get("/user/me", config);
-    return res.data;
+    return requestWithRetry({
+      method: "get",
+      url: "/user/me",
+      headers: config?.headers,
+      retries: 1,
+      dedupe: true,
+    });
   },
   updateProfile: async (payload) => {
-    const res = await API.put("/user/update", payload);
-    return res.data;
+    return requestWithRetry({
+      method: "put",
+      url: "/user/update",
+      data: payload,
+      retries: 0,
+    });
   },
 };
 
 export const eventAPI = {
   submitRequest: async (payload) => {
-    const res = await API.post("/events/request", payload);
-    return res.data;
+    return requestWithRetry({
+      method: "post",
+      url: "/events/request",
+      data: payload,
+      retries: 0,
+    });
   },
 
   create: async (payload, images) => {
@@ -149,19 +298,30 @@ export const eventAPI = {
       });
     });
 
-    const res = await API.post("/events/request", form, {
+    return requestWithRetry({
+      method: "post",
+      url: "/events/request",
+      data: form,
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      retries: 0,
+      timeout: 25000,
     });
-
-    return res.data;
   },
 
   getAll: async (params = { limit: 60 }) => {
     try {
-      const res = await API.get("/events/home", { params });
-      return res.data.events;
+      const data = await requestWithRetry({
+        method: "get",
+        url: "/events/home",
+        params,
+        retries: 2,
+        dedupe: true,
+        useCache: true,
+        cacheTtlMs: CACHE_TTL.home,
+      });
+      return data?.events || [];
     } catch (err) {
       console.log("ERROR FETCHING EVENTS:", err.response?.data || err.message);
       return [];
@@ -169,14 +329,27 @@ export const eventAPI = {
   },
 
   getList: async (params) => {
-    const res = await API.get("/events", { params });
-    return res.data;
+    return requestWithRetry({
+      method: "get",
+      url: "/events",
+      params,
+      retries: 2,
+      dedupe: true,
+      useCache: true,
+      cacheTtlMs: CACHE_TTL.events,
+    });
   },
 
   getById: async (id) => {
     try {
-      const res = await API.get(`/events/${id}`);
-      return res.data;
+      return await requestWithRetry({
+        method: "get",
+        url: `/events/${id}`,
+        retries: 1,
+        dedupe: true,
+        useCache: true,
+        cacheTtlMs: CACHE_TTL.eventDetails,
+      });
     } catch (err) {
       console.log("ERROR FETCHING EVENT:", err.response?.data || err.message);
       return null;
@@ -185,8 +358,18 @@ export const eventAPI = {
 
   search: async (query) => {
     try {
-      const res = await API.get(`/events/search?q=${encodeURIComponent(query)}`);
-      return res.data;
+      return await requestWithRetry({
+        method: "get",
+        url: "/events/search",
+        params: {
+          q: query,
+          limit: 15,
+        },
+        retries: 1,
+        dedupe: true,
+        useCache: true,
+        cacheTtlMs: CACHE_TTL.search,
+      });
     } catch (err) {
       console.log("SEARCH API ERROR:", err.response?.data || err.message);
       return [];
@@ -194,8 +377,13 @@ export const eventAPI = {
   },
   getMy: async () => {
     try {
-      const res = await API.get("/events/me");
-      return res.data.data;
+      const data = await requestWithRetry({
+        method: "get",
+        url: "/events/me",
+        retries: 1,
+        dedupe: true,
+      });
+      return data?.data || [];
     } catch (err) {
       console.log("MY EVENTS ERROR:", err.response?.data || err.message);
       return [];
@@ -210,7 +398,11 @@ export const eventAPI = {
         throw new Error("Invalid event id");
       }
 
-      await API.delete(`/events/me/${safeId}`);
+      await requestWithRetry({
+        method: "delete",
+        url: `/events/me/${safeId}`,
+        retries: 0,
+      });
     } catch (err) {
       console.log("DELETE EVENT ERROR:", err.response?.data || err.message);
       throw err;
@@ -218,15 +410,31 @@ export const eventAPI = {
   },
 
   getAdminEvents: async (params) => {
-    const res = await API.get("/events/admin", { params });
-    return res.data;
+    return requestWithRetry({
+      method: "get",
+      url: "/events/admin",
+      params,
+      retries: 1,
+      dedupe: true,
+      useCache: true,
+      cacheTtlMs: CACHE_TTL.events,
+    });
   },
 
   updateStatus: async (id, status) => {
-    await API.patch(`/events/admin/${id}/status`, { status });
+    await requestWithRetry({
+      method: "patch",
+      url: `/events/admin/${id}/status`,
+      data: { status },
+      retries: 0,
+    });
   },
   
   deleteAdmin: async (id) => {
-    await API.delete(`/events/admin/${id}`);
+    await requestWithRetry({
+      method: "delete",
+      url: `/events/admin/${id}`,
+      retries: 0,
+    });
   }
 };
