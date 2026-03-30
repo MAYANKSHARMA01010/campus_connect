@@ -43,6 +43,7 @@ const API = axios.create({
 
 const responseCache = new Map();
 const inflightGetRequests = new Map();
+const PERSISTENT_CACHE_PREFIX = "cc_cache:";
 
 const CACHE_TTL = {
   home: 60 * 1000,
@@ -84,6 +85,37 @@ const setCachedData = (cacheKey, data, ttlMs) => {
   });
 };
 
+const getPersistentCacheKey = (cacheKey) => `${PERSISTENT_CACHE_PREFIX}${cacheKey}`;
+
+const getPersistentCachedData = async (cacheKey) => {
+  try {
+    const raw = await AsyncStorage.getItem(getPersistentCacheKey(cacheKey));
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed?.data || !parsed?.expiresAt) return null;
+    if (Date.now() > parsed.expiresAt) return null;
+
+    return parsed.data;
+  } catch (err) {
+    return null;
+  }
+};
+
+const setPersistentCachedData = async (cacheKey, data, ttlMs) => {
+  try {
+    await AsyncStorage.setItem(
+      getPersistentCacheKey(cacheKey),
+      JSON.stringify({
+        data,
+        expiresAt: Date.now() + ttlMs,
+      })
+    );
+  } catch (_) {
+    // Ignore write failures to keep API calls non-blocking.
+  }
+};
+
 const isRetryableError = (err) => {
   if (!err?.response) return true;
   return RETRYABLE_STATUS.has(err.response.status);
@@ -99,6 +131,7 @@ const requestWithRetry = async ({
   retries = 1,
   retryDelayMs = 300,
   useCache = false,
+  persistentCache = false,
   cacheTtlMs = 0,
   dedupe = false,
 }) => {
@@ -133,6 +166,9 @@ const requestWithRetry = async ({
 
         if (isGet && useCache && cacheKey && cacheTtlMs > 0) {
           setCachedData(cacheKey, response.data, cacheTtlMs);
+          if (persistentCache) {
+            setPersistentCachedData(cacheKey, response.data, cacheTtlMs);
+          }
         }
 
         return response.data;
@@ -142,6 +178,11 @@ const requestWithRetry = async ({
           if (isGet && useCache && cacheKey) {
             const staleData = responseCache.get(cacheKey)?.data;
             if (staleData) return staleData;
+
+            if (persistentCache) {
+              const persisted = await getPersistentCachedData(cacheKey);
+              if (persisted) return persisted;
+            }
           }
           throw err;
         }
@@ -319,6 +360,7 @@ export const eventAPI = {
         retries: 2,
         dedupe: true,
         useCache: true,
+        persistentCache: true,
         cacheTtlMs: CACHE_TTL.home,
       });
       return data?.events || [];
@@ -336,6 +378,7 @@ export const eventAPI = {
       retries: 2,
       dedupe: true,
       useCache: true,
+      persistentCache: true,
       cacheTtlMs: CACHE_TTL.events,
     });
   },
@@ -348,6 +391,7 @@ export const eventAPI = {
         retries: 1,
         dedupe: true,
         useCache: true,
+        persistentCache: true,
         cacheTtlMs: CACHE_TTL.eventDetails,
       });
     } catch (err) {
