@@ -34,19 +34,40 @@ export default function HomeScreen({ navigation }) {
     );
   }, []);
 
+  const toDateKey = React.useCallback((value) => {
+    if (!value) return null;
+    if (typeof value === "string" && value.includes("T")) {
+      return value.split("T")[0];
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toISOString().split("T")[0];
+  }, []);
+
   const loadEvents = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await eventAPI.getAll();
-      const today = new Date();
+      const todayKey = new Date().toISOString().split("T")[0];
 
-      const valid = data.filter((e) => e?.date);
+      const valid = data.filter((e) => toDateKey(e?.date));
 
-      setUpcoming(sortByDate(valid.filter((e) => new Date(e.date) >= today)));
+      setUpcoming(
+        sortByDate(
+          valid.filter((e) => {
+            const eventDateKey = toDateKey(e.date);
+            return eventDateKey && eventDateKey >= todayKey;
+          })
+        )
+      );
 
       setPast(
         sortByDate(
-          valid.filter((e) => new Date(e.date) < today),
+          valid.filter((e) => {
+            const eventDateKey = toDateKey(e.date);
+            return eventDateKey && eventDateKey < todayKey;
+          }),
           false
         )
       );
@@ -73,7 +94,7 @@ export default function HomeScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  }, [sortByDate]);
+  }, [sortByDate, toDateKey]);
 
   React.useEffect(() => {
     loadEvents();
