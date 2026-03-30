@@ -53,6 +53,11 @@ SLOW_QUERY_THRESHOLD_MS=250
 # Precomputed home sections refresh (1-5 minutes recommended)
 HOME_SECTION_REFRESH_MS=60000
 HOME_SECTION_LIMIT=120
+
+# DB protection against hung requests
+DB_CALL_TIMEOUT_MS=7000
+DB_BREAKER_FAILURE_THRESHOLD=5
+DB_BREAKER_COOLDOWN_MS=30000
 ```
 
 ## Database Setup

@@ -1,5 +1,6 @@
 const { prisma } = require("../config/database");
 const { getHomeSectionsSnapshot, refreshHomeSections } = require("../services/homeSectionsCache");
+const { executeDbCall, isDbGuardError } = require("../utils/dbGuard");
 
 const EVENT_IMAGE_PREVIEW_SELECT = {
     take: 1,
@@ -39,6 +40,14 @@ function setPublicCache(res, maxAgeSeconds = 30) {
     res.set("Cache-Control", `public, max-age=${maxAgeSeconds}, stale-while-revalidate=60`);
 }
 
+function tryHandleDbGuardError(res, err, fallbackMessage) {
+    if (!isDbGuardError(err)) return false;
+    return res.status(err.statusCode || 503).json({
+        error: fallbackMessage,
+        reason: err.message,
+    });
+}
+
 async function createEventController(req, res) {
     try {
         const {
@@ -66,7 +75,7 @@ async function createEventController(req, res) {
             return res.status(400).json({ ERROR: "At least 4 images are required" });
         }
 
-        const createdEvent = await prisma.eventRequest.create({
+        const createdEvent = await executeDbCall("event.create", () => prisma.eventRequest.create({
             data: {
                 title,
                 description,
@@ -85,13 +94,14 @@ async function createEventController(req, res) {
             include: {
                 images: true,
             },
-        });
+        }));
 
         return res.status(201).json({
             message: "Event request submitted successfully",
             event: createdEvent,
         });
     } catch (err) {
+        if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
         console.error("createEventController ERROR:", err);
         return res.status(500).json({ ERROR: "Internal Server Error" });
     }
@@ -128,19 +138,19 @@ async function getAllEventsController(req, res) {
         if (sort === "date") orderBy = { date: "asc" };
 
         const [events, categories, total] = await Promise.all([
-            prisma.eventRequest.findMany({
+            executeDbCall("event.list", () => prisma.eventRequest.findMany({
                 where,
                 skip: (page - 1) * limit,
                 take: limit,
                 orderBy,
                 select: EVENT_LIST_SELECT,
-            }),
-            prisma.eventRequest.findMany({
+            })),
+            executeDbCall("event.categories", () => prisma.eventRequest.findMany({
                 where: { status: "APPROVED" },
                 select: { category: true },
                 distinct: ["category"],
-            }),
-            prisma.eventRequest.count({ where }),
+            })),
+            executeDbCall("event.count", () => prisma.eventRequest.count({ where })),
         ]);
 
         return res.json({
@@ -151,6 +161,7 @@ async function getAllEventsController(req, res) {
             limit,
         });
     } catch (error) {
+        if (tryHandleDbGuardError(res, error, "Database unavailable")) return;
         console.error("🔥 getAllEventsController ERROR:", error);
         return res
             .status(500)
@@ -165,7 +176,7 @@ async function getAllEventsForHomeSecreenController(req, res) {
         let cached = getHomeSectionsSnapshot();
 
         if (!cached.updatedAt) {
-            await refreshHomeSections(prisma, limit);
+            await executeDbCall("home.sections.refresh", () => refreshHomeSections(prisma, limit));
             cached = getHomeSectionsSnapshot();
         }
 
@@ -180,6 +191,7 @@ async function getAllEventsForHomeSecreenController(req, res) {
             generatedAt: cached.updatedAt,
         });
     } catch (err) {
+        if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
         console.error("getAllEventsForHomeSecreenController ERROR:", err);
         return res.status(500).json({ ERROR: "Failed to fetch events" });
     }
@@ -196,7 +208,7 @@ async function getEventByIdController(req, res) {
             return res.status(400).json({ ERROR: "Invalid event id" });
         }
 
-        const event = await prisma.eventRequest.findUnique({
+        const event = await executeDbCall("event.byId", () => prisma.eventRequest.findUnique({
             where: { id },
             include: {
                 images: {
@@ -210,12 +222,13 @@ async function getEventByIdController(req, res) {
                     },
                 },
             },
-        });
+        }));
 
         if (!event) return res.status(404).json({ ERROR: "Event not found" });
 
         return res.status(200).json({ event });
     } catch (err) {
+        if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
         console.error("getEventByIdController ERROR:", err);
         return res.status(500).json({ ERROR: "Internal Server Error" });
     }
@@ -256,7 +269,7 @@ const searchEventsController = async (req, res) => {
         };
 
         const [events, total] = await Promise.all([
-            prisma.eventRequest.findMany({
+            executeDbCall("event.search", () => prisma.eventRequest.findMany({
                 where: whereCondition,
                 skip,
                 take: limit,
@@ -273,8 +286,8 @@ const searchEventsController = async (req, res) => {
                         },
                     },
                 },
-            }),
-            prisma.eventRequest.count({ where: whereCondition }),
+            })),
+            executeDbCall("event.search.count", () => prisma.eventRequest.count({ where: whereCondition })),
         ]);
 
         return res.status(200).json({
@@ -285,6 +298,7 @@ const searchEventsController = async (req, res) => {
             results: events,
         });
     } catch (error) {
+        if (tryHandleDbGuardError(res, error, "Database unavailable")) return;
         console.error("SEARCH EVENTS ERROR:", error);
 
         return res.status(500).json({
@@ -325,15 +339,15 @@ async function getAdminEventsController(req, res) {
         if (sortBy === "past") orderBy = { date: "desc" };
 
         const [events, total] = await Promise.all([
-            prisma.eventRequest.findMany({
+            executeDbCall("admin.events.list", () => prisma.eventRequest.findMany({
                 where,
                 skip,
                 take: limit,
                 orderBy,
                 select: EVENT_LIST_SELECT,
-            }),
+            })),
 
-            prisma.eventRequest.count({ where }),
+            executeDbCall("admin.events.count", () => prisma.eventRequest.count({ where })),
         ]);
 
         return res.json({
@@ -343,6 +357,7 @@ async function getAdminEventsController(req, res) {
             totalPages: Math.ceil(total / limit),
         });
     } catch (err) {
+        if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
         console.error("ADMIN FETCH ERROR:", err);
         return res.status(500).json({ error: "Admin fetch failed" });
     }
@@ -357,10 +372,10 @@ async function updateEventStatusController(req, res) {
             return res.status(400).json({ error: "Invalid status value" });
         }
 
-        const updatedEvent = await prisma.eventRequest.update({
+        const updatedEvent = await executeDbCall("admin.event.status", () => prisma.eventRequest.update({
             where: { id: Number(id) },
             data: { status },
-        });
+        }));
 
         return res.json({
             success: true,
@@ -368,6 +383,7 @@ async function updateEventStatusController(req, res) {
             event: updatedEvent,
         });
     } catch (err) {
+        if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
         console.error("UPDATE STATUS ERROR:", err);
         return res.status(500).json({ error: "Failed to update event status" });
     }
@@ -377,15 +393,16 @@ async function deleteEventController(req, res) {
     try {
         const { id } = req.params;
 
-        await prisma.eventRequest.delete({
+        await executeDbCall("admin.event.delete", () => prisma.eventRequest.delete({
             where: { id: Number(id) },
-        });
+        }));
 
         return res.json({
             success: true,
             message: "Event deleted successfully",
         });
     } catch (err) {
+        if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
         console.error("DELETE EVENT ERROR:", err);
         return res.status(500).json({ error: "Failed to delete event" });
     }
@@ -395,7 +412,7 @@ async function getMyEventsController(req, res) {
     try {
         const userId = req.user.id;
 
-        const events = await prisma.eventRequest.findMany({
+        const events = await executeDbCall("user.events.list", () => prisma.eventRequest.findMany({
             where: {
                 createdById: userId,
             },
@@ -403,7 +420,7 @@ async function getMyEventsController(req, res) {
             orderBy: {
                 createdAt: "desc",
             },
-        });
+        }));
 
         res.json({
             success: true,
@@ -411,6 +428,7 @@ async function getMyEventsController(req, res) {
             data: events,
         });
     } catch (err) {
+        if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
         console.error(err);
         res.status(500).json({
             success: false,
@@ -430,12 +448,12 @@ async function deleteMyEventController(req, res) {
             });
         }
 
-        const event = await prisma.eventRequest.findFirst({
+        const event = await executeDbCall("user.event.lookup", () => prisma.eventRequest.findFirst({
             where: {
                 id: eventId,
                 createdById: userId,
             },
-        });
+        }));
 
         if (!event) {
             return res.status(404).json({
@@ -444,19 +462,20 @@ async function deleteMyEventController(req, res) {
             });
         }
 
-        await prisma.eventImage.deleteMany({
+        await executeDbCall("user.event.images.delete", () => prisma.eventImage.deleteMany({
             where: { eventRequestId: eventId },
-        });
+        }));
 
-        await prisma.eventRequest.delete({
+        await executeDbCall("user.event.delete", () => prisma.eventRequest.delete({
             where: { id: eventId },
-        });
+        }));
 
         return res.json({
             success: true,
             message: "Event deleted successfully",
         });
     } catch (err) {
+        if (tryHandleDbGuardError(res, err, "Database unavailable")) return;
         console.error("DELETE MY EVENT ERROR:", err);
         return res.status(500).json({
             success: false,

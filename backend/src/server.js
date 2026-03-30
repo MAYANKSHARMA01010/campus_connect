@@ -7,6 +7,7 @@ const { prisma } = require("./config/database");
 const { sendAlert, maskDbUrl } = require("./utils/alerts");
 const { runWithRequestContext } = require("./utils/requestContext");
 const { startHomeSectionsScheduler } = require("./services/homeSectionsCache");
+const { executeDbCall } = require("./utils/dbGuard");
 require("dotenv").config();
 
 const app = express();
@@ -81,7 +82,7 @@ app.get("/health", (req, res) => {
 
 app.get("/health/db", async (req, res) => {
   try {
-    await prisma.$queryRaw`SELECT 1`;
+    await executeDbCall("health.db", () => prisma.$queryRaw`SELECT 1`, 3000);
     return res.status(200).json({
       ok: true,
       database: "reachable",
