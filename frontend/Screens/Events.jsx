@@ -19,6 +19,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { useEvents } from "../hooks/useEvents";
 import EventCard from "../components/EventCard";
+import { ListSkeleton } from "../components/SkeletonLoaders";
 import { useAppTheme } from "../theme/useAppTheme";
 import { Spacing, Fonts, Radius } from "../theme/theme";
 import { scale } from "../theme/layout";
@@ -89,10 +90,6 @@ export default function EventScreen({ navigation }) {
   const renderItem = useCallback(
     ({ item }) => <EventCard item={item} navigation={navigation} />,
     [navigation]
-  );
-
-  const ShimmerCard = () => (
-    <View style={[styles.shimmerCard, { backgroundColor: colors.border }]} />
   );
 
   return (
@@ -185,13 +182,9 @@ export default function EventScreen({ navigation }) {
         </View>
       </View>
 
-      <Suspense fallback={<ShimmerCard />}>
+      <Suspense fallback={<ListSkeleton count={3} />}>
         {loading ? (
-          <>
-            <ShimmerCard />
-            <ShimmerCard />
-            <ShimmerCard />
-          </>
+          <ListSkeleton count={3} />
         ) : (
           <FlatList
             data={events}
@@ -280,10 +273,4 @@ const styles = StyleSheet.create({
   },
 
   pastChip: {},
-
-  shimmerCard: {
-    height: scale(200),
-    borderRadius: Radius.md,
-    margin: Spacing.md,
-  },
 });

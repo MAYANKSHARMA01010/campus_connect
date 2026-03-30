@@ -5,11 +5,11 @@ import {
   ScrollView,
   ImageBackground,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
 import { Appbar, Searchbar, Text, Button, Surface } from "react-native-paper";
 
 import EventSection from "../components/EventSection";
+import { HomeSkeleton } from "../components/SkeletonLoaders";
 import { eventAPI } from "../api/api";
 
 import { useAppTheme } from "../theme/useAppTheme";
@@ -103,7 +103,7 @@ export default function HomeScreen({ navigation }) {
   if (loading) {
     return (
       <View style={[styles.loaderWrap, { backgroundColor: colors.background }]}> 
-        <ActivityIndicator size="large" color={colors.primary} />
+        <HomeSkeleton />
       </View>
     );
   }
@@ -285,8 +285,7 @@ const Section = React.memo(({ title, data, navigation }) => {
 const styles = StyleSheet.create({
   loaderWrap: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    paddingTop: Spacing.lg,
   },
 
   container: {

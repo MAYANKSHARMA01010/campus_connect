@@ -128,6 +128,7 @@ const requestWithRetry = async ({
   data,
   headers,
   timeout,
+  signal,
   retries = 1,
   retryDelayMs = 300,
   useCache = false,
@@ -162,6 +163,7 @@ const requestWithRetry = async ({
           data,
           headers,
           timeout,
+          signal,
         });
 
         if (isGet && useCache && cacheKey && cacheTtlMs > 0) {
@@ -400,7 +402,7 @@ export const eventAPI = {
     }
   },
 
-  search: async (query) => {
+  search: async (query, options = {}) => {
     try {
       return await requestWithRetry({
         method: "get",
@@ -409,6 +411,7 @@ export const eventAPI = {
           q: query,
           limit: 15,
         },
+        signal: options.signal,
         retries: 1,
         dedupe: true,
         useCache: true,

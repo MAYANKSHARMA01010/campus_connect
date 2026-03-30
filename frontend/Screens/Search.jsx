@@ -12,7 +12,6 @@ import {
   Surface,
   Text,
   Searchbar,
-  ActivityIndicator,
   Chip,
   Divider,
 } from "react-native-paper";
@@ -21,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { eventAPI } from "../api/api";
 import EventCard from "../components/EventCard";
+import { ListSkeleton } from "../components/SkeletonLoaders";
 
 import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
@@ -37,21 +37,34 @@ export default function SearchScreen() {
   const [error, setError] = useState(null);
 
   const activeRequest = useRef(0);
+  const activeControllerRef = useRef(null);
 
   const fetchResults = useCallback(async (searchText = "") => {
     const currentReq = ++activeRequest.current;
 
     if (!searchText.trim()) {
+      if (activeControllerRef.current) {
+        activeControllerRef.current.abort();
+      }
       setResults([]);
       setLoading(false);
       return;
     }
 
     try {
+      if (activeControllerRef.current) {
+        activeControllerRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      activeControllerRef.current = controller;
+
       setLoading(true);
       setError(null);
 
-      const data = await eventAPI.search(searchText.trim());
+      const data = await eventAPI.search(searchText.trim(), {
+        signal: controller.signal,
+      });
 
       if (activeRequest.current !== currentReq) return;
 
@@ -60,7 +73,8 @@ export default function SearchScreen() {
       );
 
       setResults(safeResults);
-    } catch {
+    } catch (err) {
+      if (err?.code === "ERR_CANCELED") return;
       setError("Failed to search");
     } finally {
       if (activeRequest.current === currentReq) {
@@ -78,8 +92,21 @@ export default function SearchScreen() {
       }
     }, 350);
 
-    return () => clearTimeout(delay);
+    return () => {
+      clearTimeout(delay);
+      if (!query.trim() && activeControllerRef.current) {
+        activeControllerRef.current.abort();
+      }
+    };
   }, [query, fetchResults]);
+
+  useEffect(() => {
+    return () => {
+      if (activeControllerRef.current) {
+        activeControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const onRefresh = useCallback(async () => {
     if (!query.trim()) return;
@@ -125,11 +152,7 @@ export default function SearchScreen() {
           <Divider />
 
           <View style={styles.content}>
-            {loading && (
-              <View style={styles.center}>
-                <ActivityIndicator size="large" />
-              </View>
-            )}
+            {loading && results.length === 0 && <ListSkeleton count={3} />}
 
             {!loading && error && (
               <View style={styles.center}>

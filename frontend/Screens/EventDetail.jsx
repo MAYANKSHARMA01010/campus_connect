@@ -11,7 +11,6 @@ import {
 import {
   Appbar,
   Text,
-  ActivityIndicator,
   Surface,
   Button,
   Chip,
@@ -20,6 +19,7 @@ import {
 
 import { useEventDetails } from "../hooks/useEventDetails";
 import EventHeroSlider from "../components/EventHeroSlider";
+import { DetailSkeleton } from "../components/SkeletonLoaders";
 
 import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
@@ -152,8 +152,8 @@ ${event?.description || ""}`,
 
   if (loading)
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={{ flex: 1, backgroundColor: colors.background }}> 
+        <DetailSkeleton />
       </View>
     );
 
