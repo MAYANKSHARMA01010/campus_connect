@@ -1,5 +1,39 @@
 const { prisma } = require("../config/database");
 
+const EVENT_IMAGE_PREVIEW_SELECT = {
+    take: 1,
+    orderBy: { id: "asc" },
+    select: {
+        id: true,
+        url: true,
+    },
+};
+
+const EVENT_LIST_SELECT = {
+    id: true,
+    title: true,
+    description: true,
+    category: true,
+    subCategory: true,
+    date: true,
+    time: true,
+    location: true,
+    hostName: true,
+    status: true,
+    createdAt: true,
+    images: EVENT_IMAGE_PREVIEW_SELECT,
+};
+
+function toPositiveNumber(value, fallback) {
+    const num = Number(value);
+    if (Number.isNaN(num) || num <= 0) return fallback;
+    return Math.floor(num);
+}
+
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
 async function createEventController(req, res) {
     try {
         const {
@@ -60,7 +94,9 @@ async function createEventController(req, res) {
 
 async function getAllEventsController(req, res) {
     try {
-        const { page = 1, limit = 8, category, sort, past = "false" } = req.query;
+        const { category, sort, past = "false" } = req.query;
+        const page = toPositiveNumber(req.query.page, 1);
+        const limit = clamp(toPositiveNumber(req.query.limit, 8), 1, 20);
 
         const now = new Date();
         const showPast = past === "true";
@@ -79,33 +115,33 @@ async function getAllEventsController(req, res) {
             where.category = category;
         }
 
-        let orderBy = { id: "desc" };
-        if (sort === "recent") orderBy = { id: "desc" };
+        let orderBy = { createdAt: "desc" };
+        if (sort === "recent") orderBy = { createdAt: "desc" };
         if (sort === "location") orderBy = { location: "asc" };
         if (sort === "date") orderBy = { date: "asc" };
 
-        const events = await prisma.eventRequest.findMany({
-            where,
-            skip: (page - 1) * Number(limit),
-            take: Number(limit),
-            orderBy,
-            include: {
-                images: true,
-            },
-        });
-
-        const categories = await prisma.eventRequest.findMany({
-            where: { status: "APPROVED" },
-            select: { category: true },
-            distinct: ["category"],
-        });
-
-        const total = await prisma.eventRequest.count({ where });
+        const [events, categories, total] = await Promise.all([
+            prisma.eventRequest.findMany({
+                where,
+                skip: (page - 1) * limit,
+                take: limit,
+                orderBy,
+                select: EVENT_LIST_SELECT,
+            }),
+            prisma.eventRequest.findMany({
+                where: { status: "APPROVED" },
+                select: { category: true },
+                distinct: ["category"],
+            }),
+            prisma.eventRequest.count({ where }),
+        ]);
 
         return res.json({
             events,
             categories: categories.map((c) => c.category),
             total,
+            page,
+            limit,
         });
     } catch (error) {
         console.error("🔥 getAllEventsController ERROR:", error);
@@ -117,6 +153,8 @@ async function getAllEventsController(req, res) {
 
 async function getAllEventsForHomeSecreenController(req, res) {
     try {
+        const limit = clamp(toPositiveNumber(req.query.limit, 60), 1, 120);
+
         const events = await prisma.eventRequest.findMany({
             where: {
                 status: "APPROVED",
@@ -128,7 +166,10 @@ async function getAllEventsForHomeSecreenController(req, res) {
                 date: true,
                 category: true,
                 email: true,
+                location: true,
                 images: {
+                    take: 1,
+                    orderBy: { id: "asc" },
                     select: {
                         id: true,
                         url: true,
@@ -136,8 +177,9 @@ async function getAllEventsForHomeSecreenController(req, res) {
                 },
             },
             orderBy: {
-                id: "asc",
+                date: "asc",
             },
+            take: limit,
         });
 
         return res.status(200).json({ events });
@@ -187,11 +229,12 @@ const searchEventsController = async (req, res) => {
             q = "",
             category,
             status = "APPROVED",
-            page = 1,
-            limit = 10,
         } = req.query;
 
-        const skip = (Number(page) - 1) * Number(limit);
+        const page = toPositiveNumber(req.query.page, 1);
+        const limit = clamp(toPositiveNumber(req.query.limit, 10), 1, 20);
+
+        const skip = (page - 1) * limit;
 
         const whereCondition = {
             AND: [
@@ -216,12 +259,12 @@ const searchEventsController = async (req, res) => {
             prisma.eventRequest.findMany({
                 where: whereCondition,
                 skip,
-                take: Number(limit),
+                take: limit,
                 orderBy: {
                     createdAt: "desc",
                 },
-                include: {
-                    images: true,
+                select: {
+                    ...EVENT_LIST_SELECT,
                     createdBy: {
                         select: {
                             id: true,
@@ -236,8 +279,8 @@ const searchEventsController = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            page: Number(page),
-            limit: Number(limit),
+            page,
+            limit,
             total,
             results: events,
         });
@@ -257,20 +300,21 @@ async function getAdminEventsController(req, res) {
             search = "",
             status,
             sortBy = "recent",
-            pageNumber = 1,
-            pageSize = 10,
         } = req.query;
 
-        const page = Number(pageNumber);
-        const limit = Number(pageSize);
+        const page = toPositiveNumber(req.query.pageNumber, 1);
+        const limit = clamp(toPositiveNumber(req.query.pageSize, 10), 1, 30);
         const skip = (page - 1) * limit;
 
-        const where = {
-            title: {
-                contains: search,
+        const where = {};
+
+        const searchText = String(search).trim();
+        if (searchText) {
+            where.title = {
+                contains: searchText,
                 mode: "insensitive",
-            },
-        };
+            };
+        }
 
         if (status) where.status = status;
 
@@ -286,9 +330,7 @@ async function getAdminEventsController(req, res) {
                 skip,
                 take: limit,
                 orderBy,
-                include: {
-                    images: true,
-                },
+                select: EVENT_LIST_SELECT,
             }),
 
             prisma.eventRequest.count({ where }),
@@ -357,9 +399,7 @@ async function getMyEventsController(req, res) {
             where: {
                 createdById: userId,
             },
-            include: {
-                images: true,
-            },
+            select: EVENT_LIST_SELECT,
             orderBy: {
                 createdAt: "desc",
             },

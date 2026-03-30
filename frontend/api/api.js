@@ -103,9 +103,9 @@ export const eventAPI = {
     return res.data;
   },
 
-  getAll: async () => {
+  getAll: async (params = { limit: 60 }) => {
     try {
-      const res = await API.get("/events/home");
+      const res = await API.get("/events/home", { params });
       return res.data.events;
     } catch (err) {
       console.log("ERROR FETCHING EVENTS:", err.response?.data || err.message);

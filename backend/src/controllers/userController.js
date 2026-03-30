@@ -218,11 +218,23 @@ async function updateUserController(req, res) {
 
 async function getAllUsers(req, res) {
     try {
+        const page = Math.max(Number(req.query.page) || 1, 1);
+        const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
+
         const users = await prisma.user.findMany({
-            include: {
-                eventRequests: {
-                    include: {
-                        images: true,
+            skip: (page - 1) * limit,
+            take: limit,
+            select: {
+                id: true,
+                name: true,
+                username: true,
+                email: true,
+                gender: true,
+                role: true,
+                createdAt: true,
+                _count: {
+                    select: {
+                        eventRequests: true,
                     },
                 },
             },
@@ -231,9 +243,14 @@ async function getAllUsers(req, res) {
             },
         });
 
+        const total = await prisma.user.count();
+
         return res.status(200).json({
             message: "Users fetched successfully",
             count: users.length,
+            total,
+            page,
+            limit,
             users,
         });
     }

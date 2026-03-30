@@ -101,12 +101,12 @@ JWT_SECRET="your_super_secret_jwt_key"
 
 ```
 .
-├── config          # Configuration (DB, CORS)
-├── controllers     # Route logic
-├── middlewares     # Auth and validation middlewares
-├── models          # Database models (Prisma)
-├── prisma          # Prisma schema and migrations
-├── routes          # API route definitions
-├── utils           # Helper functions
-└── index.js        # Entry point
+├── prisma              # Prisma schema and migrations
+└── src
+  ├── config          # Configuration (DB, CORS)
+  ├── controllers     # Route logic
+  ├── middlewares     # Auth and validation middlewares
+  ├── routes          # API route definitions
+  ├── utils           # Helper functions
+  └── server.js       # Entry point
 ```

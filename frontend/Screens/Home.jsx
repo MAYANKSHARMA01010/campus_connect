@@ -5,6 +5,7 @@ import {
   ScrollView,
   ImageBackground,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Appbar, Searchbar, Text, Button, Surface } from "react-native-paper";
 
@@ -23,6 +24,7 @@ export default function HomeScreen({ navigation }) {
   const [past, setPast] = React.useState([]);
   const [sportsCulture, setSportsCulture] = React.useState([]);
   const [eduTech, setEduTech] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
 
   const sortByDate = React.useCallback((arr, asc = true) => {
     return [...arr].sort((a, b) =>
@@ -34,6 +36,7 @@ export default function HomeScreen({ navigation }) {
 
   const loadEvents = React.useCallback(async () => {
     try {
+      setLoading(true);
       const data = await eventAPI.getAll();
       const today = new Date();
 
@@ -67,12 +70,22 @@ export default function HomeScreen({ navigation }) {
       );
     } catch (err) {
       console.log("LoadEvents error:", err);
+    } finally {
+      setLoading(false);
     }
   }, [sortByDate]);
 
   React.useEffect(() => {
     loadEvents();
   }, [loadEvents]);
+
+  if (loading) {
+    return (
+      <View style={[styles.loaderWrap, { backgroundColor: colors.background }]}> 
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -249,6 +262,12 @@ const Section = React.memo(({ title, data, navigation }) => {
 });
 
 const styles = StyleSheet.create({
+  loaderWrap: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   container: {
     paddingBottom: scale(110),
   },
