@@ -61,7 +61,7 @@ model EventImage {
   id             Int          @id @default(autoincrement())
   url            String
   eventRequestId Int
-  eventRequest   EventRequest @relation(fields: [eventRequestId], references: [id])
+  eventRequest   EventRequest @relation(fields: [eventRequestId], references: [id], onDelete: Cascade)
 
   @@index([eventRequestId])
 }

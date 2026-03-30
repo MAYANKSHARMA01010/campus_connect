@@ -500,10 +500,6 @@ async function deleteMyEventController(req, res) {
             });
         }
 
-        await executeDbCall("user.event.images.delete", () => prisma.eventImage.deleteMany({
-            where: { eventRequestId: eventId },
-        }));
-
         await executeDbCall("user.event.delete", () => prisma.eventRequest.delete({
             where: { id: eventId },
         }));
