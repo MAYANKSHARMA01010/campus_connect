@@ -16,7 +16,7 @@ function createToken(payload) {
 function verifyToken(token) {
     try {
         return jwt.verify(token, SECRET);
-    } 
+    }
     catch (err) {
         throw err;
     }
@@ -36,13 +36,13 @@ async function authenticate(req, res, next) {
         const decoded = verifyToken(token);
         req.user = decoded;
         next();
-    } 
+    }
     catch (err) {
         return res.status(401).json({
             ERROR:
                 err.name === "TokenExpiredError"
-                ? "Token expired"
-                : "Invalid or expired token",
+                    ? "Token expired"
+                    : "Invalid or expired token",
         });
     }
 }

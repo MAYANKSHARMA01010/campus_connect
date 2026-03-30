@@ -7,7 +7,7 @@ function isAdmin(req, res, next) {
         }
 
         return res.status(403).json({ ERROR: "Admin access required" });
-    } 
+    }
     catch (err) {
         console.error("isAdmin error:", err);
         return res.status(500).json({ ERROR: "Server error" });

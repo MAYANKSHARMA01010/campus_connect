@@ -150,7 +150,7 @@ app.get('/get-all-events', async (req, res) => {
       limit,
       data,
     });
-  } 
+  }
   catch (err) {
     console.error("❌ Error fetching events:", err);
     return res.status(500).json({ error: "Internal Server Error" });

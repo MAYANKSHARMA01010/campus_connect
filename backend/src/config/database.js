@@ -15,7 +15,7 @@ const prismaClient = databaseUrl
 	? new PrismaClient({
 		datasources: { db: { url: databaseUrl } },
 		log: [{ emit: "event", level: "query" }],
-	  })
+	})
 	: new PrismaClient({ log: [{ emit: "event", level: "query" }] });
 
 prismaClient.$on("query", (event) => {
