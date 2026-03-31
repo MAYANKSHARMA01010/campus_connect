@@ -128,8 +128,6 @@ async function startHomeSectionsScheduler(prisma) {
       console.error("[HOME_SECTION_REFRESH_ERROR]", err?.message || err);
     });
   }, intervalMs);
-
-  console.log(`[home-cache] refresh interval ${intervalMs}ms`);
 }
 
 module.exports = {

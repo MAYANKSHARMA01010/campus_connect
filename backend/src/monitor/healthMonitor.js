@@ -54,7 +54,6 @@ async function runOnce() {
 }
 
 async function startMonitor() {
-  console.log(`[monitor] Checking ${MONITOR_BASE_URL} every ${CHECK_INTERVAL_MS}ms`);
   await runOnce();
 
   setInterval(() => {

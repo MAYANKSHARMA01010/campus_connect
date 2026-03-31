@@ -24,10 +24,6 @@ function createRedisClient() {
         }
     });
 
-    client.on("connect", () => {
-        console.log("[cache] redis connected");
-    });
-
     return client;
 }
 
