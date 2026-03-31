@@ -51,7 +51,17 @@ export const useEvents = (limit = 10) => {
                 }
 
                 if (categoryData.length) {
-                    setCategories(["all", ...categoryData]);
+                    const filteredCategories = categoryData.filter(
+                        (value) => {
+                            const category = String(value).toLowerCase();
+                            return (
+                                category !== "other" &&
+                                category !== "gaming" &&
+                                category !== "seminar"
+                            );
+                        }
+                    );
+                    setCategories(["all", ...filteredCategories]);
                 }
 
                 setTotalEvents(res?.total || 0);

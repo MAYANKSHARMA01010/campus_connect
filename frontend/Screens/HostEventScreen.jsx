@@ -38,10 +38,7 @@ const CATEGORY_OPTIONS = [
   "Tech",
   "Sports",
   "Workshop",
-  "Seminar",
   "Cultural",
-  "Gaming",
-  "Other",
 ];
 
 const INITIAL_FORM = {
