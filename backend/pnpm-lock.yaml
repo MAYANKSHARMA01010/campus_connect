@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@prisma/client':
-        specifier: 6.1.0
-        version: 6.1.0(prisma@6.1.0)
+        specifier: 6.19.2
+        version: 6.19.2(prisma@6.1.0)
       '@prisma/extension-accelerate':
         specifier: ^3.0.0
-        version: 3.0.1(@prisma/client@6.1.0(prisma@6.1.0))
+        version: 3.0.1(@prisma/client@6.19.2(prisma@6.1.0))
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -54,13 +54,16 @@ packages:
   '@ioredis/commands@1.5.1':
     resolution: {integrity: sha512-JH8ZL/ywcJyR9MmJ5BNqZllXNZQqQbnVZOqpPQqE1vHiFgAw4NHbvE0FOduNU8IX9babitBT46571OnPTT0Zcw==}
 
-  '@prisma/client@6.1.0':
-    resolution: {integrity: sha512-AbQYc5+EJKm1Ydfq3KxwcGiy7wIbm4/QbjCKWWoNROtvy7d6a3gmAGkKjK0iUCzh+rHV8xDhD5Cge8ke/kiy5Q==}
+  '@prisma/client@6.19.2':
+    resolution: {integrity: sha512-gR2EMvfK/aTxsuooaDA32D8v+us/8AAet+C3J1cc04SW35FPdZYgLF+iN4NDLUgAaUGTKdAB0CYenu1TAgGdMg==}
     engines: {node: '>=18.18'}
     peerDependencies:
       prisma: '*'
+      typescript: '>=5.1.0'
     peerDependenciesMeta:
       prisma:
+        optional: true
+      typescript:
         optional: true
 
   '@prisma/debug@6.1.0':
@@ -636,7 +639,7 @@ snapshots:
 
   '@ioredis/commands@1.5.1': {}
 
-  '@prisma/client@6.1.0(prisma@6.1.0)':
+  '@prisma/client@6.19.2(prisma@6.1.0)':
     optionalDependencies:
       prisma: 6.1.0
 
@@ -651,9 +654,9 @@ snapshots:
       '@prisma/fetch-engine': 6.1.0
       '@prisma/get-platform': 6.1.0
 
-  '@prisma/extension-accelerate@3.0.1(@prisma/client@6.1.0(prisma@6.1.0))':
+  '@prisma/extension-accelerate@3.0.1(@prisma/client@6.19.2(prisma@6.1.0))':
     dependencies:
-      '@prisma/client': 6.1.0(prisma@6.1.0)
+      '@prisma/client': 6.19.2(prisma@6.1.0)
 
   '@prisma/fetch-engine@6.1.0':
     dependencies:
