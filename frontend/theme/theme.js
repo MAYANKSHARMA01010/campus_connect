@@ -4,39 +4,41 @@ const { width, height } = Dimensions.get("window");
 
 export const Colors = {
     light: {
-        primary: "#4F46E5",
-        secondary: "#22C55E",
-        accent: "#F59E0B",
-        danger: "#EF4444",
+        primary: "#0B6BCB",
+        secondary: "#10B981",
+        accent: "#F97316",
+        danger: "#DC2626",
 
-        background: "#F9FAFB",
+        background: "#F3F6FB",
         surface: "#FFFFFF",
+        surfaceSoft: "#EEF4FD",
 
-        textPrimary: "#111827",
-        textSecondary: "#6B7280",
+        textPrimary: "#0F172A",
+        textSecondary: "#475569",
 
-        border: "#E5E7EB",
-        divider: "#D1D5DB",
+        border: "#D7E2EF",
+        divider: "#C7D3E2",
 
-        muted: "#9CA3AF",
+        muted: "#7C8EA5",
     },
 
     dark: {
-        primary: "#6366F1",
-        secondary: "#22C55E",
-        accent: "#F59E0B",
-        danger: "#EF4444",
+        primary: "#4C9FFF",
+        secondary: "#34D399",
+        accent: "#FB923C",
+        danger: "#F87171",
 
-        background: "#0F172A",
-        surface: "#1E293B",
+        background: "#0A1221",
+        surface: "#121E32",
+        surfaceSoft: "#1A2A45",
 
-        textPrimary: "#F8FAFC",
-        textSecondary: "#CBD5F5",
+        textPrimary: "#E6EDF7",
+        textSecondary: "#9DB2CC",
 
-        border: "#334155",
-        divider: "#475569",
+        border: "#263A59",
+        divider: "#334968",
 
-        muted: "#94A3B8",
+        muted: "#7C95B4",
     },
 };
 
@@ -67,6 +69,7 @@ export const Spacing = {
     lg: 16,
     xl: 20,
     xxl: 24,
+    xxxl: 28,
 };
 
 export const Radius = {
@@ -96,10 +99,10 @@ export const Dimension = {
 
 export const Shadows = {
     card: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-        elevation: 4,
+        shadowColor: "#0B1A2B",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.09,
+        shadowRadius: 14,
+        elevation: 6,
     },
 };

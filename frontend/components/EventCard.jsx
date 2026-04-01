@@ -51,6 +51,7 @@ const formatEventDate = (rawDate) => {
 const EventCard = memo(({ item, navigation }) => {
   const colors = useAppTheme();
   const { day, formattedDate, time, startsIn } = formatEventDate(item.date);
+  const category = item.category ? String(item.category).toUpperCase() : "EVENT";
 
   return (
     <TouchableOpacity
@@ -82,6 +83,10 @@ const EventCard = memo(({ item, navigation }) => {
               <Text style={{ color: colors.muted }}>No Image</Text>
             </View>
           )}
+
+          <View style={[styles.categoryPill, { backgroundColor: colors.surfaceSoft }]}> 
+            <Text style={[styles.categoryText, { color: colors.primary }]}>{category}</Text>
+          </View>
 
           <View style={styles.cardContent}>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
@@ -131,7 +136,7 @@ const styles = StyleSheet.create({
 
   cardImage: {
     width: "100%",
-    height: scale(280),
+    height: scale(220),
   },
 
   noImageBox: {
@@ -141,12 +146,30 @@ const styles = StyleSheet.create({
   },
 
   cardContent: {
-    padding: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
+  },
+
+  categoryPill: {
+    position: "absolute",
+    top: Spacing.md,
+    left: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.pill,
+  },
+
+  categoryText: {
+    fontSize: Fonts.size.xs,
+    fontWeight: Fonts.weight.bold,
+    letterSpacing: 0.5,
   },
 
   cardTitle: {
     fontSize: Fonts.size.lg,
     fontWeight: Fonts.weight.bold,
+    lineHeight: 24,
   },
 
   cardInfo: {

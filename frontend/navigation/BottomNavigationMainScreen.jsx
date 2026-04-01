@@ -79,8 +79,8 @@ function CustomTabBar({ state, navigation }) {
           {
             backgroundColor:
               scheme === "dark"
-                ? "rgba(30,41,59,0.55)"
-                : "rgba(255,255,255,0.45)",
+                ? "rgba(16,28,47,0.78)"
+                : "rgba(255,255,255,0.72)",
             borderColor: colors.border,
           },
         ]}
@@ -100,7 +100,7 @@ function CustomTabBar({ state, navigation }) {
           const isFocused = state.index === index;
           const scaleStyle = { transform: [{ scale: animatedScale[index] }] };
 
-          const iconColor = isFocused ? colors.primary : colors.muted;
+          const iconColor = isFocused ? "#FFFFFF" : colors.muted;
 
           const ICONS = {
             Home: <Entypo name="home" size={scale(24)} color={iconColor} />,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: "row",
     width: "90%",
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radius.pill,
     overflow: "hidden",
     borderWidth: 1,
@@ -200,8 +200,8 @@ const styles = StyleSheet.create({
     height: scale(44),
     borderRadius: Radius.pill,
     left: scale(4),
-    opacity: 0.2,
-    marginTop: 15,
+    opacity: 0.88,
+    marginTop: 10,
   },
 
   tabButton: {

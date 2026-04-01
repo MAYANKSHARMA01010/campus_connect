@@ -12,11 +12,11 @@ import {
   Surface,
   Text,
   Searchbar,
-  Chip,
   Divider,
 } from "react-native-paper";
 
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 
 import { eventAPI } from "../api/api";
 import EventCard from "../components/EventCard";
@@ -28,6 +28,7 @@ import { scale } from "../theme/layout";
 
 export default function SearchScreen() {
   const colors = useAppTheme();
+  const navigation = useNavigation();
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -116,8 +117,8 @@ export default function SearchScreen() {
   }, [query, fetchResults]);
 
   const renderItem = useCallback(
-    ({ item }) => (item ? <EventCard item={item} /> : null),
-    []
+    ({ item }) => (item ? <EventCard item={item} navigation={navigation} /> : null),
+    [navigation]
   );
 
   return (
@@ -134,19 +135,18 @@ export default function SearchScreen() {
               placeholder="Search by event, host or location…"
               value={query}
               onChangeText={setQuery}
-              style={[styles.search, { backgroundColor: colors.surface }]}
+              style={[
+                styles.search,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
               elevation={2}
               autoCorrect={false}
               autoCapitalize="none"
             />
 
-            <View style={styles.chipRow}>
-              {["Concert", "Sports", "Tech", "Workshop"].map((cat) => (
-                <Chip key={cat} compact style={styles.chip}>
-                  {cat}
-                </Chip>
-              ))}
-            </View>
           </View>
 
           <Divider />
@@ -213,18 +213,8 @@ const styles = StyleSheet.create({
   search: {
     margin: Spacing.md,
     borderRadius: Radius.md,
+    borderWidth: 1,
     ...Shadows.card,
-  },
-
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-  },
-
-  chip: {
-    borderRadius: Radius.sm,
   },
 
   content: {

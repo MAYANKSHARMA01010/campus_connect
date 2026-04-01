@@ -11,13 +11,15 @@ export const createPaperTheme = scheme => {
             ...baseTheme.colors,
             primary: colors.primary,
             secondary: colors.secondary,
+            tertiary: colors.accent,
             background: colors.background,
             surface: colors.surface,
-
+            surfaceVariant: colors.surfaceSoft,
             onSurface: colors.textPrimary,
             onBackground: colors.textPrimary,
-
+            onSurfaceVariant: colors.textSecondary,
             outline: colors.border,
+            outlineVariant: colors.divider,
             error: colors.danger,
         },
     };

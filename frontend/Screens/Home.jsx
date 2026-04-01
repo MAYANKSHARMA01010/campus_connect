@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Appbar, Searchbar, Text, Button, Surface } from "react-native-paper";
+import { LinearGradient } from "expo-linear-gradient";
 
 import EventSection from "../components/EventSection";
 import { HomeSkeleton } from "../components/SkeletonLoaders";
@@ -89,8 +90,8 @@ export default function HomeScreen({ navigation }) {
           )
         )
       );
-    } catch (err) {
-      console.log("LoadEvents error:", err);
+    } catch (_err) {
+      // Keep UI resilient if home data fetch fails; sections render empty state.
     } finally {
       setLoading(false);
     }
@@ -130,7 +131,7 @@ export default function HomeScreen({ navigation }) {
         <Appbar.Action icon="bell-outline" color={colors.textPrimary} />
       </Appbar.Header>
 
-      <View style={styles.searchCointainer}>
+      <View style={styles.searchContainer}>
         <Searchbar
           placeholder="Search events, workshops, fests..."
           value={searchQuery}
@@ -138,7 +139,10 @@ export default function HomeScreen({ navigation }) {
           onPress={() => {
             navigation.navigate("Search");
           }}
-          style={[styles.searchbar, { backgroundColor: colors.surface }]}
+          style={[
+            styles.searchbar,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
         />
       </View>
 
@@ -147,13 +151,16 @@ export default function HomeScreen({ navigation }) {
         style={styles.heroBanner}
         imageStyle={{ borderRadius: Radius.lg }}
       >
-        <View style={styles.heroOverlay}>
+        <LinearGradient
+          colors={["rgba(6, 31, 61, 0.08)", "rgba(6, 31, 61, 0.82)"]}
+          style={styles.heroOverlay}
+        >
           <Text style={styles.heroTitle}>Discover Campus Events</Text>
 
           <Text style={styles.heroSubtitle}>
             Explore workshops, fests, sports & more!
           </Text>
-        </View>
+        </LinearGradient>
       </ImageBackground>
 
       <View style={{ marginTop: Spacing.lg }}>
@@ -295,6 +302,8 @@ const styles = StyleSheet.create({
   appbar: {
     paddingHorizontal: Spacing.lg,
     justifyContent: "space-between",
+    borderBottomLeftRadius: Radius.lg,
+    borderBottomRightRadius: Radius.lg,
   },
 
   appName: {
@@ -308,6 +317,7 @@ const styles = StyleSheet.create({
 
   searchbar: {
     borderRadius: Radius.md,
+    borderWidth: 1,
     ...Shadows.card,
   },
 
@@ -321,7 +331,8 @@ const styles = StyleSheet.create({
   },
 
   heroOverlay: {
-    backgroundColor: "rgba(0,0,0,0.35)",
+    flex: 1,
+    justifyContent: "flex-end",
     padding: Spacing.md,
   },
 

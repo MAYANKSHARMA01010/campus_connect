@@ -10,7 +10,6 @@ import {
 import {
   Text,
   ActivityIndicator,
-  Chip,
   Menu,
   IconButton,
 } from "react-native-paper";
@@ -30,6 +29,7 @@ export default function EventScreen({ navigation }) {
   const colors = useAppTheme();
 
   const [activeCategory, setActiveCategory] = useState("all");
+  const [categoryVisible, setCategoryVisible] = useState(false);
   const [sortType, setSortType] = useState("recent");
   const [sortVisible, setSortVisible] = useState(false);
   const [showPast, setShowPast] = useState(false);
@@ -99,7 +99,7 @@ export default function EventScreen({ navigation }) {
       <StatusBar barStyle="light-content" translucent />
 
       <LinearGradient
-        colors={[colors.primary, colors.accent]}
+        colors={[colors.primary, colors.secondary]}
         style={styles.header}
       >
         <View style={styles.headerRow}>
@@ -108,78 +108,72 @@ export default function EventScreen({ navigation }) {
             <Text style={styles.headerSubtitle}>Discover what's happening</Text>
           </View>
 
-          <Menu
-            visible={sortVisible}
-            onDismiss={() => setSortVisible(false)}
-            anchor={
-              <IconButton
-                icon="sort-variant"
-                size={scale(24)}
-                iconColor="#fff"
-                onPress={() => setSortVisible(true)}
+          <View style={styles.headerControls}>
+            <Menu
+              visible={categoryVisible}
+              onDismiss={() => setCategoryVisible(false)}
+              anchor={
+                <IconButton
+                  icon="shape-outline"
+                  size={scale(22)}
+                  iconColor="#fff"
+                  onPress={() => setCategoryVisible(true)}
+                />
+              }
+            >
+              {categories.map((cat) => (
+                <Menu.Item
+                  key={cat}
+                  title={cat === "all" ? "All Categories" : cat.toUpperCase()}
+                  onPress={() => {
+                    setActiveCategory(cat);
+                    setCategoryVisible(false);
+                  }}
+                />
+              ))}
+            </Menu>
+
+            <Menu
+              visible={sortVisible}
+              onDismiss={() => setSortVisible(false)}
+              anchor={
+                <IconButton
+                  icon="sort-variant"
+                  size={scale(24)}
+                  iconColor="#fff"
+                  onPress={() => setSortVisible(true)}
+                />
+              }
+            >
+              <Menu.Item
+                title="Recent First"
+                onPress={() => onSortSelect("recent")}
               />
-            }
-          >
-            <Menu.Item
-              title="Recent First"
-              onPress={() => onSortSelect("recent")}
-            />
-            <Menu.Item
-              title="By Location"
-              onPress={() => onSortSelect("location")}
-            />
-            <Menu.Item
-              title="By Duration"
-              onPress={() => onSortSelect("duration")}
-            />
-          </Menu>
+              <Menu.Item
+                title="By Location"
+                onPress={() => onSortSelect("location")}
+              />
+              <Menu.Item
+                title="By Duration"
+                onPress={() => onSortSelect("duration")}
+              />
+            </Menu>
+          </View>
         </View>
+
+        <Text style={[styles.categoryHint, { color: "#E6F1FF" }]}> 
+          Category: {activeCategory === "all" ? "All" : activeCategory.toUpperCase()}
+        </Text>
       </LinearGradient>
 
-      <FlatList
-        horizontal
-        data={categories}
-        keyExtractor={(i) => i}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryList}
-        renderItem={({ item }) => (
-          <View style={styles.chipWrapper}>
-            <Chip
-              selected={activeCategory === item}
-              onPress={() => setActiveCategory(item)}
-              style={[
-                styles.categoryChip,
-                {
-                  backgroundColor:
-                    activeCategory === item
-                      ? colors.surface
-                      : colors.background,
-                },
-              ]}
-              textStyle={[styles.chipText, { color: colors.textPrimary }]}
-            >
-              {item.toUpperCase()}
-            </Chip>
-          </View>
-        )}
-      />
-
       <View style={styles.pastToggleRow}>
-        <Text style={styles.pastLabel}>Show past events</Text>
-        <View style={styles.chipWrapper}>
-          <Chip
-            selected={showPast}
-            onPress={() => setShowPast(!showPast)}
-            style={[
-              styles.pastChip,
-              {
-                backgroundColor: showPast ? colors.surface : colors.background,
-              },
-            ]}
-          >
-            {showPast ? "ON" : "OFF"}
-          </Chip>
-        </View>
+        <Text style={[styles.pastLabel, { color: colors.textSecondary }]}>Show past events</Text>
+        <IconButton
+          icon={showPast ? "toggle-switch" : "toggle-switch-off-outline"}
+          size={scale(34)}
+          iconColor={showPast ? colors.primary : colors.muted}
+          onPress={() => setShowPast(!showPast)}
+        />
       </View>
 
       <Suspense fallback={<ListSkeleton count={3} />}>
@@ -193,7 +187,12 @@ export default function EventScreen({ navigation }) {
             onEndReached={loadMore}
             onEndReachedThreshold={0.45}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
             }
             contentContainerStyle={{ paddingBottom: scale(70) }}
             ListFooterComponent={
@@ -228,6 +227,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  headerControls: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
   headerTitle: {
     color: "#fff",
     fontSize: Fonts.size.xxl,
@@ -239,24 +243,10 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.md,
   },
 
-  categoryList: {
-    paddingVertical: Spacing.md,
-    paddingLeft: Spacing.md,
-  },
-
-  chipWrapper: {
-    borderRadius: Radius.md,
-    overflow: "hidden",
-  },
-
-  categoryChip: {
-    marginRight: Spacing.sm,
-    height: scale(38),
-    justifyContent: "center",
-  },
-
-  chipText: {
-    fontWeight: Fonts.weight.semiBold,
+  categoryHint: {
+    marginTop: Spacing.xs,
+    fontSize: Fonts.size.sm,
+    fontWeight: Fonts.weight.medium,
   },
 
   pastToggleRow: {
@@ -271,6 +261,4 @@ const styles = StyleSheet.create({
   pastLabel: {
     fontWeight: Fonts.weight.semiBold,
   },
-
-  pastChip: {},
 });
