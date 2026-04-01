@@ -19,7 +19,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@prisma/client": "6.1.0",
+    "@prisma/client": "7.6.0",
     "@prisma/extension-accelerate": "^3.0.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",

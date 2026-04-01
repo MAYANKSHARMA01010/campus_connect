@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@prisma/client':
-        specifier: 6.1.0
-        version: 6.1.0(prisma@6.1.0)
+        specifier: 7.6.0
+        version: 7.6.0(prisma@6.1.0)
       '@prisma/extension-accelerate':
         specifier: ^3.0.0
-        version: 3.0.1(@prisma/client@6.1.0(prisma@6.1.0))
+        version: 3.0.1(@prisma/client@7.6.0(prisma@6.1.0))
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -54,13 +54,19 @@ packages:
   '@ioredis/commands@1.5.1':
     resolution: {integrity: sha512-JH8ZL/ywcJyR9MmJ5BNqZllXNZQqQbnVZOqpPQqE1vHiFgAw4NHbvE0FOduNU8IX9babitBT46571OnPTT0Zcw==}
 
-  '@prisma/client@6.1.0':
-    resolution: {integrity: sha512-AbQYc5+EJKm1Ydfq3KxwcGiy7wIbm4/QbjCKWWoNROtvy7d6a3gmAGkKjK0iUCzh+rHV8xDhD5Cge8ke/kiy5Q==}
-    engines: {node: '>=18.18'}
+  '@prisma/client-runtime-utils@7.6.0':
+    resolution: {integrity: sha512-fD7jlqubsZvVODKvsp9lOpXVecx2aWGxC2l35Ioz2t+teUJ5CfR0SAMsi7UkU1VvaZmmm+DS6BdujF622nY7tQ==}
+
+  '@prisma/client@7.6.0':
+    resolution: {integrity: sha512-7Pe/1ayh3GgWPEg4mmT4ax77LJ1wC+XlnIFvQ94bLP2DsUnOpnruQQR3Jw7r+Frthk94QqDNxo3FjSg8h9PXeQ==}
+    engines: {node: ^20.19 || ^22.12 || >=24.0}
     peerDependencies:
       prisma: '*'
+      typescript: '>=5.4.0'
     peerDependenciesMeta:
       prisma:
+        optional: true
+      typescript:
         optional: true
 
   '@prisma/debug@6.1.0':
@@ -636,7 +642,11 @@ snapshots:
 
   '@ioredis/commands@1.5.1': {}
 
-  '@prisma/client@6.1.0(prisma@6.1.0)':
+  '@prisma/client-runtime-utils@7.6.0': {}
+
+  '@prisma/client@7.6.0(prisma@6.1.0)':
+    dependencies:
+      '@prisma/client-runtime-utils': 7.6.0
     optionalDependencies:
       prisma: 6.1.0
 
@@ -651,9 +661,9 @@ snapshots:
       '@prisma/fetch-engine': 6.1.0
       '@prisma/get-platform': 6.1.0
 
-  '@prisma/extension-accelerate@3.0.1(@prisma/client@6.1.0(prisma@6.1.0))':
+  '@prisma/extension-accelerate@3.0.1(@prisma/client@7.6.0(prisma@6.1.0))':
     dependencies:
-      '@prisma/client': 6.1.0(prisma@6.1.0)
+      '@prisma/client': 7.6.0(prisma@6.1.0)
 
   '@prisma/fetch-engine@6.1.0':
     dependencies:
