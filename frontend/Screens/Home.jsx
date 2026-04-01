@@ -10,7 +10,6 @@ import { Appbar, Searchbar, Text, Button, Surface } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 
 import EventSection from "../components/EventSection";
-import { HomeSkeleton } from "../components/SkeletonLoaders";
 import { eventAPI } from "../api/api";
 
 import { useAppTheme } from "../theme/useAppTheme";
@@ -101,13 +100,18 @@ export default function HomeScreen({ navigation }) {
     loadEvents();
   }, [loadEvents]);
 
-  if (loading) {
-    return (
-      <View style={[styles.loaderWrap, { backgroundColor: colors.background }]}> 
-        <HomeSkeleton />
-      </View>
-    );
-  }
+  const sectionConfigs = [
+    { title: "🎉 Coming Up!", data: upcoming },
+    { title: "🕒 The Past Ones", data: past },
+    { title: "🏅 Sports & Culture", data: sportsCulture },
+    { title: "💡 Education & Tech", data: eduTech },
+  ];
+
+  const visibleSections = loading
+    ? sectionConfigs
+    : sectionConfigs.filter(
+        (section) => Array.isArray(section.data) && section.data.length > 0
+      );
 
   return (
     <ScrollView
@@ -163,33 +167,16 @@ export default function HomeScreen({ navigation }) {
         </LinearGradient>
       </ImageBackground>
 
-      <View style={{ marginTop: Spacing.lg }}>
-        <Section
-          title="🎉 Coming Up!"
-          data={upcoming}
-          navigation={navigation}
-        />
-      </View>
-
-      <View style={{ marginTop: Spacing.lg }}>
-        <Section title="🕒 The Past Ones" data={past} navigation={navigation} />
-      </View>
-
-      <View style={{ marginTop: Spacing.lg }}>
-        <Section
-          title="🏅 Sports & Culture"
-          data={sportsCulture}
-          navigation={navigation}
-        />
-      </View>
-
-      <View style={{ marginTop: Spacing.lg }}>
-        <Section
-          title="💡 Education & Tech"
-          data={eduTech}
-          navigation={navigation}
-        />
-      </View>
+      {visibleSections.map((section) => (
+        <View key={section.title} style={{ marginTop: Spacing.lg }}>
+          <Section
+            title={section.title}
+            data={section.data}
+            loading={loading}
+            navigation={navigation}
+          />
+        </View>
+      ))}
 
       <Surface
         style={[
@@ -267,8 +254,13 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-const Section = React.memo(({ title, data, navigation }) => {
+const Section = React.memo(({ title, data, loading, navigation }) => {
   const colors = useAppTheme();
+  const hasData = Array.isArray(data) && data.length > 0;
+
+  if (!loading && !hasData) {
+    return null;
+  }
 
   return (
     <View>
@@ -277,24 +269,29 @@ const Section = React.memo(({ title, data, navigation }) => {
           {title}
         </Text>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Events")}>
-          <Text style={[styles.viewAllText, { color: colors.primary }]}>
-            View All →
-          </Text>
-        </TouchableOpacity>
+        {hasData && (
+          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
+            <Text style={[styles.viewAllText, { color: colors.primary }]}> 
+              View All →
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <EventSection data={data} />
+      {loading ? (
+        <View style={styles.sectionSkeletonWrap}>
+          <Surface
+            style={[styles.sectionSkeletonCard, { backgroundColor: colors.border }]}
+          />
+        </View>
+      ) : (
+        <EventSection data={data} />
+      )}
     </View>
   );
 });
 
 const styles = StyleSheet.create({
-  loaderWrap: {
-    flex: 1,
-    paddingTop: Spacing.lg,
-  },
-
   container: {
     paddingBottom: scale(110),
   },
@@ -361,6 +358,16 @@ const styles = StyleSheet.create({
   viewAllText: {
     marginTop: Spacing.xs,
     fontWeight: Fonts.weight.semiBold,
+  },
+
+  sectionSkeletonWrap: {
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+  },
+
+  sectionSkeletonCard: {
+    height: scale(260),
+    borderRadius: Radius.lg,
   },
 
   hostCard: {

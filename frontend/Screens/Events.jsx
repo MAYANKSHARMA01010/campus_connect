@@ -12,6 +12,8 @@ import {
   ActivityIndicator,
   Menu,
   IconButton,
+  Button,
+  Surface,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -90,6 +92,35 @@ export default function EventScreen({ navigation }) {
   const renderItem = useCallback(
     ({ item }) => <EventCard item={item} navigation={navigation} />,
     [navigation]
+  );
+
+  const resetFilters = useCallback(() => {
+    setActiveCategory("all");
+    setSortType("recent");
+    setShowPast(false);
+  }, []);
+
+  const renderEmptyState = useCallback(
+    () => (
+      <View style={styles.emptyWrap}>
+        <Surface
+          style={[
+            styles.emptyCard,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+          elevation={0}
+        >
+          <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No events found</Text>
+          <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}> 
+            Try changing category or turn off past-event filter.
+          </Text>
+          <Button mode="contained" onPress={resetFilters} buttonColor={colors.primary}>
+            Reset Filters
+          </Button>
+        </Surface>
+      </View>
+    ),
+    [colors, resetFilters]
   );
 
   return (
@@ -194,7 +225,11 @@ export default function EventScreen({ navigation }) {
                 colors={[colors.primary]}
               />
             }
-            contentContainerStyle={{ paddingBottom: scale(70) }}
+            contentContainerStyle={[
+              styles.listContent,
+              events.length === 0 && styles.listEmptyContent,
+            ]}
+            ListEmptyComponent={renderEmptyState}
             ListFooterComponent={
               loadingMore && (
                 <ActivityIndicator style={{ marginVertical: Spacing.md }} />
@@ -260,5 +295,37 @@ const styles = StyleSheet.create({
 
   pastLabel: {
     fontWeight: Fonts.weight.semiBold,
+  },
+
+  listContent: {
+    paddingBottom: scale(70),
+  },
+
+  listEmptyContent: {
+    flexGrow: 1,
+  },
+
+  emptyWrap: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: scale(90),
+  },
+
+  emptyCard: {
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    padding: Spacing.xl,
+    gap: Spacing.md,
+  },
+
+  emptyTitle: {
+    fontSize: Fonts.size.xl,
+    fontWeight: Fonts.weight.bold,
+  },
+
+  emptyDesc: {
+    fontSize: Fonts.size.md,
+    lineHeight: 20,
   },
 });
