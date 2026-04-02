@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, Suspense } from "react";
+import React, { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -38,11 +38,13 @@ export default function EventScreen({ navigation }) {
   const [sortVisible, setSortVisible] = useState(false);
   const [showPast, setShowPast] = useState(false);
   const [page, setPage] = useState(1);
+  const loadMoreLockRef = useRef(false);
 
   const {
     events,
     categories,
     totalEvents,
+    hasMore,
     loading,
     refreshing,
     loadingMore,
@@ -74,16 +76,24 @@ export default function EventScreen({ navigation }) {
     setPage(2);
   };
 
-  const loadMore = () => {
-    if (loadingMore || events.length >= totalEvents) return;
+  const loadMore = async () => {
+    if (loadMoreLockRef.current) return;
+    if (loading || loadingMore || !hasMore || events.length >= totalEvents) return;
+
+    loadMoreLockRef.current = true;
     setLoadingMore(true);
-    fetchEvents({
-      page: page,
-      category: activeCategory,
-      sort: sortType,
-      past: showPast,
-    });
-    setPage((p) => p + 1);
+
+    try {
+      await fetchEvents({
+        page: page,
+        category: activeCategory,
+        sort: sortType,
+        past: showPast,
+      });
+      setPage((p) => p + 1);
+    } finally {
+      loadMoreLockRef.current = false;
+    }
   };
 
   const onSortSelect = (type) => {

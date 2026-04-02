@@ -5,26 +5,33 @@ export const useEvents = (limit = 10) => {
     const [events, setEvents] = useState([]);
     const [categories, setCategories] = useState([]);
     const [totalEvents, setTotalEvents] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
 
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState(null);
     const activeListControllerRef = useRef(null);
+    const isFetchingRef = useRef(false);
 
     const fetchEvents = useCallback(
         async ({ page = 1, category = "all", sort = "recent", past = false, reset = false } = {}) => {
+            if (isFetchingRef.current) {
+                return;
+            }
+
+            isFetchingRef.current = true;
+
             try {
                 if (reset) {
-                    if (events.length === 0) {
-                        setLoading(true);
-                    }
+                    setLoading(true);
                     setError(null);
+                    setHasMore(true);
                 }
                 
                 const isFirstPage = page === 1;
 
-                if (activeListControllerRef.current) {
+                if (reset && activeListControllerRef.current) {
                     activeListControllerRef.current.abort();
                 }
 
@@ -43,12 +50,16 @@ export const useEvents = (limit = 10) => {
 
                 const eventData = res?.events || [];
                 const categoryData = res?.categories || [];
+                const responseHasMore =
+                    typeof res?.hasMore === "boolean" ? res.hasMore : eventData.length >= limit;
 
                 if (reset || isFirstPage) {
                     setEvents(eventData);
                 } else {
                     setEvents((prev) => [...prev, ...eventData]);
                 }
+
+                setHasMore(responseHasMore);
 
                 if (categoryData.length) {
                     const filteredCategories = categoryData.filter(
@@ -73,9 +84,10 @@ export const useEvents = (limit = 10) => {
                 setLoading(false);
                 setRefreshing(false);
                 setLoadingMore(false);
+                isFetchingRef.current = false;
             }
         },
-        [limit, events.length]
+        [limit]
     );
 
     useEffect(() => {
@@ -90,6 +102,7 @@ export const useEvents = (limit = 10) => {
         events,
         categories,
         totalEvents,
+        hasMore,
         loading,
         refreshing,
         loadingMore,
