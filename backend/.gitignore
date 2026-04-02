@@ -4,3 +4,4 @@ node_modules
 
 prisma/seed.js
 verify-seed.js
+fix-images.js

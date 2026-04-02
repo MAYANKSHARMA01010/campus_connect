@@ -5,7 +5,6 @@ import {
   Pressable,
   Animated,
   Dimensions,
-  useColorScheme,
 } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BlurView } from "expo-blur";
@@ -18,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/UserContext";
+import { useThemeMode } from "../context/ThemeContext";
 import { useAppTheme } from "../theme/useAppTheme";
 import { Radius, Spacing } from "../theme/theme";
 import { scale } from "../theme/layout";
@@ -62,7 +62,7 @@ function CustomTabBar({ state, navigation }) {
   const insets = useSafeAreaInsets();
   const { role } = useAuth();
   const colors = useAppTheme();
-  const scheme = useColorScheme();
+  const { isDark } = useThemeMode();
 
   return (
     <View
@@ -73,12 +73,12 @@ function CustomTabBar({ state, navigation }) {
     >
       <BlurView
         intensity={90}
-        tint={scheme === "dark" ? "dark" : "light"}
+        tint={isDark ? "dark" : "light"}
         style={[
           styles.tabContainer,
           {
             backgroundColor:
-              scheme === "dark"
+              isDark
                 ? "rgba(16,28,47,0.78)"
                 : "rgba(255,255,255,0.72)",
             borderColor: colors.border,

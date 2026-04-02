@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useColorScheme } from "react-native";
 import { Provider as PaperProvider } from "react-native-paper";
 import {
   NavigationContainer,
@@ -7,19 +6,20 @@ import {
   DarkTheme as NavigationDarkTheme,
 } from "@react-navigation/native";
 import { UserProvider } from "./context/UserContext";
+import { ThemeProvider, useThemeMode } from "./context/ThemeContext";
 import MainStackNavigator from "./navigation/MainStackNavigator";
 import { createPaperTheme } from "./theme/paperTheme";
 import { Colors } from "./theme/theme";
 
-export default function App() {
-  const scheme = useColorScheme();
-  const paperTheme = createPaperTheme(scheme);
-  const appColors = scheme === "dark" ? Colors.dark : Colors.light;
+function AppShell() {
+  const { isDark } = useThemeMode();
+  const paperTheme = createPaperTheme(isDark ? "dark" : "light");
+  const appColors = isDark ? Colors.dark : Colors.light;
 
   const navigationTheme = {
-    ...(scheme === "dark" ? NavigationDarkTheme : NavigationDefaultTheme),
+    ...(isDark ? NavigationDarkTheme : NavigationDefaultTheme),
     colors: {
-      ...(scheme === "dark" ? NavigationDarkTheme : NavigationDefaultTheme)
+      ...(isDark ? NavigationDarkTheme : NavigationDefaultTheme)
         .colors,
       background: appColors.background,
       card: appColors.surface,
@@ -31,12 +31,20 @@ export default function App() {
   };
 
   return (
+    <PaperProvider theme={paperTheme}>
+      <NavigationContainer theme={navigationTheme}>
+        <MainStackNavigator />
+      </NavigationContainer>
+    </PaperProvider>
+  );
+}
+
+export default function App() {
+  return (
     <UserProvider>
-      <PaperProvider theme={paperTheme}>
-        <NavigationContainer theme={navigationTheme}>
-          <MainStackNavigator />
-        </NavigationContainer>
-      </PaperProvider>
+      <ThemeProvider>
+        <AppShell />
+      </ThemeProvider>
     </UserProvider>
   );
 }

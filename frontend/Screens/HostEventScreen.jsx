@@ -26,6 +26,7 @@ import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { useAuth } from "../context/UserContext";
+import { useThemeMode } from "../context/ThemeContext";
 import { CLOUD_NAME, UPLOAD_PRESET } from "@env";
 import { eventAPI } from "../api/api";
 
@@ -57,6 +58,7 @@ const INITIAL_FORM = {
 
 export default function HostEventScreen({ navigation }) {
   const colors = useAppTheme();
+  const { isDark } = useThemeMode();
   const { user } = useAuth();
 
   const [form, setForm] = useState(INITIAL_FORM);
@@ -168,7 +170,7 @@ export default function HostEventScreen({ navigation }) {
 
   return (
     <>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       <Appbar.Header elevated style={{ backgroundColor: colors.surface }}>
         <Appbar.BackAction

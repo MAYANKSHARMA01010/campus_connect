@@ -21,6 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEvents } from "../hooks/useEvents";
 import EventCard from "../components/EventCard";
 import { ListSkeleton } from "../components/SkeletonLoaders";
+import { useThemeMode } from "../context/ThemeContext";
 import { useAppTheme } from "../theme/useAppTheme";
 import { Spacing, Fonts, Radius } from "../theme/theme";
 import { scale } from "../theme/layout";
@@ -29,6 +30,7 @@ const LIMIT = 8;
 
 export default function EventScreen({ navigation }) {
   const colors = useAppTheme();
+  const { isDark } = useThemeMode();
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [categoryVisible, setCategoryVisible] = useState(false);
@@ -127,7 +129,7 @@ export default function EventScreen({ navigation }) {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <StatusBar barStyle="light-content" translucent />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} translucent />
 
       <LinearGradient
         colors={[colors.primary, colors.secondary]}

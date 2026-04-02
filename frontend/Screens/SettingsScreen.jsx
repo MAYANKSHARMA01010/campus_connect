@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/UserContext";
+import { useThemeMode } from "../context/ThemeContext";
 import { useAppTheme } from "../theme/useAppTheme";
 import { Spacing, Radius } from "../theme/theme";
 import { scale } from "../theme/layout";
@@ -23,10 +24,9 @@ export default function SettingsScreen() {
     const colors = useAppTheme();
     const insets = useSafeAreaInsets();
     const { user, logout } = useAuth();
+    const { themeMode, setThemeMode } = useThemeMode();
 
     const role = user?.role;
-
-    const [theme, setTheme] = useState("system");
 
     const [notifications, setNotifications] = useState({
         reminders: true,
@@ -130,10 +130,9 @@ export default function SettingsScreen() {
             <List.Section>
                 <List.Subheader>Appearance</List.Subheader>
 
-                <RadioButton.Group onValueChange={setTheme} value={theme}>
+                <RadioButton.Group onValueChange={setThemeMode} value={themeMode}>
                     <List.Item title="Light" right={() => <RadioButton value="light" />} />
                     <List.Item title="Dark" right={() => <RadioButton value="dark" />} />
-                    <List.Item title="System" right={() => <RadioButton value="system" />} />
                 </RadioButton.Group>
             </List.Section>
 
