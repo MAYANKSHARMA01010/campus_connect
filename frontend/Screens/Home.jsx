@@ -48,46 +48,67 @@ export default function HomeScreen({ navigation }) {
   const loadEvents = React.useCallback(async () => {
     try {
       setLoading(true);
-      const data = await eventAPI.getAll();
+      const homeData = await eventAPI.getAll();
+      const data = Array.isArray(homeData?.events) ? homeData.events : [];
+      const sections = homeData?.sections || {};
       const todayKey = new Date().toISOString().split("T")[0];
 
       const valid = data.filter((e) => toDateKey(e?.date));
 
+      const upcomingSection = Array.isArray(sections.upcoming)
+        ? sections.upcoming
+        : [];
+      const pastSection = Array.isArray(sections.past) ? sections.past : [];
+      const sportsCultureSection = Array.isArray(sections.sportsCulture)
+        ? sections.sportsCulture
+        : [];
+      const educationTechSection = Array.isArray(sections.educationTech)
+        ? sections.educationTech
+        : [];
+
       setUpcoming(
-        sortByDate(
-          valid.filter((e) => {
-            const eventDateKey = toDateKey(e.date);
-            return eventDateKey && eventDateKey >= todayKey;
-          })
-        )
+        upcomingSection.length
+          ? sortByDate(upcomingSection)
+          : sortByDate(
+              valid.filter((e) => {
+                const eventDateKey = toDateKey(e.date);
+                return eventDateKey && eventDateKey >= todayKey;
+              })
+            )
       );
 
       setPast(
-        sortByDate(
-          valid.filter((e) => {
-            const eventDateKey = toDateKey(e.date);
-            return eventDateKey && eventDateKey < todayKey;
-          }),
-          false
-        )
+        pastSection.length
+          ? sortByDate(pastSection, false)
+          : sortByDate(
+              valid.filter((e) => {
+                const eventDateKey = toDateKey(e.date);
+                return eventDateKey && eventDateKey < todayKey;
+              }),
+              false
+            )
       );
 
       setSportsCulture(
-        sortByDate(
-          data.filter((e) =>
-            ["sports", "culture"].includes(e.category?.toLowerCase())
-          )
-        )
+        sportsCultureSection.length
+          ? sortByDate(sportsCultureSection)
+          : sortByDate(
+              data.filter((e) =>
+                ["sports", "culture"].includes(e.category?.toLowerCase())
+              )
+            )
       );
 
       setEduTech(
-        sortByDate(
-          data.filter((e) =>
-            ["tech", "education", "seminar", "workshop"].includes(
-              e.category?.toLowerCase()
+        educationTechSection.length
+          ? sortByDate(educationTechSection)
+          : sortByDate(
+              data.filter((e) =>
+                ["tech", "education", "seminar", "workshop"].includes(
+                  e.category?.toLowerCase()
+                )
+              )
             )
-          )
-        )
       );
     } catch (_err) {
       // Keep UI resilient if home data fetch fails; sections render empty state.

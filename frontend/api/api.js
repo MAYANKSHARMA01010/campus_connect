@@ -355,7 +355,7 @@ export const eventAPI = {
     });
   },
 
-  getAll: async (params = { limit: 60 }) => {
+  getAll: async (params = { limit: 120 }) => {
     try {
       const data = await requestWithRetry({
         method: "get",
@@ -367,10 +367,26 @@ export const eventAPI = {
         persistentCache: true,
         cacheTtlMs: CACHE_TTL.home,
       });
-      return data?.events || [];
+      return data || {
+        events: [],
+        sections: {
+          upcoming: [],
+          past: [],
+          sportsCulture: [],
+          educationTech: [],
+        },
+      };
     } catch (err) {
       console.log("ERROR FETCHING EVENTS:", err.response?.data || err.message);
-      return [];
+      return {
+        events: [],
+        sections: {
+          upcoming: [],
+          past: [],
+          sportsCulture: [],
+          educationTech: [],
+        },
+      };
     }
   },
 
