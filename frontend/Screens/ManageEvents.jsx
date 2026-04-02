@@ -66,6 +66,8 @@ const EventRow = memo(
                                 style={styles.coverImage}
                                 contentFit="cover"
                                 transition={200}
+                                cachePolicy="disk"
+                                placeholder={{ blurhash: "L6Pj-^jE.AyE_3t7t7R*0KoeM{of" }}
                             />
                         ) : (
                             <View style={[styles.coverImage, styles.placeholderImage]} />

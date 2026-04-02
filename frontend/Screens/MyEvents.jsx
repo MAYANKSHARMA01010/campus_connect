@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, StyleSheet, FlatList, Alert, Image } from "react-native";
+import { View, StyleSheet, FlatList, Alert } from "react-native";
+import { Image } from "expo-image";
 import {
   Text,
   Button,
@@ -42,7 +43,13 @@ export default function MyEvents() {
     return (
       <Card style={styles.card}>
         {image && (
-          <Image source={image} style={styles.image} resizeMode="cover" />
+          <Image
+            source={image}
+            style={styles.image}
+            contentFit="cover"
+            cachePolicy="disk"
+            placeholder={{ blurhash: "L6Pj-^jE.AyE_3t7t7R*0KoeM{of" }}
+          />
         )}
 
         <Card.Title title={item.title} />

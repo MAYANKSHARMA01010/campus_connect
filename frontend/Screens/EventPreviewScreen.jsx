@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Image, StyleSheet, ScrollView, Alert } from "react-native";
+import { View, StyleSheet, ScrollView, Alert } from "react-native";
+import { Image } from "expo-image";
 import {
   Text,
   Button,
@@ -148,7 +149,14 @@ export default function EventPreviewScreen({ route, navigation }) {
             style={{ marginVertical: Spacing.md }}
           >
             {form.images.map((uri, i) => (
-              <Image key={i} source={{ uri }} style={styles.image} />
+              <Image
+                key={i}
+                source={{ uri }}
+                style={styles.image}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                placeholder={{ blurhash: "L6Pj-^jE.AyE_3t7t7R*0KoeM{of" }}
+              />
             ))}
           </ScrollView>
 

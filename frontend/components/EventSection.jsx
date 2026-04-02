@@ -4,9 +4,9 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  ImageBackground,
 } from "react-native";
 import { Text, Surface } from "react-native-paper";
+import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 
 import { useAppTheme } from "../theme/useAppTheme";
@@ -28,39 +28,45 @@ const Card = memo(({ item, navigation }) => {
       ]}
       onPress={() => navigation.navigate("EventDetail", { id: item.id })}
     >
-      <ImageBackground
+      {/* expo-image: disk-cached + blurhash shimmer while loading */}
+      <Image
         source={{ uri: item.images?.[0]?.url }}
-        style={styles.bgImage}
-        imageStyle={[styles.bgImageStyle, { borderRadius: Radius.lg }]}
-      >
-        <View
-          style={[
-            styles.gradientOverlay,
-            { backgroundColor: "rgba(0,0,0,0.35)" },
-          ]}
-        />
+        style={[styles.bgImage, { borderRadius: Radius.lg }]}
+        contentFit="cover"
+        transition={300}
+        cachePolicy="disk"
+        placeholder={{ blurhash: "L6Pj-^jE.AyE_3t7t7R*0KoeM{of" }}
+      />
 
-        <View style={styles.overlayContent}>
-          <Text
-            variant="titleLarge"
-            style={[styles.overlayTitle, { color: colors.surface }]}
-            numberOfLines={1}
-          >
-            {item.title}
-          </Text>
+      {/* Dark overlay on top of image */}
+      <View
+        style={[
+          styles.gradientOverlay,
+          { backgroundColor: "rgba(0,0,0,0.40)" },
+        ]}
+      />
 
-          <Text style={[styles.overlayDate, { color: colors.accent }]}>
-            {item.date ? new Date(item.date).toDateString() : ""}
-          </Text>
+      <View style={styles.overlayContent}>
+        <Text
+          variant="titleLarge"
+          style={[styles.overlayTitle, { color: "#fff" }]}
+          numberOfLines={1}
+        >
+          {item.title}
+        </Text>
 
-          <Text
-            style={[styles.overlaySummary, { color: colors.surface }]}
-            numberOfLines={2}
-          >
-            {item.description || `${item.category || "Event"}${item.location ? ` • ${item.location}` : ""}`}
-          </Text>
-        </View>
-      </ImageBackground>
+        <Text style={[styles.overlayDate, { color: colors.accent }]}>
+          {item.date ? new Date(item.date).toDateString() : ""}
+        </Text>
+
+        <Text
+          style={[styles.overlaySummary, { color: "#fff" }]}
+          numberOfLines={2}
+        >
+          {item.description ||
+            `${item.category || "Event"}${item.location ? ` • ${item.location}` : ""}`}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 });
@@ -103,9 +109,9 @@ export default function EventSection({ data }) {
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         showsHorizontalScrollIndicator={false}
-        initialNumToRender={4}
-        maxToRenderPerBatch={4}
-        windowSize={7}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
         removeClippedSubviews
         ListFooterComponent={renderViewMore}
         contentContainerStyle={styles.scrollContainer}
@@ -136,12 +142,7 @@ const styles = StyleSheet.create({
   },
 
   bgImage: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-
-  bgImageStyle: {
-    resizeMode: "cover",
+    ...StyleSheet.absoluteFillObject,
   },
 
   gradientOverlay: {
@@ -149,6 +150,10 @@ const styles = StyleSheet.create({
   },
 
   overlayContent: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: Spacing.md,
   },
 

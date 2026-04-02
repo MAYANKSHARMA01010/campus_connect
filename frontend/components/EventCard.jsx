@@ -73,8 +73,9 @@ const EventCard = memo(({ item, navigation }) => {
               source={item.images[0].url}
               style={styles.cardImage}
               contentFit="cover"
-              transition={250}
+              transition={300}
               cachePolicy="disk"
+              placeholder={{ blurhash: "L6Pj-^jE.AyE_3t7t7R*0KoeM{of" }}
             />
           ) : (
             <View
