@@ -7,6 +7,7 @@ import HostEventScreen from "../Screens/HostEventScreen";
 import ManageEventsScreen from "../Screens/ManageEvents";
 import EventDetail from "../Screens/EventDetail";
 import EventPreviewScreen from "../Screens/EventPreviewScreen";
+import AboutScreen from "../Screens/AboutScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +29,7 @@ export default function MainStackNavigator() {
       <Stack.Screen name="ManageEvents" component={ManageEventsScreen} />
       <Stack.Screen name="EventPreview" component={EventPreviewScreen} />
       <Stack.Screen name="EventDetail" component={EventDetail} />
+      <Stack.Screen name="About" component={AboutScreen} />
     </Stack.Navigator>
   );
 }

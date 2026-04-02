@@ -5,9 +5,12 @@ import {
   ScrollView,
   ImageBackground,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
-import { Appbar, Searchbar, Text, Button, Surface } from "react-native-paper";
+import { Appbar, Searchbar, Text, Button, Surface, ActivityIndicator } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import EventSection from "../components/EventSection";
 import { eventAPI } from "../api/api";
@@ -16,12 +19,14 @@ import { useAppTheme } from "../theme/useAppTheme";
 import { Fonts, Spacing, Radius, Shadows } from "../theme/theme";
 import { scale } from "../theme/layout";
 
+const { width } = Dimensions.get("window");
+
 export default function HomeScreen({ navigation }) {
   const colors = useAppTheme();
+  const isDark = colors.background === "#121212";
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [upcoming, setUpcoming] = React.useState([]);
-  const [past, setPast] = React.useState([]);
   const [sportsCulture, setSportsCulture] = React.useState([]);
   const [eduTech, setEduTech] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -51,14 +56,13 @@ export default function HomeScreen({ navigation }) {
       const homeData = await eventAPI.getAll();
       const data = Array.isArray(homeData?.events) ? homeData.events : [];
       const sections = homeData?.sections || {};
-      const todayKey = new Date().toISOString().split("T")[0];
 
+      const todayKey = new Date().toISOString().split("T")[0];
       const valid = data.filter((e) => toDateKey(e?.date));
 
       const upcomingSection = Array.isArray(sections.upcoming)
         ? sections.upcoming
         : [];
-      const pastSection = Array.isArray(sections.past) ? sections.past : [];
       const sportsCultureSection = Array.isArray(sections.sportsCulture)
         ? sections.sportsCulture
         : [];
@@ -74,18 +78,6 @@ export default function HomeScreen({ navigation }) {
                 const eventDateKey = toDateKey(e.date);
                 return eventDateKey && eventDateKey >= todayKey;
               })
-            )
-      );
-
-      setPast(
-        pastSection.length
-          ? sortByDate(pastSection, false)
-          : sortByDate(
-              valid.filter((e) => {
-                const eventDateKey = toDateKey(e.date);
-                return eventDateKey && eventDateKey < todayKey;
-              }),
-              false
             )
       );
 
@@ -111,7 +103,7 @@ export default function HomeScreen({ navigation }) {
             )
       );
     } catch (_err) {
-      // Keep UI resilient if home data fetch fails; sections render empty state.
+      // Fail silently
     } finally {
       setLoading(false);
     }
@@ -121,18 +113,34 @@ export default function HomeScreen({ navigation }) {
     loadEvents();
   }, [loadEvents]);
 
-  const sectionConfigs = [
-    { title: "🎉 Coming Up!", data: upcoming },
-    { title: "🕒 The Past Ones", data: past },
-    { title: "🏅 Sports & Culture", data: sportsCulture },
-    { title: "💡 Education & Tech", data: eduTech },
-  ];
+  const topEvent = upcoming.length > 0 ? upcoming[0] : null;
 
-  const visibleSections = loading
-    ? sectionConfigs
-    : sectionConfigs.filter(
-        (section) => Array.isArray(section.data) && section.data.length > 0
-      );
+  const sections = [
+    {
+      id: "upcoming",
+      title: "Coming Up",
+      subtitle: "Events happening this month",
+      icon: "calendar-clock",
+      data: upcoming,
+      onViewAll: () => navigation.navigate("Events"),
+    },
+    {
+      id: "sports",
+      title: "Sports & Culture",
+      subtitle: "Competitions, clubs & fests",
+      icon: "soccer",
+      data: sportsCulture,
+      onViewAll: () => navigation.navigate("Events"),
+    },
+    {
+      id: "tech",
+      title: "Learning & Tech",
+      subtitle: "Workshops, seminars & talks",
+      icon: "laptop",
+      data: eduTech,
+      onViewAll: () => navigation.navigate("Events"),
+    },
+  ];
 
   return (
     <ScrollView
@@ -142,233 +150,397 @@ export default function HomeScreen({ navigation }) {
         { backgroundColor: colors.background },
       ]}
     >
+      {/* Header */}
       <Appbar.Header
         elevated
-        style={[styles.appbar, { backgroundColor: colors.surface }]}
+        style={[
+          styles.header,
+          { backgroundColor: colors.surface },
+        ]}
       >
-        <Text
-          variant="headlineSmall"
-          style={[styles.appName, { color: colors.primary }]}
-        >
-          CampusConnect
-        </Text>
-
+        <View style={styles.headerContent}>
+          <View style={styles.brandSection}>
+            <MaterialCommunityIcons
+              name="calendar-check"
+              size={28}
+              color={colors.primary}
+            />
+            <Text variant="headlineSmall" style={[styles.brandText, { color: colors.primary }]}>
+              Campus
+            </Text>
+          </View>
+        </View>
         <Appbar.Action icon="bell-outline" color={colors.textPrimary} />
       </Appbar.Header>
 
-      <View style={styles.searchContainer}>
+      {/* Search Bar */}
+      <View style={styles.searchSection}>
         <Searchbar
-          placeholder="Search events, workshops, fests..."
+          placeholder="Find events..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          onPress={() => {
-            navigation.navigate("Search");
-          }}
+          onPress={() => navigation.navigate("Search")}
           style={[
             styles.searchbar,
-            { backgroundColor: colors.surface, borderColor: colors.border },
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
           ]}
+          inputStyle={styles.searchInput}
         />
       </View>
 
-      <ImageBackground
-        source={{ uri: "https://picsum.photos/seed/campus-banner/800/500" }}
-        style={styles.heroBanner}
-        imageStyle={{ borderRadius: Radius.lg }}
-      >
-        <LinearGradient
-          colors={["rgba(6, 31, 61, 0.08)", "rgba(6, 31, 61, 0.82)"]}
-          style={styles.heroOverlay}
+      {/* Featured Quick Access Card */}
+      {!loading && topEvent ? (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() =>
+            navigation.navigate("EventDetail", {
+              eventId: topEvent.id,
+            })
+          }
+          style={styles.featuredWrapper}
         >
-          <Text style={styles.heroTitle}>Discover Campus Events</Text>
-
-          <Text style={styles.heroSubtitle}>
-            Explore workshops, fests, sports & more!
-          </Text>
-        </LinearGradient>
-      </ImageBackground>
-
-      {visibleSections.map((section) => (
-        <View key={section.title} style={{ marginTop: Spacing.lg }}>
-          <Section
-            title={section.title}
-            data={section.data}
-            loading={loading}
-            navigation={navigation}
+          <ImageBackground
+            source={
+              topEvent.imagePath
+                ? { uri: topEvent.imagePath }
+                : {
+                    uri: "https://picsum.photos/seed/event-featured/400/280",
+                  }
+            }
+            style={styles.featuredCard}
+            imageStyle={{ borderRadius: Radius.lg }}
+          >
+            <BlurView intensity={isDark ? 40 : 25} style={styles.blurContainer}>
+              <LinearGradient
+                colors={[
+                  isDark
+                    ? "rgba(0, 0, 0, 0.3)"
+                    : "rgba(255, 255, 255, 0.1)",
+                  isDark
+                    ? "rgba(0, 0, 0, 0.7)"
+                    : "rgba(0, 0, 0, 0.4)",
+                ]}
+                style={styles.gradientOverlay}
+              >
+                <Text style={[styles.badgeText, { color: colors.primary }]}>
+                  FEATURED
+                </Text>
+                <Text style={styles.featuredTitle} numberOfLines={2}>
+                  {topEvent.title || "Upcoming Event"}
+                </Text>
+                <Text style={styles.featuredSubtitle} numberOfLines={1}>
+                  {new Date(topEvent.date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </Text>
+              </LinearGradient>
+            </BlurView>
+          </ImageBackground>
+        </TouchableOpacity>
+      ) : loading ? (
+        <View style={styles.featuredSkeleton}>
+          <Surface
+            style={[
+              styles.featuredSkeletonCard,
+              { backgroundColor: colors.border },
+            ]}
           />
         </View>
-      ))}
+      ) : null}
 
-      <Surface
-        style={[
-          styles.hostCard,
-          {
-            backgroundColor: colors.surface,
-            borderRadius: Radius.lg,
-          },
-        ]}
+      {/* Main Sections */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator
+            animating={true}
+            size="large"
+            color={colors.primary}
+          />
+        </View>
+      ) : (
+        sections.map((section) => (
+          <EventCategorySection
+            key={section.id}
+            section={section}
+            navigation={navigation}
+            colors={colors}
+          />
+        ))
+      )}
+
+      {/* Host Event CTA */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate("HostEvent")}
+        style={styles.ctaWrapper}
       >
-        <Text style={[styles.hostTitle, { color: colors.primary }]}>
-          🎤 Want to Host an Event?
-        </Text>
-
-        <Text style={[styles.hostText, { color: colors.textSecondary }]}>
-          Submit your event details and get featured on CampusConnect!
-        </Text>
-
-        <Button
-          mode="contained"
-          style={styles.hostBtn}
-          buttonColor={colors.primary}
-          onPress={() => navigation.navigate("HostEvent")}
+        <ImageBackground
+          source={{
+            uri: "https://picsum.photos/seed/host-banner/800/280",
+          }}
+          style={styles.ctaCard}
+          imageStyle={{ borderRadius: Radius.lg }}
         >
-          Raise a Request
-        </Button>
-      </Surface>
+          <BlurView intensity={isDark ? 35 : 30} style={styles.ctaBlur}>
+            <LinearGradient
+              colors={[
+                isDark
+                  ? "rgba(0, 0, 0, 0.4)"
+                  : "rgba(255, 255, 255, 0.15)",
+                isDark
+                  ? "rgba(0, 0, 0, 0.8)"
+                  : "rgba(0, 0, 0, 0.5)",
+              ]}
+              style={styles.ctaGradient}
+            >
+              <MaterialCommunityIcons
+                name="microphone-variant"
+                size={44}
+                color={colors.primary}
+              />
+              <Text style={[styles.ctaTitle, { color: "#fff" }]}>
+                Host an Event
+              </Text>
+              <Text style={styles.ctaSubtitle}>
+                Share your campus activity
+              </Text>
+              <Button
+                mode="contained"
+                style={styles.ctaButton}
+                buttonColor={colors.primary}
+                contentStyle={styles.ctaButtonContent}
+              >
+                Create Event
+              </Button>
+            </LinearGradient>
+          </BlurView>
+        </ImageBackground>
+      </TouchableOpacity>
 
-      <View style={styles.statsRow}>
-        {[
-          { num: "50+", label: "Colleges" },
-          { num: "200+", label: "Events" },
-          { num: "5K+", label: "Participants" },
-        ].map((item, index) => (
-          <Surface
-            key={index}
-            style={[
-              styles.statCard,
-              {
-                backgroundColor: colors.surface,
-                borderRadius: Radius.md,
-              },
-            ]}
+      {/* About Us Section */}
+      <View style={styles.aboutWrapper}>
+        <View style={styles.aboutContainer}>
+          <View style={styles.aboutIconContainer}>
+            <MaterialCommunityIcons
+              name="information"
+              size={32}
+              color={colors.primary}
+            />
+          </View>
+          <Text style={[styles.aboutSectionTitle, { color: colors.primary }]}>
+            About CampusConnect
+          </Text>
+          <Text style={[styles.aboutDescription, { color: colors.textSecondary }]}>
+            CampusConnect is your one-stop platform to explore, register, and
+            participate in college events — from cultural fests to tech summits.
+          </Text>
+          <Button
+            mode="outlined"
+            style={styles.aboutButton}
+            labelStyle={[styles.aboutButtonLabel, { color: colors.primary }]}
+            onPress={() => navigation.navigate("About")}
           >
-            <Text style={[styles.statNumber, { color: colors.primary }]}>
-              {item.num}
-            </Text>
-
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              {item.label}
-            </Text>
-          </Surface>
-        ))}
+            Learn More
+          </Button>
+        </View>
       </View>
 
-      <Surface
-        style={[
-          styles.aboutCard,
-          {
-            backgroundColor: colors.surface,
-            borderRadius: Radius.lg,
-          },
-        ]}
-      >
-        <Text style={[styles.aboutTitle, { color: colors.primary }]}>
-          About CampusConnect
-        </Text>
-
-        <Text style={[styles.aboutText, { color: colors.textSecondary }]}>
-          CampusConnect is your one-stop platform to explore, register, and
-          participate in college events — from cultural fests to tech summits.
-        </Text>
-      </Surface>
+      <View style={{ height: Spacing.xl }} />
     </ScrollView>
   );
 }
 
-const Section = React.memo(({ title, data, loading, navigation }) => {
-  const colors = useAppTheme();
-  const hasData = Array.isArray(data) && data.length > 0;
+const EventCategorySection = React.memo(
+  ({ section, navigation, colors }) => {
+    const hasData = Array.isArray(section.data) && section.data.length > 0;
 
-  if (!loading && !hasData) {
-    return null;
-  }
-
-  return (
-    <View>
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.primary }]}>
-          {title}
-        </Text>
-
-        {hasData && (
-          <TouchableOpacity onPress={() => navigation.navigate("Events")}>
-            <Text style={[styles.viewAllText, { color: colors.primary }]}> 
-              View All →
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {loading ? (
-        <View style={styles.sectionSkeletonWrap}>
-          <Surface
-            style={[styles.sectionSkeletonCard, { backgroundColor: colors.border }]}
+    if (!hasData) {
+      return (
+        <View style={styles.emptySection}>
+          <MaterialCommunityIcons
+            name="file-document-outline"
+            size={48}
+            color={colors.border}
           />
+          <Text
+            style={[
+              styles.emptyText,
+              { color: colors.textSecondary, marginTop: Spacing.md },
+            ]}
+          >
+            No {section.title.toLowerCase()} events yet
+          </Text>
         </View>
-      ) : (
-        <EventSection data={data} />
-      )}
-    </View>
-  );
-});
+      );
+    }
+
+    return (
+      <View style={styles.sectionWrapper}>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeaderInfo}>
+            <View style={styles.iconContainer}>
+              <MaterialCommunityIcons
+                name={section.icon}
+                size={20}
+                color="white"
+              />
+            </View>
+            <View style={styles.textGroup}>
+              <Text style={[styles.sectionTitle, { color: colors.primary }]}>
+                {section.title}
+              </Text>
+              <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+                {section.subtitle}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity onPress={section.onViewAll}>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={24}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ marginTop: Spacing.md }}>
+          <EventSection data={section.data} />
+        </View>
+      </View>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   container: {
     paddingBottom: scale(110),
   },
 
-  appbar: {
+  header: {
     paddingHorizontal: Spacing.lg,
     justifyContent: "space-between",
-    borderBottomLeftRadius: Radius.lg,
-    borderBottomRightRadius: Radius.lg,
   },
 
-  appName: {
+  headerContent: {
+    flex: 1,
+  },
+
+  brandSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+
+  brandText: {
     fontWeight: Fonts.weight.bold,
   },
 
-  searchContainer: {
+  searchSection: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
+    paddingVertical: Spacing.md,
   },
 
   searchbar: {
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     borderWidth: 1,
+    height: scale(48),
     ...Shadows.card,
   },
 
-  heroBanner: {
-    height: scale(200),
+  searchInput: {
+    fontSize: Fonts.size.sm,
+  },
+
+  featuredWrapper: {
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+
+  featuredCard: {
+    height: scale(200),
     borderRadius: Radius.lg,
     overflow: "hidden",
     justifyContent: "flex-end",
+    ...Shadows.card,
   },
 
-  heroOverlay: {
+  blurContainer: {
     flex: 1,
     justifyContent: "flex-end",
-    padding: Spacing.md,
   },
 
-  heroTitle: {
-    color: "#fff",
+  gradientOverlay: {
+    flex: 1,
+    padding: Spacing.lg,
+    justifyContent: "flex-end",
+  },
+
+  badgeText: {
+    fontSize: Fonts.size.xs,
+    fontWeight: Fonts.weight.bold,
+    letterSpacing: 1.2,
+    marginBottom: Spacing.sm,
+  },
+
+  featuredTitle: {
     fontSize: Fonts.size.xl,
     fontWeight: Fonts.weight.bold,
+    color: "#fff",
+    marginBottom: Spacing.xs,
   },
 
-  heroSubtitle: {
-    color: "#eee",
-    marginTop: Spacing.xs,
+  featuredSubtitle: {
+    fontSize: Fonts.size.sm,
+    color: "rgba(255, 255, 255, 0.9)",
+    fontWeight: Fonts.weight.medium,
   },
 
-  sectionHeader: {
+  featuredSkeleton: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+
+  featuredSkeletonCard: {
+    height: scale(200),
+    borderRadius: Radius.lg,
+  },
+
+  sectionWrapper: {
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+
+  sectionHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
+    alignItems: "center",
+  },
+
+  sectionHeaderInfo: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+
+  iconContainer: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: Radius.md,
+    backgroundColor: "#5E7CE2",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  textGroup: {
+    flex: 1,
   },
 
   sectionTitle: {
@@ -376,81 +548,119 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weight.bold,
   },
 
-  viewAllText: {
-    marginTop: Spacing.xs,
-    fontWeight: Fonts.weight.semiBold,
+  sectionSubtitle: {
+    fontSize: Fonts.size.xs,
+    marginTop: 2,
   },
 
-  sectionSkeletonWrap: {
-    paddingHorizontal: Spacing.lg,
-    marginTop: Spacing.md,
-  },
-
-  sectionSkeletonCard: {
-    height: scale(260),
-    borderRadius: Radius.lg,
-  },
-
-  hostCard: {
+  emptySection: {
     marginHorizontal: Spacing.lg,
-    marginTop: scale(30),
-    padding: Spacing.xl,
+    marginVertical: Spacing.xl,
+    paddingVertical: scale(40),
     alignItems: "center",
-    ...Shadows.card,
   },
 
-  hostTitle: {
-    fontWeight: Fonts.weight.bold,
-    fontSize: Fonts.size.lg,
-    marginBottom: Spacing.xs,
-  },
-
-  hostText: {
-    textAlign: "center",
-    marginBottom: Spacing.md,
-    fontSize: Fonts.size.md,
-  },
-
-  hostBtn: {
-    borderRadius: Radius.sm,
-  },
-
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: scale(28),
-  },
-
-  statCard: {
-    width: scale(95),
-    paddingVertical: Spacing.md,
-    alignItems: "center",
-    ...Shadows.card,
-  },
-
-  statNumber: {
-    fontSize: Fonts.size.xl,
-    fontWeight: Fonts.weight.bold,
-  },
-
-  statLabel: {
-    marginTop: Spacing.xs,
+  emptyText: {
+    fontSize: Fonts.size.sm,
     fontWeight: Fonts.weight.medium,
   },
 
-  aboutCard: {
-    margin: Spacing.xl,
-    padding: Spacing.xl,
+  ctaWrapper: {
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+
+  ctaCard: {
+    height: scale(200),
+    borderRadius: Radius.lg,
+    overflow: "hidden",
     ...Shadows.card,
   },
 
-  aboutTitle: {
-    fontWeight: Fonts.weight.bold,
-    fontSize: Fonts.size.lg,
-    marginBottom: Spacing.xs,
+  ctaBlur: {
+    flex: 1,
   },
 
-  aboutText: {
+  ctaGradient: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.xl,
+  },
+
+  ctaTitle: {
+    fontSize: Fonts.size.xl,
+    fontWeight: Fonts.weight.bold,
+    marginTop: Spacing.md,
+  },
+
+  ctaSubtitle: {
+    fontSize: Fonts.size.sm,
+    color: "rgba(255, 255, 255, 0.85)",
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
+
+  ctaButton: {
+    borderRadius: Radius.md,
+    minWidth: scale(120),
+  },
+
+  ctaButtonContent: {
+    paddingVertical: Spacing.xs,
+  },
+
+  loadingContainer: {
+    paddingVertical: scale(60),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  aboutWrapper: {
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+  },
+
+  aboutContainer: {
+    backgroundColor: "rgba(94, 124, 226, 0.08)",
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(94, 124, 226, 0.2)",
+  },
+
+  aboutIconContainer: {
+    width: scale(48),
+    height: scale(48),
+    borderRadius: Radius.md,
+    backgroundColor: "rgba(94, 124, 226, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+
+  aboutSectionTitle: {
+    fontSize: Fonts.size.lg,
+    fontWeight: Fonts.weight.bold,
+    marginBottom: Spacing.sm,
+  },
+
+  aboutDescription: {
+    fontSize: Fonts.size.sm,
+    textAlign: "center",
     lineHeight: 20,
+    marginBottom: Spacing.lg,
+  },
+
+  aboutButton: {
+    borderRadius: Radius.md,
+    borderWidth: 2,
+    minWidth: scale(140),
+  },
+
+  aboutButtonLabel: {
+    fontSize: Fonts.size.sm,
+    fontWeight: Fonts.weight.bold,
   },
 });
