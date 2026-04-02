@@ -1,3 +1,6 @@
 node_modules
 .env
 /generated/prisma
+
+prisma/seed.js
+verify-seed.js
