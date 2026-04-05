@@ -193,12 +193,8 @@ export default function EventScreen({ navigation }) {
                 onPress={() => onSortSelect("recent")}
               />
               <Menu.Item
-                title="By Location"
-                onPress={() => onSortSelect("location")}
-              />
-              <Menu.Item
                 title="By Duration"
-                onPress={() => onSortSelect("duration")}
+                onPress={() => onSortSelect("date")}
               />
             </Menu>
           </View>

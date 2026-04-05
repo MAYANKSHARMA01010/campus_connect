@@ -152,12 +152,26 @@ async function getAllEventsController(req, res) {
             where.category = category;
         }
 
+        const normalizedSort = String(sort || "recent").toLowerCase();
         let orderBy = [{ createdAt: "desc" }, { id: "desc" }];
-        if (sort === "recent") orderBy = [{ createdAt: "desc" }, { id: "desc" }];
-        if (sort === "location") orderBy = { location: "asc" };
-        if (sort === "date") orderBy = { date: "asc" };
 
-        const useCursor = Boolean(cursor) && (sort === "recent" || !sort);
+        if (normalizedSort === "location") {
+            orderBy = [
+                { location: "asc" },
+                { date: "asc" },
+                { id: "asc" },
+            ];
+        }
+
+        if (normalizedSort === "date" || normalizedSort === "duration") {
+            orderBy = [
+                { date: "asc" },
+                { time: "asc" },
+                { id: "asc" },
+            ];
+        }
+
+        const useCursor = Boolean(cursor) && normalizedSort === "recent";
         const listArgs = {
             where,
             take: useCursor ? limit + 1 : limit,
@@ -174,7 +188,7 @@ async function getAllEventsController(req, res) {
 
         const cacheKey = buildCacheKey("events.list", {
             category: category || "all",
-            sort: sort || "recent",
+            sort: normalizedSort,
             past,
             page,
             limit,
