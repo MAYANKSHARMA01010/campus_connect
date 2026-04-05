@@ -7,12 +7,13 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { Appbar, Searchbar, Text, Button, Surface, ActivityIndicator } from "react-native-paper";
+import { Appbar, Searchbar, Text, Button, Surface } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import EventSection from "../components/EventSection";
+import { HomeSkeleton } from "../components/SkeletonLoaders";
 import { eventAPI } from "../api/api";
 
 import { useAppTheme } from "../theme/useAppTheme";
@@ -255,13 +256,7 @@ export default function HomeScreen({ navigation }) {
 
       {/* Main Sections */}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator
-            animating={true}
-            size="large"
-            color={colors.primary}
-          />
-        </View>
+        <HomeSkeleton />
       ) : (
         sections.map((section) => (
           <EventCategorySection
@@ -608,12 +603,6 @@ const styles = StyleSheet.create({
 
   ctaButtonContent: {
     paddingVertical: Spacing.xs,
-  },
-
-  loadingContainer: {
-    paddingVertical: scale(60),
-    justifyContent: "center",
-    alignItems: "center",
   },
 
   aboutWrapper: {
