@@ -18,7 +18,7 @@
     "@react-navigation/native-stack": "^7.6.2",
     "axios": "^1.14.0",
     "expo": "~55.0.9",
-    "expo-blur": "~55.0.10",
+    "expo-blur": "~55.0.12",
     "expo-constants": "^55.0.9",
     "expo-image": "~55.0.6",
     "expo-image-picker": "~55.0.14",
